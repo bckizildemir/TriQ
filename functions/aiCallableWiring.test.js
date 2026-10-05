@@ -97,3 +97,9 @@ test("every callable declaring its own secret is either quota-wrapped or an expl
     );
   }
 });
+
+test("resolveUsername requires App Check because it returns an email before sign-in", () => {
+  const source = readIndex().replace(/\s+/g, " ");
+
+  assert.match(source, /exports\.resolveUsername = onCall\(\{ region: REGION, enforceAppCheck: true \}/);
+});

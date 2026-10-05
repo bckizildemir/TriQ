@@ -497,7 +497,10 @@ exports.claimUsername = onCall({ region: REGION }, async (request) => {
   });
 });
 
-exports.resolveUsername = onCall({ region: REGION }, async (request) => {
+// Username sign-in needs this before the user is signed in, so it cannot require auth. It returns
+// an email, so without App Check a script could walk usernames and collect every user's email.
+// The app attests with App Attest (AppCheckInstaller), the same token the AI callables require.
+exports.resolveUsername = onCall({ region: REGION, enforceAppCheck: true }, async (request) => {
   return resolveUsername({
     db,
     username: request.data?.username,

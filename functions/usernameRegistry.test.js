@@ -241,3 +241,129 @@ function createSnapshot(id, data) {
     },
   };
 }
+
+test("claimUsername refuses the placeholder names every new account shows", async () => {
+  const db = createFakeDb({ users: {}, usernames: {} });
+
+  for (const username of ["User", " guest user ", "kullanıcı", "Misafir Kullanıcı"]) {
+    await assert.rejects(
+      claimUsername({
+        db,
+        user: { uid: "user-1" },
+        username,
+        email: "",
+        isAnonymous: false,
+        createServerTimestamp: () => SERVER_TIMESTAMP,
+      }),
+      /reserved/
+    );
+  }
+});
+
+test("releaseUsername does not restore a name another user owns", async () => {
+  const db = createFakeDb({
+    users: {
+      mallory: { username: "Mallory2", usernameNormalized: "mallory2", email: "" },
+    },
+    usernames: {
+      berke: { uid: "berke", username: "Berke", email: "berke@example.com" },
+      mallory2: { uid: "mallory", username: "Mallory2", email: "" },
+    },
+  });
+
+  await releaseUsername({
+    db,
+    user: { uid: "mallory" },
+    username: "mallory2",
+    restoreUsername: "Berke",
+    createServerTimestamp: () => SERVER_TIMESTAMP,
+  });
+
+  assert.equal(db.getDocument("users", "mallory").username, "Mallory2");
+  assert.equal(db.getDocument("usernames", "berke").uid, "berke");
+});
+
+test("releaseUsername restores a free previous name and registers it to the caller", async () => {
+  const db = createFakeDb({
+    users: {
+      "user-1": { username: "NewName", usernameNormalized: "newname", email: "" },
+    },
+    usernames: {
+      newname: { uid: "user-1", username: "NewName", email: "" },
+    },
+  });
+
+  await releaseUsername({
+    db,
+    user: { uid: "user-1" },
+    username: "newname",
+    restoreUsername: "OldName",
+    restoreEmail: "old@example.com",
+    createServerTimestamp: () => SERVER_TIMESTAMP,
+  });
+
+  assert.equal(db.getDocument("usernames", "newname"), undefined);
+  assert.equal(db.getDocument("usernames", "oldname").uid, "user-1");
+  assert.equal(db.getDocument("usernames", "oldname").email, "old@example.com");
+  assert.equal(db.getDocument("users", "user-1").username, "OldName");
+});
+
+test("claimUsername refuses names that can look like another user's name", async () => {
+  const db = createFakeDb({ users: {}, usernames: {} });
+
+  for (const username of [
+    "аlice", // Cyrillic а
+    "alice​", // zero-width space
+    "ａlice", // fullwidth a
+    "al‮ice", // right-to-left override
+    "alice  smith", // two spaces
+    "alice smith", // no-break space
+    "ali<ce>",
+  ]) {
+    await assert.rejects(
+      claimUsername({
+        db,
+        user: { uid: "user-1" },
+        username,
+        email: "",
+        isAnonymous: false,
+        createServerTimestamp: () => SERVER_TIMESTAMP,
+      }),
+      /Latin letters/,
+      JSON.stringify(username)
+    );
+  }
+});
+
+test("claimUsername accepts English and Turkish names", async () => {
+  for (const username of ["Alice", "Ömer Çağlar", "İlker_99", "şule.k", "ığdır-1"]) {
+    const db = createFakeDb({ users: {}, usernames: {} });
+    await claimUsername({
+      db,
+      user: { uid: "user-1" },
+      username,
+      email: "",
+      isAnonymous: false,
+      createServerTimestamp: () => SERVER_TIMESTAMP,
+    });
+    assert.equal(db.getDocument("users", "user-1").username, username);
+  }
+});
+
+test("releaseUsername does not register a look-alike name", async () => {
+  const db = createFakeDb({
+    users: { mallory: { username: "Mallory2", usernameNormalized: "mallory2", email: "" } },
+    usernames: { mallory2: { uid: "mallory", username: "Mallory2", email: "" } },
+  });
+
+  await releaseUsername({
+    db,
+    user: { uid: "mallory" },
+    username: "mallory2",
+    restoreUsername: "аlice",
+    createServerTimestamp: () => SERVER_TIMESTAMP,
+  });
+
+  assert.equal(db.getDocument("usernames", "аlice"), undefined);
+  assert.equal(db.getDocument("users", "mallory").username, "Mallory2");
+});

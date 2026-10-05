@@ -10,6 +10,15 @@ try {
   };
 }
 
+// The first username AuthModelDependencies.defaultUserData writes, one pair per app language
+// (auth.placeholder.guestUser / auth.placeholder.user). firestore.rules isPlaceholderUsername holds
+// the same list; firestoreRulesStatic.test.js fails when the two drift apart.
+const PLACEHOLDER_USERNAMES = Object.freeze(["Guest User", "User", "Misafir Kullanıcı", "Kullanıcı"]);
+
+function isPlaceholderUsername(username) {
+  return PLACEHOLDER_USERNAMES.includes(username);
+}
+
 function normalizeUsername(username) {
   return String(username || "").trim().toLowerCase();
 }
@@ -30,6 +39,30 @@ function validateNormalizedUsername(normalizedUsername) {
   if (normalizedUsername.length > 64) {
     throw new HttpsError("invalid-argument", "Username is too long.");
   }
+
+  // Every new account shows a placeholder, so nobody may own one.
+  if (PLACEHOLDER_USERNAMES.some((placeholder) => normalizeUsername(placeholder) === normalizedUsername)) {
+    throw new HttpsError("invalid-argument", "This username is reserved.");
+  }
+}
+
+// New names only: Latin letters (which covers English and Turkish), ASCII digits, single spaces,
+// ".", "_" and "-". Other scripts, invisible format characters and compatibility forms are what
+// let one name look like another ("аlice" with a Cyrillic а, "alice\u200B", a fullwidth "ａlice").
+// Existing names are not re-checked, so resolveUsername and releaseUsername keep working for them.
+const CLAIMABLE_USERNAME = /^[\p{Script=Latin}0-9._-]+(?: [\p{Script=Latin}0-9._-]+)*$/u;
+
+function isClaimableUsername(displayUsername) {
+  return displayUsername.normalize("NFKC") === displayUsername && CLAIMABLE_USERNAME.test(displayUsername);
+}
+
+function validateClaimableUsername(displayUsername) {
+  if (!isClaimableUsername(displayUsername)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Usernames may use Latin letters, digits, single spaces, '.', '_' and '-'."
+    );
+  }
 }
 
 async function claimUsername({
@@ -47,6 +80,7 @@ async function claimUsername({
   const displayUsername = cleanedUsername(username);
   const normalizedUsername = normalizeUsername(displayUsername);
   validateNormalizedUsername(normalizedUsername);
+  validateClaimableUsername(displayUsername);
 
   const now = createServerTimestamp();
   const userRef = db.collection("users").doc(user.uid);
@@ -156,18 +190,47 @@ async function releaseUsername({
   const userRef = db.collection("users").doc(user.uid);
   const now = createServerTimestamp();
 
+  const cleanedRestoreUsername = cleanedUsername(restoreUsername);
+  const normalizedRestoreUsername = normalizeUsername(cleanedRestoreUsername);
+  // The client chooses restoreUsername, so it may only bring back a placeholder or a name that is
+  // free or already the caller's. Anything else would let a caller wear another user's name.
+  const restoreRef = cleanedRestoreUsername
+    && !isPlaceholderUsername(cleanedRestoreUsername)
+    && normalizedRestoreUsername !== normalizedUsername
+    && !normalizedRestoreUsername.includes("/")
+    && normalizedRestoreUsername.length <= 64
+    && isClaimableUsername(cleanedRestoreUsername)
+    ? db.collection("usernames").doc(normalizedRestoreUsername)
+    : null;
+
   await db.runTransaction(async (transaction) => {
     const usernameSnapshot = await transaction.get(usernameRef);
+    const restoreSnapshot = restoreRef ? await transaction.get(restoreRef) : null;
     const usernameData = usernameSnapshot.data() || {};
     if (usernameSnapshot.exists && usernameData.uid === user.uid) {
       transaction.delete(usernameRef);
     }
 
     const restorePatch = { updatedAt: now };
-    const cleanedRestoreUsername = cleanedUsername(restoreUsername);
-    if (cleanedRestoreUsername) {
+    if (cleanedRestoreUsername && isPlaceholderUsername(cleanedRestoreUsername)) {
       restorePatch.username = cleanedRestoreUsername;
-      restorePatch.usernameNormalized = normalizeUsername(cleanedRestoreUsername);
+      restorePatch.usernameNormalized = normalizedRestoreUsername;
+    } else if (restoreSnapshot && (!restoreSnapshot.exists || restoreSnapshot.data()?.uid === user.uid)) {
+      restorePatch.username = cleanedRestoreUsername;
+      restorePatch.usernameNormalized = normalizedRestoreUsername;
+      transaction.set(
+        restoreRef,
+        {
+          uid: user.uid,
+          username: cleanedRestoreUsername,
+          usernameNormalized: normalizedRestoreUsername,
+          ...(typeof restoreEmail === "string" ? { email: restoreEmail.trim() } : {}),
+          ...(typeof restoreIsAnonymous === "boolean" ? { isAnonymous: restoreIsAnonymous } : {}),
+          updatedAt: now,
+          createdAt: restoreSnapshot.exists ? restoreSnapshot.data()?.createdAt || now : now,
+        },
+        { merge: true }
+      );
     }
 
     if (typeof restoreEmail === "string") {
@@ -185,6 +248,7 @@ async function releaseUsername({
 }
 
 module.exports = {
+  PLACEHOLDER_USERNAMES,
   claimUsername,
   cleanedUsername,
   normalizeUsername,
