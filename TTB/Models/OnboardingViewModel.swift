@@ -40,6 +40,11 @@ final class OnboardingViewModel: ObservableObject {
     hasAcceptedLegal && !isCompleting
   }
 
+  /// Legal acceptance only gates the final step; earlier steps just advance.
+  var isPrimaryActionEnabled: Bool {
+    currentStep.isFinalStep ? canComplete : !isCompleting
+  }
+
   var termsURL: URL? {
     AppConfig.termsURL
   }
