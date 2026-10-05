@@ -237,7 +237,7 @@ struct OnboardingFlowView: View {
         title: viewModel.primaryButtonTitle,
         isLoading: viewModel.isCompleting,
         loadingAccessibilityLabel: String(localized: "onboarding.primaryButton.final"),
-        isEnabled: viewModel.canComplete
+        isEnabled: viewModel.isPrimaryActionEnabled
       ) {
         handlePrimaryAction()
       }
