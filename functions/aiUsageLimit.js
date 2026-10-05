@@ -8,6 +8,12 @@ const { HttpsError } = require("firebase-functions/v2/https");
 
 const AI_QUERY_GROUP = "aiQuery";
 const QUICK_ANSWER_GROUP = "quickAnswers";
+// Not AI, but the same per-uid daily counter bounds them. Pexels has an hourly quota shared by
+// every user, each saved image is a Storage object, and each share fans out to one read per
+// listed question.
+const IMAGE_SUGGESTION_GROUP = "imageSuggestions";
+const IMAGE_SAVE_GROUP = "answerImageSaves";
+const SHARE_WRITE_GROUP = "shareWrites";
 
 // Server-owned; no client can read or write it. See the aiUsageDaily rule in firestore.rules.
 const USAGE_COLLECTION = "aiUsageDaily";
@@ -20,6 +26,9 @@ const USAGE_COLLECTION = "aiUsageDaily";
 const DAILY_LIMITS = {
   [AI_QUERY_GROUP]: { anonymous: 5, permanent: 20 },
   [QUICK_ANSWER_GROUP]: { anonymous: 60, permanent: 200 },
+  [IMAGE_SUGGESTION_GROUP]: { anonymous: 30, permanent: 100 },
+  [IMAGE_SAVE_GROUP]: { anonymous: 15, permanent: 60 },
+  [SHARE_WRITE_GROUP]: { anonymous: 5, permanent: 50 },
 };
 
 /**
@@ -55,7 +64,7 @@ async function consumeDailyQuota({ db, uid, group, isAnonymous, now }) {
     const used = typeof counts[group] === "number" ? counts[group] : 0;
 
     if (used >= limit) {
-      throw new HttpsError("resource-exhausted", "Daily AI limit reached.", {
+      throw new HttpsError("resource-exhausted", "Daily limit reached.", {
         reason: "daily-limit",
         group,
         limit,
@@ -99,6 +108,9 @@ function withDailyQuota({ db, group, now = () => new Date() }, handler) {
 module.exports = {
   AI_QUERY_GROUP,
   DAILY_LIMITS,
+  IMAGE_SAVE_GROUP,
+  IMAGE_SUGGESTION_GROUP,
+  SHARE_WRITE_GROUP,
   QUICK_ANSWER_GROUP,
   USAGE_COLLECTION,
   consumeDailyQuota,

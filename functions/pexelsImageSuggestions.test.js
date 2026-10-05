@@ -112,6 +112,7 @@ test("suggestAnswerImages maps Pexels failures to unavailable", async () => {
 test("saveSuggestedAnswerImage writes selected Pexels image to the answer slot path", async () => {
   const savedFiles = [];
   const result = await saveSuggestedAnswerImage({
+    db: questionDb(),
     user: { uid: "user-1" },
     data: {
       questionId: "question-1",
@@ -168,9 +169,95 @@ test("saveSuggestedAnswerImage rejects non-Pexels image URLs", async () => {
           fullSizeURL: "https://example.com/image.jpg",
         },
       },
+      db: questionDb(),
       bucket: { name: "bucket", file: () => ({ save: async () => {} }) },
       fetchImpl: async () => ({ ok: true }),
     }),
     /Only Pexels image URLs/
+  );
+});
+
+function questionDb(existingIds = ["question-1"]) {
+  return {
+    collection(name) {
+      assert.equal(name, "questions");
+      return {
+        doc(id) {
+          return { get: async () => ({ exists: existingIds.includes(id) }) };
+        },
+      };
+    },
+  };
+}
+
+function saveRequest(overrides = {}) {
+  return {
+    db: questionDb(),
+    user: { uid: "user-1" },
+    data: {
+      questionId: "question-1",
+      slotIndex: 0,
+      suggestion: {
+        photoId: "123",
+        fullSizeURL: "https://images.pexels.com/photos/123/pexels-photo-123.jpeg",
+      },
+    },
+    bucket: { name: "bucket", file: () => ({ save: async () => {} }) },
+    fetchImpl: async () => ({
+      ok: true,
+      headers: { get: () => "image/jpeg" },
+      arrayBuffer: async () => Buffer.from("image-bytes"),
+    }),
+    ...overrides,
+  };
+}
+
+test("saveSuggestedAnswerImage refuses a question that does not exist", async () => {
+  await assert.rejects(
+    () => saveSuggestedAnswerImage(saveRequest({ db: questionDb([]) })),
+    /Question not found/
+  );
+});
+
+test("saveSuggestedAnswerImage refuses an id that walks into another path", async () => {
+  const request = saveRequest();
+  request.data.questionId = "question-1/userAnswers/victim";
+  await assert.rejects(() => saveSuggestedAnswerImage(request), /questionId is required/);
+});
+
+test("saveSuggestedAnswerImage refuses a redirect away from Pexels", async () => {
+  await assert.rejects(
+    () => saveSuggestedAnswerImage(saveRequest({
+      fetchImpl: async () => ({
+        ok: true,
+        url: "https://attacker.example/big.jpg",
+        headers: { get: () => "image/jpeg" },
+        arrayBuffer: async () => Buffer.from("image-bytes"),
+      }),
+    })),
+    /Only Pexels image URLs/
+  );
+});
+
+test("saveSuggestedAnswerImage refuses SVG and oversized bodies", async () => {
+  await assert.rejects(
+    () => saveSuggestedAnswerImage(saveRequest({
+      fetchImpl: async () => ({
+        ok: true,
+        headers: { get: (name) => (name === "content-type" ? "image/svg+xml" : null) },
+        arrayBuffer: async () => Buffer.from("<svg/>"),
+      }),
+    })),
+    /not an image/
+  );
+  await assert.rejects(
+    () => saveSuggestedAnswerImage(saveRequest({
+      fetchImpl: async () => ({
+        ok: true,
+        headers: { get: (name) => (name === "content-type" ? "image/jpeg" : null) },
+        arrayBuffer: async () => Buffer.alloc(5 * 1024 * 1024 + 1),
+      }),
+    })),
+    /size is invalid/
   );
 });

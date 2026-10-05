@@ -224,8 +224,13 @@ async function makeProviderCall({
   return content.trim();
 }
 
+// The provider's own error text can name models, accounts or quotas, so callers get a fixed
+// message; the reason and status still tell the client what kind of failure it was.
 function mapProviderHTTPError(status, payload) {
-  const message = payload?.error?.message || "AI provider request failed.";
+  const message = "AI provider request failed.";
+  if (payload?.error?.message) {
+    console.warn("AI provider error", { status, message: payload.error.message });
+  }
   if (status === 401) {
     return new HttpsError("unauthenticated", "AI provider key is invalid.", { reason: "api-key-invalid" });
   }
