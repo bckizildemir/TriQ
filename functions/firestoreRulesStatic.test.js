@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
+const { PLACEHOLDER_USERNAMES } = require("./usernameRegistry");
 
 const rulesPath = path.join(__dirname, "..", "firestore.rules");
 
@@ -69,4 +70,31 @@ test("question list recipient collection group reads do not require document ID 
   assert.doesNotMatch(collectionGroupRule[0], /request\.auth\.uid == recipientId/);
   assert.doesNotMatch(collectionGroupRule[0], /parentShare\(\)/);
   assert.doesNotMatch(collectionGroupRule[0], /get\(/);
+});
+
+test("every localized username placeholder is accepted by the users rules", () => {
+  // AuthModelDependencies.defaultUserData writes these strings as the first username, and the
+  // users create rule accepts only the names in isPlaceholderUsername. A language added to the
+  // app without a rules update would block every sign-up in that language.
+  const rules = compact(fs.readFileSync(rulesPath, "utf8"));
+  const placeholderList = rules.match(/function isPlaceholderUsername\(name\) \{ return name in \[(.*?)\]; \}/);
+  assert.ok(placeholderList, "isPlaceholderUsername exists");
+  const accepted = [...placeholderList[1].matchAll(/'([^']*)'/g)].map((match) => match[1]);
+  // claimUsername reserves the same names, so nobody can own a name every new account shows.
+  assert.deepEqual([...PLACEHOLDER_USERNAMES].sort(), [...accepted].sort());
+
+  const catalog = JSON.parse(
+    fs.readFileSync(path.join(__dirname, "..", "TTB", "Localizable.xcstrings"), "utf8")
+  );
+  for (const key of ["auth.placeholder.guestUser", "auth.placeholder.user"]) {
+    const localizations = catalog.strings[key]?.localizations ?? {};
+    assert.ok(Object.keys(localizations).length > 0, `${key} has localizations`);
+    for (const [language, entry] of Object.entries(localizations)) {
+      const value = entry.stringUnit.value;
+      assert.ok(
+        accepted.includes(value),
+        `${key} (${language}) "${value}" is missing from isPlaceholderUsername in firestore.rules`
+      );
+    }
+  }
 });

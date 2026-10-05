@@ -73,6 +73,7 @@ functions/node_modules/
 
 # Local debug logs
 firebase-debug.log
+firestore-debug.log
 /firepit-log.txt
 
 # Local Xcode build outputs
