@@ -1,0 +1,1135 @@
+[
+  {
+    "contentId": "daily-01",
+    "text": "Bugün seni en çok mutlu eden şey neydi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün seni en çok mutlu eden şey neydi?",
+      "en": "What made you happiest today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-02",
+    "text": "Bugün şükran duyduğun üç şeyi söyler misin?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün şükran duyduğun üç şeyi söyler misin?",
+      "en": "Can you name three things you are grateful for today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-03",
+    "text": "Bugün öğrendiğin en ilginç şey neydi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün öğrendiğin en ilginç şey neydi?",
+      "en": "What was the most interesting thing you learned today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-04",
+    "text": "Bugün kendinle gurur duyduğun bir an oldu mu?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün kendinle gurur duyduğun bir an oldu mu?",
+      "en": "Was there a moment today that made you feel proud of yourself?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-05",
+    "text": "Bugün enerjini en çok ne tüketti?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün enerjini en çok ne tüketti?",
+      "en": "What consumed your energy the most today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-06",
+    "text": "Bugün seni düşündüren bir şey var mıydı?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün seni düşündüren bir şey var mıydı?",
+      "en": "Was there anything that made you think today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-07",
+    "text": "Sabah uyandığında aklına ilk ne geldi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Sabah uyandığında aklına ilk ne geldi?",
+      "en": "What was the first thing that came to your mind when you woke up in the morning?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-08",
+    "text": "Bugün birisiyle güzel bir an yaşadın mı?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün birisiyle güzel bir an yaşadın mı?",
+      "en": "Did you have a nice moment with someone today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-09",
+    "text": "Bugün kendine ayırdığın zaman nasıl geçti?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün kendine ayırdığın zaman nasıl geçti?",
+      "en": "How was your time for yourself today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-10",
+    "text": "Bu gün bittiğinde nasıl bir his taşıyorsun?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bu gün bittiğinde nasıl bir his taşıyorsun?",
+      "en": "How do you feel when this day is over?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-11",
+    "text": "Bugün bir şeyi yarım bıraktıysan, neden?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün bir şeyi yarım bıraktıysan, neden?",
+      "en": "If you left something unfinished today, why?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-12",
+    "text": "Bugün sana iyi gelen küçük bir şey neydi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün sana iyi gelen küçük bir şey neydi?",
+      "en": "What was one little thing that did you good today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-13",
+    "text": "Bugün kafanı meşgul eden en büyük endişe ne?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün kafanı meşgul eden en büyük endişe ne?",
+      "en": "What's the biggest worry on your mind today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-14",
+    "text": "Bugün beklentilerinin dışında olan bir şey oldu mu?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün beklentilerinin dışında olan bir şey oldu mu?",
+      "en": "Did anything happen today that was beyond your expectations?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-15",
+    "text": "Yarın yapmak istediğin bir şey var mı?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Yarın yapmak istediğin bir şey var mı?",
+      "en": "Is there anything you want to do tomorrow?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-16",
+    "text": "Bugün gülümsemen için ne oldu?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün gülümsemen için ne oldu?",
+      "en": "What happened to make you smile today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-17",
+    "text": "Şu an nasıl hissediyorsun, bunu ne zaman en son fark etmiştin?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Şu an nasıl hissediyorsun, bunu ne zaman en son fark etmiştin?",
+      "en": "How are you feeling right now, when was the last time you noticed this?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-18",
+    "text": "Bugün ne için zaman dilimlediysen, gerçekten değdi mi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün ne için zaman dilimlediysen, gerçekten değdi mi?",
+      "en": "Whatever you spent time on today, was it really worth it?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-01",
+    "text": "Hayatında en çok gurur duyduğun başarın ne?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Hayatında en çok gurur duyduğun başarın ne?",
+      "en": "What is the accomplishment in your life that you are most proud of?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-02",
+    "text": "Kendini en iyi anlatan üç sıfat nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Kendini en iyi anlatan üç sıfat nedir?",
+      "en": "What are the three adjectives that best describe you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-03",
+    "text": "Geçen yıla kıyasla nasıl biri oldun?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Geçen yıla kıyasla nasıl biri oldun?",
+      "en": "How have you become compared to last year?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-04",
+    "text": "Seni en çok motive eden şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Seni en çok motive eden şey nedir?",
+      "en": "What motivates you the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-05",
+    "text": "Korkularının seni hangi konularda engellediğini düşünüyorsun?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Korkularının seni hangi konularda engellediğini düşünüyorsun?",
+      "en": "In what areas do you think your fears hinder you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-06",
+    "text": "Kendinde en çok değiştirmek istediğin şey ne?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Kendinde en çok değiştirmek istediğin şey ne?",
+      "en": "What do you want to change most about yourself?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-07",
+    "text": "Başkalarına kolay verip kendinle zorlandığın bir tavsiye var mı?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Başkalarına kolay verip kendinle zorlandığın bir tavsiye var mı?",
+      "en": "Is there any advice that you find easy to give to others but difficult for yourself?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-08",
+    "text": "Hangisi seni daha çok tanımlar: içgüdülerin mi yoksa planların mı?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Hangisi seni daha çok tanımlar: içgüdülerin mi yoksa planların mı?",
+      "en": "Which defines you more: your instincts or your plans?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-09",
+    "text": "Seni en çok tatmin eden şey maddi mi manevi mi?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Seni en çok tatmin eden şey maddi mi manevi mi?",
+      "en": "What satisfies you the most, material or spiritual?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-10",
+    "text": "Beş yıl önce olmayıp şimdi olduğun bir şey var mı?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Beş yıl önce olmayıp şimdi olduğun bir şey var mı?",
+      "en": "Is there anything you are now that you weren't five years ago?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-11",
+    "text": "Seni en çok zorlayan duygusal durum ne?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Seni en çok zorlayan duygusal durum ne?",
+      "en": "What is the emotional situation that challenges you the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-12",
+    "text": "Kendin için tuttuğun ama başarmakta zorlandığın bir alışkanlık ne?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Kendin için tuttuğun ama başarmakta zorlandığın bir alışkanlık ne?",
+      "en": "What's a habit you've kept for yourself but are having trouble achieving?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-13",
+    "text": "Başkalarının seni nasıl gördüğünü merak ediyor musun?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Başkalarının seni nasıl gördüğünü merak ediyor musun?",
+      "en": "Do you wonder how others see you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-14",
+    "text": "Hayatında hangi alanlarda daha cesur olmak istiyorsun?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Hayatında hangi alanlarda daha cesur olmak istiyorsun?",
+      "en": "In what areas of your life do you want to be more courageous?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-15",
+    "text": "Geçmişindeki hangi kararından hâlâ ders çıkarıyorsun?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Geçmişindeki hangi kararından hâlâ ders çıkarıyorsun?",
+      "en": "What decision from your past do you still learn from?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-01",
+    "text": "Bir ilişkide seni gerçekten mutlu eden ne?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Bir ilişkide seni gerçekten mutlu eden ne?",
+      "en": "What makes you truly happy in a relationship?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-02",
+    "text": "Hayatındaki en önemli ilişkiyi nasıl besleyebilirsin?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Hayatındaki en önemli ilişkiyi nasıl besleyebilirsin?",
+      "en": "How can you nurture the most important relationship in your life?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-03",
+    "text": "Bir insanda güven inşa eden ne?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Bir insanda güven inşa eden ne?",
+      "en": "What builds trust in a person?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-04",
+    "text": "Son zamanlarda birine minnetini yeterince ifade edebildin mi?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Son zamanlarda birine minnetini yeterince ifade edebildin mi?",
+      "en": "Have you been able to adequately express your gratitude to someone lately?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-05",
+    "text": "İlişkilerinde en çok neyi vermek istersin: zaman mı, anlayış mı, yoksa başka bir şey mi?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "İlişkilerinde en çok neyi vermek istersin: zaman mı, anlayış mı, yoksa başka bir şey mi?",
+      "en": "What do you want to give most in your relationships: time, understanding, or something else?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-06",
+    "text": "Birinden özür dilemekte zorlandığın bir durum oldu mu?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Birinden özür dilemekte zorlandığın bir durum oldu mu?",
+      "en": "Have you ever had a hard time apologizing to someone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-07",
+    "text": "Uzaklaştığın biriyle tekrar bağlantı kurmak ister misin?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Uzaklaştığın biriyle tekrar bağlantı kurmak ister misin?",
+      "en": "Want to reconnect with someone you've drifted away from?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-08",
+    "text": "Sınır koymanın zor olduğu bir ilişki türü var mı?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Sınır koymanın zor olduğu bir ilişki türü var mı?",
+      "en": "Is there a type of relationship where it is difficult to set boundaries?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-09",
+    "text": "Sevdiklerine varlığını en iyi ne şekilde gösteriyorsun?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Sevdiklerine varlığını en iyi ne şekilde gösteriyorsun?",
+      "en": "How do you best show your presence to your loved ones?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-10",
+    "text": "Bir arkadaşından öğrendiğin en değerli şey ne?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Bir arkadaşından öğrendiğin en değerli şey ne?",
+      "en": "What is the most valuable thing you learned from a friend?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-11",
+    "text": "Çatışmayı çözme biçimin ilişkilerini nasıl şekillendiriyor?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Çatışmayı çözme biçimin ilişkilerini nasıl şekillendiriyor?",
+      "en": "How does the way you resolve conflict shape your relationships?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-12",
+    "text": "Aile bağların sana ne kazandırıyor, ne götürüyor?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Aile bağların sana ne kazandırıyor, ne götürüyor?",
+      "en": "What do your family ties bring and take away from you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-13",
+    "text": "Son bir ayda biriyle gerçekten derinlemesine konuşabildin mi?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Son bir ayda biriyle gerçekten derinlemesine konuşabildin mi?",
+      "en": "Have you been able to really talk in depth with someone in the last month?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-14",
+    "text": "Seni gerçekten anlayan birinin varlığı hayatında nasıl bir fark yaratıyor?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Seni gerçekten anlayan birinin varlığı hayatında nasıl bir fark yaratıyor?",
+      "en": "What difference does having someone who truly understands you make in your life?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-01",
+    "text": "Kariyer yolunda şu an nerede olduğunu düşünüyorsun?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Kariyer yolunda şu an nerede olduğunu düşünüyorsun?",
+      "en": "Where do you think you are now in your career path?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-02",
+    "text": "İşinde seni en çok tatmin eden şey ne?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "İşinde seni en çok tatmin eden şey ne?",
+      "en": "What satisfies you most in your job?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-03",
+    "text": "Bir sonraki mesleki adımın ne olmasını istiyorsun?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Bir sonraki mesleki adımın ne olmasını istiyorsun?",
+      "en": "What do you want your next professional step to be?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-04",
+    "text": "İş hayatında hangi becerin seni en çok öne çıkarıyor?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "İş hayatında hangi becerin seni en çok öne çıkarıyor?",
+      "en": "Which skill makes you stand out the most in business life?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-05",
+    "text": "Kariyerinde almak isteyip ertelediklerin var mı?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Kariyerinde almak isteyip ertelediklerin var mı?",
+      "en": "Are there any things you want to pursue in your career that you have postponed?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-06",
+    "text": "İşin seni duygusal olarak nasıl etkiliyor?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "İşin seni duygusal olarak nasıl etkiliyor?",
+      "en": "How does your work affect you emotionally?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-07",
+    "text": "Çalışırken en iyi performansını ne zaman gösteriyorsun?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Çalışırken en iyi performansını ne zaman gösteriyorsun?",
+      "en": "When are you at your best while working?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-08",
+    "text": "Bugün mesleğinde seni zorlayan ne oldu?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Bugün mesleğinde seni zorlayan ne oldu?",
+      "en": "What challenges you in your profession today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-09",
+    "text": "İş-yaşam dengesini gerçekten sağlayabiliyor musun?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "İş-yaşam dengesini gerçekten sağlayabiliyor musun?",
+      "en": "Can you really achieve work-life balance?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-10",
+    "text": "Bir mentor ya da rol modelin var mı, bu seni nasıl etkiliyor?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Bir mentor ya da rol modelin var mı, bu seni nasıl etkiliyor?",
+      "en": "Do you have a mentor or role model, how does that influence you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-11",
+    "text": "Mesleki olarak en çok geliştirmek istediğin alan hangisi?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Mesleki olarak en çok geliştirmek istediğin alan hangisi?",
+      "en": "Which area do you want to improve most professionally?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-12",
+    "text": "Kariyerinde bir hata yaptığında bunu nasıl yönetiyorsun?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Kariyerinde bir hata yaptığında bunu nasıl yönetiyorsun?",
+      "en": "How do you manage when you make a mistake in your career?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-13",
+    "text": "Çalıştığın ortam seni besliyor mu yoksa yıpratıyor mu?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Çalıştığın ortam seni besliyor mu yoksa yıpratıyor mu?",
+      "en": "Does the environment you work in nourish you or wear you out?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-14",
+    "text": "Hayalindeki iş ortamı nasıl olurdu?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Hayalindeki iş ortamı nasıl olurdu?",
+      "en": "What would your dream work environment be like?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-01",
+    "text": "Bugün bedenine nasıl davrandın?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Bugün bedenine nasıl davrandın?",
+      "en": "How did you treat your body today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-02",
+    "text": "Enerji seviyeni etkileyen en büyük etken ne?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Enerji seviyeni etkileyen en büyük etken ne?",
+      "en": "What is the biggest factor affecting your energy level?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-03",
+    "text": "Ruh sağlığına nasıl zaman ayırıyorsun?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Ruh sağlığına nasıl zaman ayırıyorsun?",
+      "en": "How do you make time for your mental health?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-04",
+    "text": "Stres altındayken vücudun nasıl tepki veriyor?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Stres altındayken vücudun nasıl tepki veriyor?",
+      "en": "How does your body react when you're under stress?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-05",
+    "text": "Uyku düzenin genel sağlığını nasıl etkiliyor?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Uyku düzenin genel sağlığını nasıl etkiliyor?",
+      "en": "How does your sleep pattern affect your overall health?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-06",
+    "text": "Bedenini dinlemek ne zaman zorlaşıyor?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Bedenini dinlemek ne zaman zorlaşıyor?",
+      "en": "When does it become difficult to listen to your body?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-07",
+    "text": "Kendin için en son ne zaman gerçekten dinlendin?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Kendin için en son ne zaman gerçekten dinlendin?",
+      "en": "When was the last time you truly listened to yourself?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-08",
+    "text": "Seni en çok rahatlatmaya yarayan şey ne?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Seni en çok rahatlatmaya yarayan şey ne?",
+      "en": "What is the thing that relaxes you the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-09",
+    "text": "Sağlığına öncelik vermekte zorlandığın dönemler ne zaman oluyor?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Sağlığına öncelik vermekte zorlandığın dönemler ne zaman oluyor?",
+      "en": "When are there times when you find it difficult to prioritize your health?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-10",
+    "text": "Bedeninin sana vermek istediği mesaj ne?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Bedeninin sana vermek istediği mesaj ne?",
+      "en": "What message does your body want to give you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-11",
+    "text": "Günlük hareketlilik açısından kendinle barışık mısın?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Günlük hareketlilik açısından kendinle barışık mısın?",
+      "en": "Are you at peace with yourself in terms of daily mobility?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-12",
+    "text": "Beslenme alışkanlıklarında en tatmin olduğun nokta ne?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Beslenme alışkanlıklarında en tatmin olduğun nokta ne?",
+      "en": "What are you most satisfied with about your eating habits?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-13",
+    "text": "Sağlıklı bir alışkanlığı sürdürmeni kolaylaştıran şey ne?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Sağlıklı bir alışkanlığı sürdürmeni kolaylaştıran şey ne?",
+      "en": "What makes it easier for you to maintain a healthy habit?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-14",
+    "text": "Kendine karşı en nazik olduğun an ne zaman?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Kendine karşı en nazik olduğun an ne zaman?",
+      "en": "When are you the kindest to yourself?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-01",
+    "text": "Bu yıl gerçekten ulaşmak istediğin hedef ne?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Bu yıl gerçekten ulaşmak istediğin hedef ne?",
+      "en": "What goal do you really want to achieve this year?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-02",
+    "text": "Hedeflerinle ilgili seni en çok korkutan ne?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Hedeflerinle ilgili seni en çok korkutan ne?",
+      "en": "What scares you most about your goals?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-03",
+    "text": "Bugün hedefine doğru attığın en küçük adım neydi?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Bugün hedefine doğru attığın en küçük adım neydi?",
+      "en": "What was the smallest step you took towards your goal today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-04",
+    "text": "Bir hedefi yarım bıraktıysak bunun arkasında ne yatıyor genellikle?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Bir hedefi yarım bıraktıysak bunun arkasında ne yatıyor genellikle?",
+      "en": "If we leave a goal unfinished, what usually lies behind it?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-05",
+    "text": "Beş yıl sonra nasıl bir hayat yaşamak istiyorsun?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Beş yıl sonra nasıl bir hayat yaşamak istiyorsun?",
+      "en": "What kind of life do you want to live in five years?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-06",
+    "text": "Bir hedef için başkasının onayına ihtiyaç duyuyor musun?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Bir hedef için başkasının onayına ihtiyaç duyuyor musun?",
+      "en": "Do you need someone else's approval for a goal?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-07",
+    "text": "Hangi hedefinle ilgili hâlâ kararlı hissediyorsun?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Hangi hedefinle ilgili hâlâ kararlı hissediyorsun?",
+      "en": "What goal do you still feel determined about?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-08",
+    "text": "Başarmanın nasıl bir his olduğunu son hissettiğin an ne zaman?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Başarmanın nasıl bir his olduğunu son hissettiğin an ne zaman?",
+      "en": "When was the last time you felt what success felt like?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-09",
+    "text": "Hayatındaki öncelikler şu an hedeflerin ile örtüşüyor mu?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Hayatındaki öncelikler şu an hedeflerin ile örtüşüyor mu?",
+      "en": "Do your life priorities align with your goals right now?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-10",
+    "text": "Uzun vadeli hedefin için kısa vadede ne feda ediyorsun?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Uzun vadeli hedefin için kısa vadede ne feda ediyorsun?",
+      "en": "What are you sacrificing in the short term for your long term goal?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-11",
+    "text": "Hedefini başkasına anlatmak onu güçlendiriyor mu zayıflatıyor mu?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Hedefini başkasına anlatmak onu güçlendiriyor mu zayıflatıyor mu?",
+      "en": "Does explaining your goal to someone else strengthen or weaken it?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-12",
+    "text": "Geçmişte bir hedefe ulaşmanı sağlayan en önemli unsur neydi?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Geçmişte bir hedefe ulaşmanı sağlayan en önemli unsur neydi?",
+      "en": "What was the most important element that helped you achieve a goal in the past?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-13",
+    "text": "Hayalini kurduğun ama başlamadığın bir şey var mı, neden?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Hayalini kurduğun ama başlamadığın bir şey var mı, neden?",
+      "en": "Is there anything you've dreamed of but haven't started, why?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-14",
+    "text": "Hedeflerinden vazgeçmek yerine onları yeniden çerçevelediğin oldu mu?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Hedeflerinden vazgeçmek yerine onları yeniden çerçevelediğin oldu mu?",
+      "en": "Have you ever reframed your goals instead of giving up on them?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-01",
+    "text": "Yaratıcılığını en çok ne besliyor?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Yaratıcılığını en çok ne besliyor?",
+      "en": "What fuels your creativity the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-02",
+    "text": "Son ürettiğin şeyin sana ne hissettirdi?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Son ürettiğin şeyin sana ne hissettirdi?",
+      "en": "How did your last creation make you feel?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-03",
+    "text": "Yaratıcı bloğu aşmak için ne yapıyorsun?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Yaratıcı bloğu aşmak için ne yapıyorsun?",
+      "en": "What do you do to overcome creative block?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-04",
+    "text": "Bir şey yaratırken en çok neyi elden bırakmakta zorlanıyorsun?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Bir şey yaratırken en çok neyi elden bırakmakta zorlanıyorsun?",
+      "en": "What do you find most difficult to let go of when creating something?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-05",
+    "text": "Sanat ya da ifade biçimleri sana ne ifade ediyor?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Sanat ya da ifade biçimleri sana ne ifade ediyor?",
+      "en": "What do art or forms of expression mean to you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-06",
+    "text": "En son ne zaman aklındaki bir fikri dışa vurabildin?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "En son ne zaman aklındaki bir fikri dışa vurabildin?",
+      "en": "When was the last time you were able to express an idea in your mind?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-07",
+    "text": "Denemekten çekindiğin bir ifade biçimi var mı?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Denemekten çekindiğin bir ifade biçimi var mı?",
+      "en": "Is there a form of expression that you are hesitant to try?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-08",
+    "text": "Yaratıcı süreçte başkalarının yorumu seni nasıl etkiliyor?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Yaratıcı süreçte başkalarının yorumu seni nasıl etkiliyor?",
+      "en": "How do others' comments influence you in the creative process?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-09",
+    "text": "Rutinin dışında yaratıcılığını tetikleyen ne oldu son zamanlarda?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Rutinin dışında yaratıcılığını tetikleyen ne oldu son zamanlarda?",
+      "en": "What has triggered your creativity lately, apart from routine?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-10",
+    "text": "Çocukken sevdiğin ama bıraktığın yaratıcı bir aktivite var mı?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Çocukken sevdiğin ama bıraktığın yaratıcı bir aktivite var mı?",
+      "en": "Is there a creative activity you loved as a child but abandoned?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-11",
+    "text": "Mükemmeliyetçiliğin yaratma sürecini engelliyor mu?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Mükemmeliyetçiliğin yaratma sürecini engelliyor mu?",
+      "en": "Is your perfectionism hindering the creative process?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-12",
+    "text": "Bir şey yaratırken en çok nerede takılıp kalıyorsun?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Bir şey yaratırken en çok nerede takılıp kalıyorsun?",
+      "en": "Where do you get stuck the most when creating something?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-13",
+    "text": "Yaratıcılık sana özgürlük mü verir, sorumluluk mu?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Yaratıcılık sana özgürlük mü verir, sorumluluk mu?",
+      "en": "Does creativity give you freedom or responsibility?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-14",
+    "text": "Yeni bir şey denemek için ne kadar cesarete ihtiyacın var?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Yeni bir şey denemek için ne kadar cesarete ihtiyacın var?",
+      "en": "How much courage do you need to try something new?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  }
+]

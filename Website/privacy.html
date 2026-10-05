@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TTB - Gizlilik Politikasi</title>
+    <meta name="theme-color" content="#F7F1E8">
+    <link rel="icon" href="/assets/launch-logo.png">
+    <style>
+      :root {
+        --paper: #f7f1e8;
+        --ink: #202124;
+        --muted: #65625d;
+        --line: #ddd4c7;
+        --accent: #326a5f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 1rem;
+        letter-spacing: 0;
+      }
+
+      main,
+      header,
+      footer {
+        width: min(760px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      header,
+      footer {
+        padding: 24px 0;
+      }
+
+      a {
+        color: var(--accent);
+        font-weight: 750;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      .brand img {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+      }
+
+      .notice {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgb(255 250 242 / 0.66);
+        color: var(--muted);
+      }
+
+      h1 {
+        margin: 34px 0 14px;
+        font-size: clamp(2.3rem, 12vw, 4.2rem);
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin: 32px 0 10px;
+        font-size: 1.25rem;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      footer {
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/">
+        <img src="/assets/launch-logo.png" alt="">
+        <strong>TTB</strong>
+      </a>
+    </header>
+    <main>
+      <p class="notice" data-i18n="notice">Bu metin yayın öncesi hazırlanmış hafif bir taslaktır. Nihai gizlilik politikası App Store yayını öncesi güncellenecektir.</p>
+      <h1 data-i18n="title">Gizlilik Politikası</h1>
+      <p data-i18n="intro">TTB, kişisel cevaplarını kısa ve düzenli tutmak için tasarlanır. Bu sayfa, beta döneminde temel gizlilik yaklaşımını açıklar.</p>
+
+      <h2 data-i18n="sectionDataTitle">Toplanan bilgiler</h2>
+      <p data-i18n="sectionDataBody">Uygulama; hesap bilgileri, verdiğin cevaplar, favoriler ve uygulama deneyimi için gerekli teknik verileri kullanabilir.</p>
+
+      <h2 data-i18n="sectionUseTitle">Kullanım amacı</h2>
+      <p data-i18n="sectionUseBody">Veriler; hesabını çalıştırmak, cevaplarını saklamak, favorilerini göstermek ve beta geri bildirimlerini değerlendirmek için kullanılır.</p>
+
+      <h2 data-i18n="sectionContactTitle">İletişim</h2>
+      <p>
+        <span data-i18n="sectionContactBody">Gizlilik soruları için mail gönderebilirsin:</span>
+        <a href="mailto:bckizildemir@icloud.com?subject=TTB%20Privacy">bckizildemir@icloud.com</a>
+      </p>
+    </main>
+    <footer>
+      <a href="/" data-i18n="home">Ana sayfa</a>
+    </footer>
+    <script>
+      const en = navigator.language && navigator.language.toLowerCase().startsWith("en");
+      const copy = {
+        notice: "This is a lightweight prelaunch draft. The final privacy policy will be updated before App Store release.",
+        title: "Privacy Policy",
+        intro: "TTB is designed to keep your personal answers short and organized. This page explains the basic privacy approach during beta.",
+        sectionDataTitle: "Information collected",
+        sectionDataBody: "The app may use account information, your answers, favorites, and technical data required for the app experience.",
+        sectionUseTitle: "How it is used",
+        sectionUseBody: "Data is used to run your account, store your answers, show favorites, and evaluate beta feedback.",
+        sectionContactTitle: "Contact",
+        sectionContactBody: "For privacy questions, email:",
+        home: "Home"
+      };
+      if (en) {
+        document.documentElement.lang = "en";
+        document.querySelectorAll("[data-i18n]").forEach((node) => {
+          const key = node.getAttribute("data-i18n");
+          if (copy[key]) node.textContent = copy[key];
+        });
+      }
+    </script>
+  </body>
+</html>

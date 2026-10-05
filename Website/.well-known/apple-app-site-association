@@ -1,0 +1,26 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "A355549DDD.app.berke.can.kizildemir.ttb"
+        ],
+        "components": [
+          {
+            "/": "/q/*",
+            "comment": "Open shared TTB questions in the iOS app."
+          },
+          {
+            "/": "/share/lists/*",
+            "comment": "Open shared TTB question lists in the iOS app."
+          },
+          {
+            "/": "/l/*",
+            "comment": "Open legacy shared TTB question list links in the iOS app."
+          }
+        ]
+      }
+    ]
+  }
+}

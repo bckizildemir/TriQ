@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build app and tests
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Create Secrets.xcconfig from the template
+        run: cp TTB/Secrets.xcconfig.template TTB/Secrets.xcconfig
+
+      - name: Cache Swift packages
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/ci-spm
+          key: spm-${{ hashFiles('TTB.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+
+      - name: Build app and test targets
+        run: |
+          xcodebuild build-for-testing \
+            -project TTB.xcodeproj \
+            -scheme TTB \
+            -destination 'generic/platform=iOS Simulator' \
+            -clonedSourcePackagesDirPath ~/Library/Caches/ci-spm \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            > build.log 2>&1 || { grep -E 'error:' build.log | head -50; exit 1; }
+          tail -n 3 build.log
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log

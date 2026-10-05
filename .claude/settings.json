@@ -1,0 +1,15 @@
+{
+  "enabledPlugins": {
+    "mattpocock-skills@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "mcp__xcodebuildmcp__session_show_defaults",
+      "mcp__xcodebuildmcp__session_set_defaults",
+      "mcp__xcodebuildmcp__list_sims",
+      "mcp__xcodebuildmcp__show_build_settings",
+      "mcp__xcodebuildmcp__screenshot",
+      "mcp__xcodebuildmcp__snapshot_ui"
+    ]
+  }
+}

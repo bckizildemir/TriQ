@@ -1,0 +1,4424 @@
+[
+  {
+    "contentId": "daily-01",
+    "text": "Bugün yüzünü gülümseten şeyler nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün yüzünü gülümseten şeyler nelerdi?",
+      "en": "What were the things that made you smile today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-02",
+    "text": "Bugün şükrettiğin şeyler nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün şükrettiğin şeyler nelerdi?",
+      "en": "What are the things you are grateful for today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-03",
+    "text": "Bugün aklında kalan yeni şeyler nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün aklında kalan yeni şeyler nelerdi?",
+      "en": "What new things stuck in your mind today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-04",
+    "text": "Bugün kendinle gurur duyduğun anlar nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün kendinle gurur duyduğun anlar nelerdi?",
+      "en": "What were the moments you were proud of today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-05",
+    "text": "Bugün enerjini en çok tüketen şeyler nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün enerjini en çok tüketen şeyler nelerdi?",
+      "en": "What were the things that consumed your energy the most today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-06",
+    "text": "Bugün seni durup düşündüren anlar nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün seni durup düşündüren anlar nelerdi?",
+      "en": "What were the moments today that made you stop and think?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-07",
+    "text": "Sabah uyanınca aklına gelen ilk şeyler nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Sabah uyanınca aklına gelen ilk şeyler nelerdi?",
+      "en": "What were the first things that came to your mind when you woke up in the morning?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-08",
+    "text": "Bugün biriyle paylaştığın güzel anlar nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün biriyle paylaştığın güzel anlar nelerdi?",
+      "en": "What were the beautiful moments you shared with someone today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-09",
+    "text": "Bugün kendine ayırdığın anlarda neler yaptın?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün kendine ayırdığın anlarda neler yaptın?",
+      "en": "What did you do in the moments you had for yourself today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-10",
+    "text": "Gün biterken içinde kalan hisler neler?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Gün biterken içinde kalan hisler neler?",
+      "en": "What are the feelings you feel when the day ends?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-11",
+    "text": "Bugün yarım bıraktığın şeyler nelerdi, neden?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün yarım bıraktığın şeyler nelerdi, neden?",
+      "en": "What were the things you left unfinished today, why?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-12",
+    "text": "Bugün sana iyi gelen şeyler nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün sana iyi gelen şeyler nelerdi?",
+      "en": "What were the things that were good for you today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-13",
+    "text": "Bugün kafanı en çok meşgul eden düşünceler nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün kafanı en çok meşgul eden düşünceler nelerdi?",
+      "en": "What were the thoughts that occupied your mind the most today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-14",
+    "text": "Bugün planlarının dışına çıkan sürprizler nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün planlarının dışına çıkan sürprizler nelerdi?",
+      "en": "What were the surprises that went beyond your plans today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-15",
+    "text": "Yarın için heyecan duyduğun şeyler neler?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Yarın için heyecan duyduğun şeyler neler?",
+      "en": "What are you excited about tomorrow?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-16",
+    "text": "Bugün seni gülümseten küçük detaylar nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün seni gülümseten küçük detaylar nelerdi?",
+      "en": "What were the little details that made you smile today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-17",
+    "text": "Şu an içinde taşıdığın duygular neler?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Şu an içinde taşıdığın duygular neler?",
+      "en": "What emotions are you carrying right now?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "daily-18",
+    "text": "Bugün fotoğrafını çekmek istediğin anlar nelerdi?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Bugün fotoğrafını çekmek istediğin anlar nelerdi?",
+      "en": "What moments did you want to photograph today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-01",
+    "text": "Hayatında en çok gurur duyduğun başarılar hangileri?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Hayatında en çok gurur duyduğun başarılar hangileri?",
+      "en": "What accomplishments in your life are you most proud of?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-02",
+    "text": "Seni en iyi anlatan üç kelime hangileri?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Seni en iyi anlatan üç kelime hangileri?",
+      "en": "What three words describe you best?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-03",
+    "text": "Geçen yıla göre sende en çok değişen yönler neler?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Geçen yıla göre sende en çok değişen yönler neler?",
+      "en": "What are the aspects that have changed the most for you compared to last year?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-04",
+    "text": "Seni ayağa kaldıran motivasyon kaynakların neler?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Seni ayağa kaldıran motivasyon kaynakların neler?",
+      "en": "What are your sources of motivation that get you up and running?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-05",
+    "text": "Korkularının seni en çok yavaşlattığı alanlar neler?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Korkularının seni en çok yavaşlattığı alanlar neler?",
+      "en": "What are the areas where your fears slow you down the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-06",
+    "text": "Kendinde dönüştürmek istediğin yönler neler?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Kendinde dönüştürmek istediğin yönler neler?",
+      "en": "What aspects of yourself would you like to transform?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-07",
+    "text": "Başkalarına kolayca verip kendine söylemekte zorlandığın tavsiyeler neler?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Başkalarına kolayca verip kendine söylemekte zorlandığın tavsiyeler neler?",
+      "en": "What advice do you find easy to give to others but difficult to say to yourself?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-08",
+    "text": "Seni daha çok tanımlayan tarafların neler: içgüdülerin, planların, yoksa başka bir şey mi?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Seni daha çok tanımlayan tarafların neler: içgüdülerin, planların, yoksa başka bir şey mi?",
+      "en": "What parts of you define you more: your instincts, your plans, or something else?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-09",
+    "text": "Sana en çok tatmin veren şeyler neler: maddi, manevi, yoksa ikisinin dengesi mi?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Sana en çok tatmin veren şeyler neler: maddi, manevi, yoksa ikisinin dengesi mi?",
+      "en": "What things give you the most satisfaction: material, spiritual, or a balance of the two?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-10",
+    "text": "Beş yıl öncesine göre kazandığın yeni yanlar neler?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Beş yıl öncesine göre kazandığın yeni yanlar neler?",
+      "en": "What are the new aspects you have gained compared to five years ago?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-11",
+    "text": "Seni en çok zorlayan duygular neler?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Seni en çok zorlayan duygular neler?",
+      "en": "What are the emotions that challenge you the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-12",
+    "text": "Sürdürmek isteyip zorlandığın alışkanlıklar neler?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Sürdürmek isteyip zorlandığın alışkanlıklar neler?",
+      "en": "What are the habits that you want to maintain but find it difficult?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-13",
+    "text": "İnsanların sende gördüğünü merak ettiğin yönler neler?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "İnsanların sende gördüğünü merak ettiğin yönler neler?",
+      "en": "What aspects do you wonder people see in you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-14",
+    "text": "Hayatında daha cesur davranmak istediğin alanlar neler?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Hayatında daha cesur davranmak istediğin alanlar neler?",
+      "en": "What are the areas in your life where you want to be more courageous?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "personal-15",
+    "text": "Geçmişinden hâlâ ders çıkardığın kararlar neler?",
+    "category": "SelfDiscovery",
+    "localizedTexts": {
+      "tr": "Geçmişinden hâlâ ders çıkardığın kararlar neler?",
+      "en": "What decisions do you still learn from your past?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-01",
+    "text": "Bir ilişkide seni gerçekten mutlu eden şeyler neler?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Bir ilişkide seni gerçekten mutlu eden şeyler neler?",
+      "en": "What are the things that make you truly happy in a relationship?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-02",
+    "text": "Hayatındaki önemli ilişkileri besleyen küçük hareketler neler?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Hayatındaki önemli ilişkileri besleyen küçük hareketler neler?",
+      "en": "What are the small actions that nourish the important relationships in your life?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-03",
+    "text": "Sende güven duygusu oluşturan şeyler neler?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Sende güven duygusu oluşturan şeyler neler?",
+      "en": "What are the things that create a sense of confidence in you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-04",
+    "text": "Son zamanlarda teşekkür etmek isteyip henüz söyleyemediğin insanlar ya da anlar neler?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Son zamanlarda teşekkür etmek isteyip henüz söyleyemediğin insanlar ya da anlar neler?",
+      "en": "What are some people or moments lately that you want to thank but haven't yet been able to?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-05",
+    "text": "İlişkilerinde en çok vermek istediğin şeyler neler?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "İlişkilerinde en çok vermek istediğin şeyler neler?",
+      "en": "What are the things you want to give most in your relationships?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-06",
+    "text": "Özür dilemekte zorlandığın anlar nelerdi?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Özür dilemekte zorlandığın anlar nelerdi?",
+      "en": "What were the moments when you had a hard time apologizing?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-07",
+    "text": "Yeniden bağ kurmak istediğin insanlar kimler?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Yeniden bağ kurmak istediğin insanlar kimler?",
+      "en": "Who are the people you want to reconnect with?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-08",
+    "text": "Sınır koymanın zorlaştığı ilişkiler hangileri?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Sınır koymanın zorlaştığı ilişkiler hangileri?",
+      "en": "Which relationships make it difficult to set boundaries?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-09",
+    "text": "Sevdiklerine varlığını en çok hangi şekillerde hissettiriyorsun?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Sevdiklerine varlığını en çok hangi şekillerde hissettiriyorsun?",
+      "en": "In what ways do you make your loved ones feel your presence the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-10",
+    "text": "Arkadaşlarından öğrendiğin en değerli şeyler neler?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Arkadaşlarından öğrendiğin en değerli şeyler neler?",
+      "en": "What are the most valuable things you learned from your friends?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-11",
+    "text": "Tartışmaları çözerken işe yarayan yönlerin neler?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Tartışmaları çözerken işe yarayan yönlerin neler?",
+      "en": "What are your useful aspects when resolving arguments?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-12",
+    "text": "Ailenden taşıdığın sıcak alışkanlıklar neler?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Ailenden taşıdığın sıcak alışkanlıklar neler?",
+      "en": "What warm habits do you carry from your family?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-13",
+    "text": "Son zamanlarda derinleşen sohbetlerin hangileriydi?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Son zamanlarda derinleşen sohbetlerin hangileriydi?",
+      "en": "Which conversations have deepened recently?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "relationships-14",
+    "text": "Kendini gerçekten anlaşılmış hissettiğin anlar nelerdi?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Kendini gerçekten anlaşılmış hissettiğin anlar nelerdi?",
+      "en": "What were the moments when you felt truly understood?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-01",
+    "text": "Kariyer yolunda şu an bulunduğun noktayı anlatan şeyler neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Kariyer yolunda şu an bulunduğun noktayı anlatan şeyler neler?",
+      "en": "What describes where you are now in your career path?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-02",
+    "text": "İşinde sana tatmin veren şeyler neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "İşinde sana tatmin veren şeyler neler?",
+      "en": "What gives you satisfaction in your job?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-03",
+    "text": "Sıradaki mesleki adımında görmek istediğin şeyler neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Sıradaki mesleki adımında görmek istediğin şeyler neler?",
+      "en": "What would you like to see in your next professional step?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-04",
+    "text": "İş hayatında seni öne çıkaran beceriler neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "İş hayatında seni öne çıkaran beceriler neler?",
+      "en": "What are the skills that make you stand out in business life?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-05",
+    "text": "Kariyerinde ertelediğin ama aklında kalan adımlar neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Kariyerinde ertelediğin ama aklında kalan adımlar neler?",
+      "en": "What are the steps in your career that you postponed but still remember?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-06",
+    "text": "İşinin sende bıraktığı duygular neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "İşinin sende bıraktığı duygular neler?",
+      "en": "What feelings does your job leave you with?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-07",
+    "text": "En iyi performansını gösterdiğin çalışma koşulları neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "En iyi performansını gösterdiğin çalışma koşulları neler?",
+      "en": "What are the working conditions in which you perform your best?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-08",
+    "text": "Bugün işte seni zorlayan şeyler nelerdi?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Bugün işte seni zorlayan şeyler nelerdi?",
+      "en": "What were the things that challenged you at work today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-09",
+    "text": "İş ve özel hayat arasında denge kurmana yardımcı olan şeyler neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "İş ve özel hayat arasında denge kurmana yardımcı olan şeyler neler?",
+      "en": "What things help you balance work and private life?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-10",
+    "text": "Sende iz bırakan mentorlar ya da rol modeller kimler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Sende iz bırakan mentorlar ya da rol modeller kimler?",
+      "en": "Who are the mentors or role models who left their mark on you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-11",
+    "text": "Mesleki olarak güçlendirmek istediğin alanlar neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Mesleki olarak güçlendirmek istediğin alanlar neler?",
+      "en": "What areas do you want to strengthen professionally?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-12",
+    "text": "Kariyerinde yaptığın hatalardan öğrendiğin şeyler neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Kariyerinde yaptığın hatalardan öğrendiğin şeyler neler?",
+      "en": "What have you learned from the mistakes you've made in your career?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-13",
+    "text": "Çalıştığın ortamın sana iyi gelen ve zorlayan yanları neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Çalıştığın ortamın sana iyi gelen ve zorlayan yanları neler?",
+      "en": "What are the good and challenging aspects of the environment you work in?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "career-14",
+    "text": "Hayalindeki iş ortamında mutlaka olsun dediğin şeyler neler?",
+    "category": "Career",
+    "localizedTexts": {
+      "tr": "Hayalindeki iş ortamında mutlaka olsun dediğin şeyler neler?",
+      "en": "What are the things you would like to have in your dream workplace?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-01",
+    "text": "Bugün bedenine iyi gelen şeyler nelerdi?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Bugün bedenine iyi gelen şeyler nelerdi?",
+      "en": "What were the things that were good for your body today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-02",
+    "text": "Enerjini en çok etkileyen şeyler neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Enerjini en çok etkileyen şeyler neler?",
+      "en": "What are the things that affect your energy the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-03",
+    "text": "Ruhuna iyi gelen küçük rutinler neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Ruhuna iyi gelen küçük rutinler neler?",
+      "en": "What are the little routines that are good for your soul?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-04",
+    "text": "Stres altındayken bedeninde fark ettiğin tepkiler neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Stres altındayken bedeninde fark ettiğin tepkiler neler?",
+      "en": "What reactions do you notice in your body when you are under stress?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-05",
+    "text": "Uykunun hayatını etkilediğini düşündüğün noktalar neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Uykunun hayatını etkilediğini düşündüğün noktalar neler?",
+      "en": "What points do you think sleep affects your life?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-06",
+    "text": "Bedenini dinlemenin zorlaştığı anlar neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Bedenini dinlemenin zorlaştığı anlar neler?",
+      "en": "What are the moments when it becomes difficult to listen to your body?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-07",
+    "text": "Son zamanlarda gerçekten dinlendiğin anlar nelerdi?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Son zamanlarda gerçekten dinlendiğin anlar nelerdi?",
+      "en": "What have been your moments of true relaxation lately?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-08",
+    "text": "Seni rahatlatan alışkanlıklar neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Seni rahatlatan alışkanlıklar neler?",
+      "en": "What are the habits that relax you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-09",
+    "text": "Sağlığını erteleme eğilimine girdiğin dönemler neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Sağlığını erteleme eğilimine girdiğin dönemler neler?",
+      "en": "What are the times when you tend to postpone your health?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-10",
+    "text": "Bedeninin sana vermeye çalıştığı sinyaller neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Bedeninin sana vermeye çalıştığı sinyaller neler?",
+      "en": "What are the signals your body is trying to give you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-11",
+    "text": "Gün içinde sana iyi gelen hareketler neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Gün içinde sana iyi gelen hareketler neler?",
+      "en": "What actions are good for you during the day?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-12",
+    "text": "Beslenme düzeninde sana iyi hissettiren seçimler neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Beslenme düzeninde sana iyi hissettiren seçimler neler?",
+      "en": "What choices in your diet make you feel good?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-13",
+    "text": "Sağlıklı bir alışkanlığı sürdürmeni kolaylaştıran şeyler neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Sağlıklı bir alışkanlığı sürdürmeni kolaylaştıran şeyler neler?",
+      "en": "What makes it easier for you to maintain a healthy habit?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "health-14",
+    "text": "Kendine en nazik davrandığın anlar neler?",
+    "category": "Health",
+    "localizedTexts": {
+      "tr": "Kendine en nazik davrandığın anlar neler?",
+      "en": "What are the moments when you are the kindest to yourself?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-01",
+    "text": "Bu yıl gerçekten ulaşmak istediğin hedefler neler?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Bu yıl gerçekten ulaşmak istediğin hedefler neler?",
+      "en": "What goals do you really want to achieve this year?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-02",
+    "text": "Hedeflerinin yanında beliren korkular neler?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Hedeflerinin yanında beliren korkular neler?",
+      "en": "What are the fears that appear next to your goals?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-03",
+    "text": "Bugün hedeflerine yaklaşmanı sağlayan küçük adımlar nelerdi?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Bugün hedeflerine yaklaşmanı sağlayan küçük adımlar nelerdi?",
+      "en": "What were the small steps that brought you closer to your goals today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-04",
+    "text": "Yarım kalan hedeflerinin arkasındaki sebepler neler?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Yarım kalan hedeflerinin arkasındaki sebepler neler?",
+      "en": "What are the reasons behind your unfinished goals?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-05",
+    "text": "Beş yıl sonra kurmak istediğin hayatın parçaları neler?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Beş yıl sonra kurmak istediğin hayatın parçaları neler?",
+      "en": "What are the parts of the life you want to build in five years?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-06",
+    "text": "Bir hedef için ihtiyaç duyduğunu düşündüğün destekler neler?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Bir hedef için ihtiyaç duyduğunu düşündüğün destekler neler?",
+      "en": "What supports do you think you need for a goal?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-07",
+    "text": "Hâlâ içini heyecanlandıran hedefler neler?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Hâlâ içini heyecanlandıran hedefler neler?",
+      "en": "What goals still excite you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-08",
+    "text": "Başarmanın tadını en son aldığın anlar nelerdi?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Başarmanın tadını en son aldığın anlar nelerdi?",
+      "en": "What were the last moments you enjoyed success?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-09",
+    "text": "Şu anki önceliklerinle uyumlu hedeflerin neler?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Şu anki önceliklerinle uyumlu hedeflerin neler?",
+      "en": "What are your goals that align with your current priorities?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-10",
+    "text": "Uzun vadeli hedeflerin için kısa vadede göze aldığın fedakârlıklar neler?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Uzun vadeli hedeflerin için kısa vadede göze aldığın fedakârlıklar neler?",
+      "en": "What are the sacrifices you make in the short term for your long-term goals?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-11",
+    "text": "Hedeflerini birine anlattığında güçlenen taraflar neler?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Hedeflerini birine anlattığında güçlenen taraflar neler?",
+      "en": "What are the aspects that become stronger when you tell someone about your goals?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-12",
+    "text": "Geçmişte bir hedefe ulaşmanı sağlayan alışkanlıklar nelerdi?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Geçmişte bir hedefe ulaşmanı sağlayan alışkanlıklar nelerdi?",
+      "en": "What habits have helped you achieve a goal in the past?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-13",
+    "text": "Uzun zamandır hayalini kurup başlamadığın şeyler neler?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Uzun zamandır hayalini kurup başlamadığın şeyler neler?",
+      "en": "What are the things you've been dreaming about for a long time but haven't started yet?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "goals-14",
+    "text": "Vazgeçmek yerine yeniden şekillendirdiğin hedefler neler?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Vazgeçmek yerine yeniden şekillendirdiğin hedefler neler?",
+      "en": "What goals are you reshaping instead of giving up?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-01",
+    "text": "Yaratıcılığını besleyen şeyler neler?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Yaratıcılığını besleyen şeyler neler?",
+      "en": "What fuels your creativity?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-02",
+    "text": "Son ürettiğin şeyin sende bıraktığı hisler nelerdi?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Son ürettiğin şeyin sende bıraktığı hisler nelerdi?",
+      "en": "What were the feelings that the last thing you produced left you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-03",
+    "text": "Yaratıcı tıkanıklığı açmana yardımcı olan şeyler neler?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Yaratıcı tıkanıklığı açmana yardımcı olan şeyler neler?",
+      "en": "What things help you clear creative blockage?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-04",
+    "text": "Bir şey üretirken bırakmakta zorlandığın kontrol alanları neler?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Bir şey üretirken bırakmakta zorlandığın kontrol alanları neler?",
+      "en": "What are the areas of control that you have difficulty giving up when producing something?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-05",
+    "text": "Sana ilham veren ifade biçimleri neler?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Sana ilham veren ifade biçimleri neler?",
+      "en": "What forms of expression inspire you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-06",
+    "text": "Son zamanlarda dışa vurabildiğin fikirler nelerdi?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Son zamanlarda dışa vurabildiğin fikirler nelerdi?",
+      "en": "What ideas have you been able to express lately?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-07",
+    "text": "Denemek isteyip ertelediğin yaratıcı alanlar neler?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Denemek isteyip ertelediğin yaratıcı alanlar neler?",
+      "en": "What creative fields have you wanted to try but have been postponing?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-08",
+    "text": "Başkalarından gelen yorumların üretim sürecine etkileri neler?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Başkalarından gelen yorumların üretim sürecine etkileri neler?",
+      "en": "What are the effects of comments from others on the production process?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-09",
+    "text": "Rutinin dışında ilham aldığın anlar nelerdi?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Rutinin dışında ilham aldığın anlar nelerdi?",
+      "en": "What were your inspirational moments outside of your routine?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-10",
+    "text": "Çocukluğundan bugüne yanında taşımak istediğin yaratıcı alışkanlıklar neler?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Çocukluğundan bugüne yanında taşımak istediğin yaratıcı alışkanlıklar neler?",
+      "en": "What creative habits do you want to carry with you from your childhood to today?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-11",
+    "text": "Mükemmeliyetçiliğinin üretimini yavaşlattığı anlar neler?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Mükemmeliyetçiliğinin üretimini yavaşlattığı anlar neler?",
+      "en": "What are the moments when your perfectionism slows down your production?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-12",
+    "text": "Üretirken en çok takıldığın noktalar neler?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Üretirken en çok takıldığın noktalar neler?",
+      "en": "What are your favorite points while producing?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-13",
+    "text": "Yaratıcılığın sana açtığı kapılar neler?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Yaratıcılığın sana açtığı kapılar neler?",
+      "en": "What doors does creativity open for you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "creativity-14",
+    "text": "Yeni bir şey denemek için sana cesaret veren şeyler neler?",
+    "category": "Creativity",
+    "localizedTexts": {
+      "tr": "Yeni bir şey denemek için sana cesaret veren şeyler neler?",
+      "en": "What gives you the courage to try something new?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-001-en-sevdigin-3-yemek-nedir",
+    "text": "En sevdiğin 3 yemek nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 yemek nedir?",
+      "en": "What are your 3 favorite dishes?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-002-en-sevdigin-3-tatli-nedir",
+    "text": "En sevdiğin 3 tatlı nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 tatlı nedir?",
+      "en": "What are your 3 favorite desserts?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-003-en-sevdigin-3-icecek-nedir",
+    "text": "En sevdiğin 3 içecek nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 içecek nedir?",
+      "en": "What are your 3 favorite drinks?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-004-en-sevdigin-3-kahvaltilik-nedir",
+    "text": "En sevdiğin 3 kahvaltılık nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kahvaltılık nedir?",
+      "en": "What are your 3 favorite breakfast foods?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-005-en-sevdigin-3-atistirmalik-nedir",
+    "text": "En sevdiğin 3 atıştırmalık nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 atıştırmalık nedir?",
+      "en": "What are your 3 favorite snacks?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-006-en-sevdigin-3-meyve-nedir",
+    "text": "En sevdiğin 3 meyve nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 meyve nedir?",
+      "en": "What are your 3 favorite fruits?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-007-en-sevdigin-3-sebze-nedir",
+    "text": "En sevdiğin 3 sebze nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 sebze nedir?",
+      "en": "What are your 3 favorite vegetables?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-008-en-sevdigin-3-sokak-lezzeti-nedir",
+    "text": "En sevdiğin 3 sokak lezzeti nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 sokak lezzeti nedir?",
+      "en": "What are your 3 favorite street foods?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-009-en-sevdigin-3-fast-food-urunu-nedir",
+    "text": "En sevdiğin 3 fast food ürünü nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 fast food ürünü nedir?",
+      "en": "What are your 3 favorite fast food items?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-010-en-sevdigin-3-ev-yemegi-nedir",
+    "text": "En sevdiğin 3 ev yemeği nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 ev yemeği nedir?",
+      "en": "What are your 3 favorite homemade dishes?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-011-en-sevdigin-3-makarna-cesidi-nedir",
+    "text": "En sevdiğin 3 makarna çeşidi nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 makarna çeşidi nedir?",
+      "en": "What are your 3 favorite types of pasta?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-012-en-sevdigin-3-pizza-malzemesi-nedir",
+    "text": "En sevdiğin 3 pizza malzemesi nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 pizza malzemesi nedir?",
+      "en": "What are your 3 favorite pizza toppings?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-013-en-sevdigin-3-dondurma-aromasi-nedir",
+    "text": "En sevdiğin 3 dondurma aroması nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 dondurma aroması nedir?",
+      "en": "What are your 3 favorite ice cream flavors?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-014-en-sevdigin-3-cikolata-turu-nedir",
+    "text": "En sevdiğin 3 çikolata türü nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 çikolata türü nedir?",
+      "en": "What are your 3 favorite types of chocolate?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-015-en-sevdigin-3-restoran-nedir",
+    "text": "En sevdiğin 3 restoran nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 restoran nedir?",
+      "en": "What are your 3 favorite restaurants?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-016-en-sevdigin-3-kafe-nedir",
+    "text": "En sevdiğin 3 kafe nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kafe nedir?",
+      "en": "What are your 3 favorite cafés?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-017-en-sevdigin-3-cay-kahve-turu-nedir",
+    "text": "En sevdiğin 3 çay/kahve türü nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 çay/kahve türü nedir?",
+      "en": "What are your 3 favorite types of tea/coffee?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-018-en-sevdigin-3-sos-nedir",
+    "text": "En sevdiğin 3 sos nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 sos nedir?",
+      "en": "What are your 3 favorite sauces?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-019-en-sevdigin-3-baharat-nedir",
+    "text": "En sevdiğin 3 baharat nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 baharat nedir?",
+      "en": "What are your 3 favorite spices?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-020-en-sevmedigin-3-yemek-nedir",
+    "text": "En sevmediğin 3 yemek nedir?",
+    "category": "Food",
+    "localizedTexts": {
+      "tr": "En sevmediğin 3 yemek nedir?",
+      "en": "What are 3 foods you dislike the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-021-en-sevdigin-3-film-nedir",
+    "text": "En sevdiğin 3 film nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 film nedir?",
+      "en": "What are your 3 favorite movies?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-022-en-sevdigin-3-dizi-nedir",
+    "text": "En sevdiğin 3 dizi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 dizi nedir?",
+      "en": "What are your 3 favorite TV shows?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-023-en-sevdigin-3-animasyon-filmi-nedir",
+    "text": "En sevdiğin 3 animasyon filmi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 animasyon filmi nedir?",
+      "en": "What are your 3 favorite animated movies?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-024-en-sevdigin-3-romantik-film-nedir",
+    "text": "En sevdiğin 3 romantik film nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 romantik film nedir?",
+      "en": "What are your 3 favorite romantic movies?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-025-en-sevdigin-3-komedi-filmi-nedir",
+    "text": "En sevdiğin 3 komedi filmi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 komedi filmi nedir?",
+      "en": "What are your 3 favorite comedy movies?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-026-en-sevdigin-3-korku-gerilim-filmi-nedir",
+    "text": "En sevdiğin 3 korku/gerilim filmi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 korku/gerilim filmi nedir?",
+      "en": "What are your 3 favorite horror/thriller movies?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-027-en-sevdigin-3-bilim-kurgu-filmi-nedir",
+    "text": "En sevdiğin 3 bilim kurgu filmi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 bilim kurgu filmi nedir?",
+      "en": "What are your 3 favorite science fiction movies?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-028-en-sevdigin-3-dram-filmi-nedir",
+    "text": "En sevdiğin 3 dram filmi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 dram filmi nedir?",
+      "en": "What are your 3 favorite drama movies?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-029-en-sevdigin-3-turk-filmi-nedir",
+    "text": "En sevdiğin 3 Türk filmi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 Türk filmi nedir?",
+      "en": "What are your 3 favorite Turkish movies?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-030-en-sevdigin-3-yabanci-dizi-nedir",
+    "text": "En sevdiğin 3 yabancı dizi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 yabancı dizi nedir?",
+      "en": "What are your 3 favorite foreign TV shows?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-031-en-sevdigin-3-turk-dizisi-nedir",
+    "text": "En sevdiğin 3 Türk dizisi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 Türk dizisi nedir?",
+      "en": "What are your 3 favorite Turkish TV shows?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-032-en-sevdigin-3-mini-dizi-nedir",
+    "text": "En sevdiğin 3 mini dizi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 mini dizi nedir?",
+      "en": "What are your 3 favorite miniseries?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-033-tekrar-tekrar-izleyebilecegin-3-film-nedir",
+    "text": "Tekrar tekrar izleyebileceğin 3 film nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "Tekrar tekrar izleyebileceğin 3 film nedir?",
+      "en": "What are 3 movies you could watch over and over again?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-034-tekrar-tekrar-izleyebilecegin-3-dizi-nedir",
+    "text": "Tekrar tekrar izleyebileceğin 3 dizi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "Tekrar tekrar izleyebileceğin 3 dizi nedir?",
+      "en": "What are 3 TV shows you could watch over and over again?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-035-en-sevdigin-3-film-sahnesi-nedir",
+    "text": "En sevdiğin 3 film sahnesi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 film sahnesi nedir?",
+      "en": "What are your 3 favorite movie scenes?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-036-en-sevdigin-3-dizi-sahnesi-nedir",
+    "text": "En sevdiğin 3 dizi sahnesi nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 dizi sahnesi nedir?",
+      "en": "What are your 3 favorite TV show scenes?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-037-en-sevdigin-3-film-karakteri-nedir",
+    "text": "En sevdiğin 3 film karakteri nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 film karakteri nedir?",
+      "en": "Who are your 3 favorite movie characters?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-038-en-sevdigin-3-dizi-karakteri-nedir",
+    "text": "En sevdiğin 3 dizi karakteri nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 dizi karakteri nedir?",
+      "en": "Who are your 3 favorite TV show characters?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-039-en-sevmedigin-3-film-karakteri-nedir",
+    "text": "En sevmediğin 3 film karakteri nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevmediğin 3 film karakteri nedir?",
+      "en": "Who are 3 movie characters you dislike the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-040-en-sevdigin-3-kotu-karakter-nedir",
+    "text": "En sevdiğin 3 kötü karakter nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kötü karakter nedir?",
+      "en": "Who are your 3 favorite villains?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-041-en-sevdigin-3-animasyon-karakteri-nedir",
+    "text": "En sevdiğin 3 animasyon karakteri nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 animasyon karakteri nedir?",
+      "en": "Who are your 3 favorite animated characters?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-042-en-sevdigin-3-film-muzigi-nedir",
+    "text": "En sevdiğin 3 film müziği nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 film müziği nedir?",
+      "en": "What are your 3 favorite movie soundtracks?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-043-en-sevdigin-3-dizi-jenerigi-nedir",
+    "text": "En sevdiğin 3 dizi jeneriği nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 dizi jeneriği nedir?",
+      "en": "What are your 3 favorite TV show intros?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-044-en-begendigin-3-oyuncu-nedir",
+    "text": "En beğendiğin 3 oyuncu nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En beğendiğin 3 oyuncu nedir?",
+      "en": "Who are 3 actors you admire the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-045-en-begendigin-3-yonetmen-nedir",
+    "text": "En beğendiğin 3 yönetmen nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En beğendiğin 3 yönetmen nedir?",
+      "en": "Who are 3 directors you admire the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-046-en-sevdigin-3-kitap-nedir",
+    "text": "En sevdiğin 3 kitap nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kitap nedir?",
+      "en": "What are your 3 favorite books?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-047-en-sevdigin-3-roman-nedir",
+    "text": "En sevdiğin 3 roman nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 roman nedir?",
+      "en": "What are your 3 favorite novels?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-048-en-sevdigin-3-cocukluk-kitabi-nedir",
+    "text": "En sevdiğin 3 çocukluk kitabı nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 çocukluk kitabı nedir?",
+      "en": "What are your 3 favorite childhood books?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-049-en-sevdigin-3-yazar-nedir",
+    "text": "En sevdiğin 3 yazar nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 yazar nedir?",
+      "en": "Who are your 3 favorite authors?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-050-en-sevdigin-3-kitap-karakteri-nedir",
+    "text": "En sevdiğin 3 kitap karakteri nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kitap karakteri nedir?",
+      "en": "Who are your 3 favorite book characters?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-051-en-sevdigin-3-kurgu-evreni-nedir",
+    "text": "En sevdiğin 3 kurgu evreni nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kurgu evreni nedir?",
+      "en": "What are your 3 favorite fictional universes?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-052-en-cok-etkilendigin-3-kitap-nedir",
+    "text": "En çok etkilendiğin 3 kitap nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "En çok etkilendiğin 3 kitap nedir?",
+      "en": "What are 3 books that affected you the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-053-tekrar-okumak-istedigin-3-kitap-nedir",
+    "text": "Tekrar okumak istediğin 3 kitap nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "Tekrar okumak istediğin 3 kitap nedir?",
+      "en": "What are 3 books you would like to read again?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-054-en-sevdigin-3-kitap-turu-nedir",
+    "text": "En sevdiğin 3 kitap türü nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kitap türü nedir?",
+      "en": "What are your 3 favorite book genres?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-055-en-sevdigin-3-siir-sair-nedir",
+    "text": "En sevdiğin 3 şiir/şair nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 şiir/şair nedir?",
+      "en": "What are your 3 favorite poems/poets?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-056-en-sevdigin-3-cizgi-roman-manga-nedir",
+    "text": "En sevdiğin 3 çizgi roman/manga nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 çizgi roman/manga nedir?",
+      "en": "What are your 3 favorite comics/manga?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-057-okumak-istedigin-3-kitap-nedir",
+    "text": "Okumak istediğin 3 kitap nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "Okumak istediğin 3 kitap nedir?",
+      "en": "What are 3 books you want to read?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-058-baskalarina-en-cok-onerdigin-3-kitap-nedir",
+    "text": "Başkalarına en çok önerdiğin 3 kitap nedir?",
+    "category": "Books",
+    "localizedTexts": {
+      "tr": "Başkalarına en çok önerdiğin 3 kitap nedir?",
+      "en": "What are 3 books you recommend to others the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-059-en-sevdigin-3-sarki-nedir",
+    "text": "En sevdiğin 3 şarkı nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 şarkı nedir?",
+      "en": "What are your 3 favorite songs?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-060-en-sevdigin-3-sanatci-nedir",
+    "text": "En sevdiğin 3 sanatçı nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 sanatçı nedir?",
+      "en": "Who are your 3 favorite artists?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-061-en-sevdigin-3-grup-nedir",
+    "text": "En sevdiğin 3 grup nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 grup nedir?",
+      "en": "What are your 3 favorite bands?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-062-en-sevdigin-3-album-nedir",
+    "text": "En sevdiğin 3 albüm nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 albüm nedir?",
+      "en": "What are your 3 favorite albums?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-063-en-sevdigin-3-muzik-turu-nedir",
+    "text": "En sevdiğin 3 müzik türü nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 müzik türü nedir?",
+      "en": "What are your 3 favorite music genres?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-064-en-sevdigin-3-turkce-sarki-nedir",
+    "text": "En sevdiğin 3 Türkçe şarkı nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 Türkçe şarkı nedir?",
+      "en": "What are your 3 favorite Turkish songs?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-065-en-sevdigin-3-yabanci-sarki-nedir",
+    "text": "En sevdiğin 3 yabancı şarkı nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 yabancı şarkı nedir?",
+      "en": "What are your 3 favorite foreign songs?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-066-en-sevdigin-3-nostaljik-sarki-nedir",
+    "text": "En sevdiğin 3 nostaljik şarkı nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 nostaljik şarkı nedir?",
+      "en": "What are your 3 favorite nostalgic songs?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-067-en-sevdigin-3-konser-anisi-nedir",
+    "text": "En sevdiğin 3 konser anısı nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 konser anısı nedir?",
+      "en": "What are your 3 favorite concert memories?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-068-konserine-gitmek-istedigin-3-sanatci-grup-nedir",
+    "text": "Konserine gitmek istediğin 3 sanatçı/grup nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "Konserine gitmek istediğin 3 sanatçı/grup nedir?",
+      "en": "Which 3 artists/bands would you like to see live?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-069-sabah-dinlemeyi-sevdigin-3-sarki-nedir",
+    "text": "Sabah dinlemeyi sevdiğin 3 şarkı nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "Sabah dinlemeyi sevdiğin 3 şarkı nedir?",
+      "en": "What are 3 songs you like listening to in the morning?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-070-gece-dinlemeyi-sevdigin-3-sarki-nedir",
+    "text": "Gece dinlemeyi sevdiğin 3 şarkı nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "Gece dinlemeyi sevdiğin 3 şarkı nedir?",
+      "en": "What are 3 songs you like listening to at night?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-071-yolculukta-dinlemeyi-sevdigin-3-sarki-nedir",
+    "text": "Yolculukta dinlemeyi sevdiğin 3 şarkı nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "Yolculukta dinlemeyi sevdiğin 3 şarkı nedir?",
+      "en": "What are 3 songs you like listening to while traveling?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-072-en-sevdigin-3-film-dizi-soundtrack-i-nedir",
+    "text": "En sevdiğin 3 film/dizi soundtrack’i nedir?",
+    "category": "Music",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 film/dizi soundtrack’i nedir?",
+      "en": "What are your 3 favorite movie/TV show soundtracks?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-073-en-sevdigin-3-video-oyunu-nedir",
+    "text": "En sevdiğin 3 video oyunu nedir?",
+    "category": "Games",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 video oyunu nedir?",
+      "en": "What are your 3 favorite video games?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-074-en-sevdigin-3-mobil-oyun-nedir",
+    "text": "En sevdiğin 3 mobil oyun nedir?",
+    "category": "Games",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 mobil oyun nedir?",
+      "en": "What are your 3 favorite mobile games?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-075-en-sevdigin-3-kutu-oyunu-nedir",
+    "text": "En sevdiğin 3 kutu oyunu nedir?",
+    "category": "Games",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kutu oyunu nedir?",
+      "en": "What are your 3 favorite board games?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-076-en-sevdigin-3-kart-oyunu-nedir",
+    "text": "En sevdiğin 3 kart oyunu nedir?",
+    "category": "Games",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kart oyunu nedir?",
+      "en": "What are your 3 favorite card games?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-077-en-sevdigin-3-cocukluk-oyunu-nedir",
+    "text": "En sevdiğin 3 çocukluk oyunu nedir?",
+    "category": "Games",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 çocukluk oyunu nedir?",
+      "en": "What are your 3 favorite childhood games?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-078-en-sevdigin-3-oyun-karakteri-nedir",
+    "text": "En sevdiğin 3 oyun karakteri nedir?",
+    "category": "Games",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 oyun karakteri nedir?",
+      "en": "Who are your 3 favorite game characters?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-079-en-sevdigin-3-oyun-turu-nedir",
+    "text": "En sevdiğin 3 oyun türü nedir?",
+    "category": "Games",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 oyun türü nedir?",
+      "en": "What are your 3 favorite game genres?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-080-arkadaslarla-oynamayi-en-sevdigin-3-oyun-nedir",
+    "text": "Arkadaşlarla oynamayı en sevdiğin 3 oyun nedir?",
+    "category": "Games",
+    "localizedTexts": {
+      "tr": "Arkadaşlarla oynamayı en sevdiğin 3 oyun nedir?",
+      "en": "What are your 3 favorite games to play with friends?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-081-en-sevdigin-3-eglence-aktivitesi-nedir",
+    "text": "En sevdiğin 3 eğlence aktivitesi nedir?",
+    "category": "Games",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 eğlence aktivitesi nedir?",
+      "en": "What are your 3 favorite entertainment activities?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-082-en-sevdigin-3-parti-oyunu-nedir",
+    "text": "En sevdiğin 3 parti oyunu nedir?",
+    "category": "Games",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 parti oyunu nedir?",
+      "en": "What are your 3 favorite party games?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-083-en-sevdigin-3-sehir-nedir",
+    "text": "En sevdiğin 3 şehir nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 şehir nedir?",
+      "en": "What are your 3 favorite cities?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-084-gitmek-istedigin-3-ulke-nedir",
+    "text": "Gitmek istediğin 3 ülke nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "Gitmek istediğin 3 ülke nedir?",
+      "en": "What are 3 countries you want to visit?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-085-gitmek-istedigin-3-sehir-nedir",
+    "text": "Gitmek istediğin 3 şehir nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "Gitmek istediğin 3 şehir nedir?",
+      "en": "What are 3 cities you want to visit?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-086-en-sevdigin-3-tatil-yeri-nedir",
+    "text": "En sevdiğin 3 tatil yeri nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 tatil yeri nedir?",
+      "en": "What are your 3 favorite vacation spots?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-087-en-sevdigin-3-plaj-sahil-nedir",
+    "text": "En sevdiğin 3 plaj/sahil nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 plaj/sahil nedir?",
+      "en": "What are your 3 favorite beaches/coastlines?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-088-en-sevdigin-3-doga-yeri-nedir",
+    "text": "En sevdiğin 3 doğa yeri nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 doğa yeri nedir?",
+      "en": "What are your 3 favorite nature spots?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-089-en-sevdigin-3-muze-nedir",
+    "text": "En sevdiğin 3 müze nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 müze nedir?",
+      "en": "What are your 3 favorite museums?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-090-en-sevdigin-3-tarihi-yer-nedir",
+    "text": "En sevdiğin 3 tarihi yer nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 tarihi yer nedir?",
+      "en": "What are your 3 favorite historical places?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-091-en-sevdigin-3-mahalle-semt-nedir",
+    "text": "En sevdiğin 3 mahalle/semt nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 mahalle/semt nedir?",
+      "en": "What are your 3 favorite neighborhoods/districts?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-092-yasamak-istedigin-3-sehir-nedir",
+    "text": "Yaşamak istediğin 3 şehir nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "Yaşamak istediğin 3 şehir nedir?",
+      "en": "What are 3 cities you would like to live in?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-093-tekrar-gitmek-istedigin-3-yer-nedir",
+    "text": "Tekrar gitmek istediğin 3 yer nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "Tekrar gitmek istediğin 3 yer nedir?",
+      "en": "What are 3 places you would like to visit again?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-094-hafta-sonu-kacamagi-yapmak-istedigin-3-yer-nedir",
+    "text": "Hafta sonu kaçamağı yapmak istediğin 3 yer nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "Hafta sonu kaçamağı yapmak istediğin 3 yer nedir?",
+      "en": "What are 3 places you would like to go for a weekend getaway?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-095-en-sevdigin-3-yolculuk-turu-nedir",
+    "text": "En sevdiğin 3 yolculuk türü nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 yolculuk türü nedir?",
+      "en": "What are your 3 favorite types of travel?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-096-seyahatte-yaninda-goturdugun-3-vazgecilmez-sey-nedir",
+    "text": "Seyahatte yanında götürdüğün 3 vazgeçilmez şey nedir?",
+    "category": "Travel",
+    "localizedTexts": {
+      "tr": "Seyahatte yanında götürdüğün 3 vazgeçilmez şey nedir?",
+      "en": "What are 3 must-have items you take with you when traveling?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-097-en-sevdigin-3-renk-nedir",
+    "text": "En sevdiğin 3 renk nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 renk nedir?",
+      "en": "What are your 3 favorite colors?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-098-en-sevdigin-3-koku-nedir",
+    "text": "En sevdiğin 3 koku nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 koku nedir?",
+      "en": "What are your 3 favorite scents?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-099-en-sevdigin-3-mevsim-hava-durumu-nedir",
+    "text": "En sevdiğin 3 mevsim/hava durumu nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 mevsim/hava durumu nedir?",
+      "en": "What are your 3 favorite seasons/weather types?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-100-en-sevdigin-3-ay-nedir",
+    "text": "En sevdiğin 3 ay nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 ay nedir?",
+      "en": "What are your 3 favorite months?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-101-en-sevdigin-3-gun-ici-ani-nedir",
+    "text": "En sevdiğin 3 gün içi anı nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 gün içi anı nedir?",
+      "en": "What are your 3 favorite moments during the day?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-102-en-sevdigin-3-kiyafet-turu-nedir",
+    "text": "En sevdiğin 3 kıyafet türü nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kıyafet türü nedir?",
+      "en": "What are your 3 favorite types of clothing?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-103-en-sevdigin-3-ayakkabi-turu-nedir",
+    "text": "En sevdiğin 3 ayakkabı türü nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 ayakkabı türü nedir?",
+      "en": "What are your 3 favorite types of shoes?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-104-en-sevdigin-3-aksesuar-nedir",
+    "text": "En sevdiğin 3 aksesuar nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 aksesuar nedir?",
+      "en": "What are your 3 favorite accessories?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-105-en-sevdigin-3-marka-nedir",
+    "text": "En sevdiğin 3 marka nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 marka nedir?",
+      "en": "What are your 3 favorite brands?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-106-en-sevdigin-3-uygulama-nedir",
+    "text": "En sevdiğin 3 uygulama nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 uygulama nedir?",
+      "en": "What are your 3 favorite apps?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-107-en-sevdigin-3-web-sitesi-nedir",
+    "text": "En sevdiğin 3 web sitesi nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 web sitesi nedir?",
+      "en": "What are your 3 favorite websites?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-108-en-sevdigin-3-emoji-nedir",
+    "text": "En sevdiğin 3 emoji nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 emoji nedir?",
+      "en": "What are your 3 favorite emojis?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-109-en-sevdigin-3-hayvan-nedir",
+    "text": "En sevdiğin 3 hayvan nedir?",
+    "category": "Hobbies",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 hayvan nedir?",
+      "en": "What are your 3 favorite animals?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-110-en-sevdigin-3-cicek-bitki-nedir",
+    "text": "En sevdiğin 3 çiçek/bitki nedir?",
+    "category": "Hobbies",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 çiçek/bitki nedir?",
+      "en": "What are your 3 favorite flowers/plants?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-111-en-sevdigin-3-hobi-nedir",
+    "text": "En sevdiğin 3 hobi nedir?",
+    "category": "Hobbies",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 hobi nedir?",
+      "en": "What are your 3 favorite hobbies?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-112-en-sevdigin-3-spor-dali-nedir",
+    "text": "En sevdiğin 3 spor dalı nedir?",
+    "category": "Hobbies",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 spor dalı nedir?",
+      "en": "What are your 3 favorite sports?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-113-en-sevdigin-3-takim-nedir",
+    "text": "En sevdiğin 3 takım nedir?",
+    "category": "Hobbies",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 takım nedir?",
+      "en": "What are your 3 favorite teams?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-114-en-sevdigin-3-koleksiyon-urunu-nedir",
+    "text": "En sevdiğin 3 koleksiyon ürünü nedir?",
+    "category": "Hobbies",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 koleksiyon ürünü nedir?",
+      "en": "What are your 3 favorite collectible items?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-115-cocukken-en-sevdigin-3-oyuncak-nedir",
+    "text": "Çocukken en sevdiğin 3 oyuncak nedir?",
+    "category": "Childhood",
+    "localizedTexts": {
+      "tr": "Çocukken en sevdiğin 3 oyuncak nedir?",
+      "en": "What were your 3 favorite toys as a child?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-116-cocukken-en-sevdigin-3-cizgi-film-nedir",
+    "text": "Çocukken en sevdiğin 3 çizgi film nedir?",
+    "category": "Childhood",
+    "localizedTexts": {
+      "tr": "Çocukken en sevdiğin 3 çizgi film nedir?",
+      "en": "What were your 3 favorite cartoons as a child?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-117-cocukken-en-sevdigin-3-oyun-nedir",
+    "text": "Çocukken en sevdiğin 3 oyun nedir?",
+    "category": "Childhood",
+    "localizedTexts": {
+      "tr": "Çocukken en sevdiğin 3 oyun nedir?",
+      "en": "What were your 3 favorite games as a child?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-118-cocukken-en-sevdigin-3-yemek-nedir",
+    "text": "Çocukken en sevdiğin 3 yemek nedir?",
+    "category": "Childhood",
+    "localizedTexts": {
+      "tr": "Çocukken en sevdiğin 3 yemek nedir?",
+      "en": "What were your 3 favorite foods as a child?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-119-cocukken-en-sevdigin-3-okul-anisi-nedir",
+    "text": "Çocukken en sevdiğin 3 okul anısı nedir?",
+    "category": "Childhood",
+    "localizedTexts": {
+      "tr": "Çocukken en sevdiğin 3 okul anısı nedir?",
+      "en": "What are your 3 favorite school memories from childhood?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-120-cocukken-en-sevdigin-3-yer-nedir",
+    "text": "Çocukken en sevdiğin 3 yer nedir?",
+    "category": "Childhood",
+    "localizedTexts": {
+      "tr": "Çocukken en sevdiğin 3 yer nedir?",
+      "en": "What were your 3 favorite places as a child?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-121-cocuklugunu-hatirlatan-3-koku-nedir",
+    "text": "Çocukluğunu hatırlatan 3 koku nedir?",
+    "category": "Childhood",
+    "localizedTexts": {
+      "tr": "Çocukluğunu hatırlatan 3 koku nedir?",
+      "en": "What are 3 scents that remind you of your childhood?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-122-cocuklugunu-hatirlatan-3-sarki-nedir",
+    "text": "Çocukluğunu hatırlatan 3 şarkı nedir?",
+    "category": "Childhood",
+    "localizedTexts": {
+      "tr": "Çocukluğunu hatırlatan 3 şarkı nedir?",
+      "en": "What are 3 songs that remind you of your childhood?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-123-cocuklugunu-hatirlatan-3-esya-nedir",
+    "text": "Çocukluğunu hatırlatan 3 eşya nedir?",
+    "category": "Childhood",
+    "localizedTexts": {
+      "tr": "Çocukluğunu hatırlatan 3 eşya nedir?",
+      "en": "What are 3 objects that remind you of your childhood?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-124-en-unutamadigin-3-dogum-gunu-anisi-nedir",
+    "text": "En unutamadığın 3 doğum günü anısı nedir?",
+    "category": "Childhood",
+    "localizedTexts": {
+      "tr": "En unutamadığın 3 doğum günü anısı nedir?",
+      "en": "What are your 3 most unforgettable birthday memories?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-125-en-sevdigin-3-aile-gelenegi-nedir",
+    "text": "En sevdiğin 3 aile geleneği nedir?",
+    "category": "Childhood",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 aile geleneği nedir?",
+      "en": "What are your 3 favorite family traditions?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-126-en-sevdigin-3-sohbet-konusu-nedir",
+    "text": "En sevdiğin 3 sohbet konusu nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 sohbet konusu nedir?",
+      "en": "What are your 3 favorite conversation topics?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-127-yeni-tanistigin-biriyle-konusmayi-sevdigin-3-konu-nedir",
+    "text": "Yeni tanıştığın biriyle konuşmayı sevdiğin 3 konu nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "Yeni tanıştığın biriyle konuşmayı sevdiğin 3 konu nedir?",
+      "en": "What are 3 topics you like talking about with someone you just met?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-128-arkadaslarinda-en-sevdigin-3-ozellik-nedir",
+    "text": "Arkadaşlarında en sevdiğin 3 özellik nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "Arkadaşlarında en sevdiğin 3 özellik nedir?",
+      "en": "What are the 3 qualities you like most in your friends?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-129-bir-insanda-seni-en-cok-etkileyen-3-ozellik-nedir",
+    "text": "Bir insanda seni en çok etkileyen 3 özellik nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "Bir insanda seni en çok etkileyen 3 özellik nedir?",
+      "en": "What are the 3 qualities that impress you most in a person?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-130-bir-insanda-seni-en-cok-sogutan-3-davranis-nedir",
+    "text": "Bir insanda seni en çok soğutan 3 davranış nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "Bir insanda seni en çok soğutan 3 davranış nedir?",
+      "en": "What are 3 behaviors that turn you off the most in a person?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-131-en-sevdigin-3-arkadas-aktivitesi-nedir",
+    "text": "En sevdiğin 3 arkadaş aktivitesi nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 arkadaş aktivitesi nedir?",
+      "en": "What are your 3 favorite activities to do with friends?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-132-kalabalikta-yapmayi-sevdigin-3-sey-nedir",
+    "text": "Kalabalıkta yapmayı sevdiğin 3 şey nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "Kalabalıkta yapmayı sevdiğin 3 şey nedir?",
+      "en": "What are 3 things you like doing in a crowd?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-133-tek-basina-yapmayi-sevdigin-3-sey-nedir",
+    "text": "Tek başına yapmayı sevdiğin 3 şey nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "Tek başına yapmayı sevdiğin 3 şey nedir?",
+      "en": "What are 3 things you like doing alone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-134-misafir-agirlarken-ikram-etmeyi-sevdigin-3-sey-nedir",
+    "text": "Misafir ağırlarken ikram etmeyi sevdiğin 3 şey nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "Misafir ağırlarken ikram etmeyi sevdiğin 3 şey nedir?",
+      "en": "What are 3 things you like serving when hosting guests?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-135-arkadaslarinla-gitmeyi-sevdigin-3-yer-nedir",
+    "text": "Arkadaşlarınla gitmeyi sevdiğin 3 yer nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "Arkadaşlarınla gitmeyi sevdiğin 3 yer nedir?",
+      "en": "What are 3 places you like going to with your friends?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-136-en-cok-guldugun-3-insan-tipi-nedir",
+    "text": "En çok güldüğün 3 insan tipi nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "En çok güldüğün 3 insan tipi nedir?",
+      "en": "What are 3 types of people that make you laugh the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-137-en-iyi-anlastigin-3-insan-tipi-nedir",
+    "text": "En iyi anlaştığın 3 insan tipi nedir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "En iyi anlaştığın 3 insan tipi nedir?",
+      "en": "What are 3 types of people you get along with best?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-138-sohbet-etmeyi-en-sevdigin-3-kisi-kimdir",
+    "text": "Sohbet etmeyi en sevdiğin 3 kişi kimdir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "Sohbet etmeyi en sevdiğin 3 kişi kimdir?",
+      "en": "Who are 3 people you enjoy chatting with the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-139-tavsiye-almayi-sevdigin-3-kisi-kimdir",
+    "text": "Tavsiye almayı sevdiğin 3 kişi kimdir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "Tavsiye almayı sevdiğin 3 kişi kimdir?",
+      "en": "Who are 3 people you like getting advice from?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-140-zor-zamanlarda-konusmak-istedigin-3-kisi-kimdir",
+    "text": "Zor zamanlarda konuşmak istediğin 3 kişi kimdir?",
+    "category": "SocialLife",
+    "localizedTexts": {
+      "tr": "Zor zamanlarda konuşmak istediğin 3 kişi kimdir?",
+      "en": "Who are 3 people you would want to talk to during hard times?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-141-sabah-yapmayi-sevdigin-3-sey-nedir",
+    "text": "Sabah yapmayı sevdiğin 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Sabah yapmayı sevdiğin 3 şey nedir?",
+      "en": "What are 3 things you like doing in the morning?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-142-gece-yapmayi-sevdigin-3-sey-nedir",
+    "text": "Gece yapmayı sevdiğin 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Gece yapmayı sevdiğin 3 şey nedir?",
+      "en": "What are 3 things you like doing at night?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-143-hafta-sonu-yapmayi-sevdigin-3-sey-nedir",
+    "text": "Hafta sonu yapmayı sevdiğin 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Hafta sonu yapmayı sevdiğin 3 şey nedir?",
+      "en": "What are 3 things you like doing on the weekend?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-144-evde-yapmayi-sevdigin-3-sey-nedir",
+    "text": "Evde yapmayı sevdiğin 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Evde yapmayı sevdiğin 3 şey nedir?",
+      "en": "What are 3 things you like doing at home?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-145-disarida-yapmayi-sevdigin-3-sey-nedir",
+    "text": "Dışarıda yapmayı sevdiğin 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Dışarıda yapmayı sevdiğin 3 şey nedir?",
+      "en": "What are 3 things you like doing outside?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-146-sikildiginda-yaptigin-3-sey-nedir",
+    "text": "Sıkıldığında yaptığın 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Sıkıldığında yaptığın 3 şey nedir?",
+      "en": "What are 3 things you do when you are bored?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-147-keyfin-yerindeyken-yaptigin-3-sey-nedir",
+    "text": "Keyfin yerindeyken yaptığın 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Keyfin yerindeyken yaptığın 3 şey nedir?",
+      "en": "What are 3 things you do when you are in a good mood?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-148-dinlenmek-icin-yaptigin-3-sey-nedir",
+    "text": "Dinlenmek için yaptığın 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Dinlenmek için yaptığın 3 şey nedir?",
+      "en": "What are 3 things you do to relax?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-149-odaklanmak-icin-kullandigin-3-yontem-nedir",
+    "text": "Odaklanmak için kullandığın 3 yöntem nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Odaklanmak için kullandığın 3 yöntem nedir?",
+      "en": "What are 3 methods you use to focus?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-150-kendini-iyi-hissettiren-3-kucuk-sey-nedir",
+    "text": "Kendini iyi hissettiren 3 küçük şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Kendini iyi hissettiren 3 küçük şey nedir?",
+      "en": "What are 3 little things that make you feel good?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-151-seni-en-hizli-rahatlatan-3-sey-nedir",
+    "text": "Seni en hızlı rahatlatan 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Seni en hızlı rahatlatan 3 şey nedir?",
+      "en": "What are 3 things that calm you down the fastest?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-152-seni-en-hizli-motive-eden-3-sey-nedir",
+    "text": "Seni en hızlı motive eden 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Seni en hızlı motive eden 3 şey nedir?",
+      "en": "What are 3 things that motivate you the fastest?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-153-gun-icinde-en-sevdigin-3-saat-dilim-nedir",
+    "text": "Gün içinde en sevdiğin 3 saat/dilim nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Gün içinde en sevdiğin 3 saat/dilim nedir?",
+      "en": "What are your 3 favorite times/parts of the day?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-154-evde-en-sevdigin-3-kose-yer-nedir",
+    "text": "Evde en sevdiğin 3 köşe/yer nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Evde en sevdiğin 3 köşe/yer nedir?",
+      "en": "What are your 3 favorite spots/places at home?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-155-disari-cikarken-yaninda-tasidigin-3-sey-nedir",
+    "text": "Dışarı çıkarken yanında taşıdığın 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Dışarı çıkarken yanında taşıdığın 3 şey nedir?",
+      "en": "What are 3 things you carry with you when going out?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-156-sahip-olmak-istedigin-3-sey-nedir",
+    "text": "Sahip olmak istediğin 3 şey nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Sahip olmak istediğin 3 şey nedir?",
+      "en": "What are 3 things you would like to have?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-157-ogrenmek-istedigin-3-beceri-nedir",
+    "text": "Öğrenmek istediğin 3 beceri nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Öğrenmek istediğin 3 beceri nedir?",
+      "en": "What are 3 skills you want to learn?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-158-denemek-istedigin-3-aktivite-nedir",
+    "text": "Denemek istediğin 3 aktivite nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Denemek istediğin 3 aktivite nedir?",
+      "en": "What are 3 activities you want to try?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-159-gitmek-istedigin-3-etkinlik-nedir",
+    "text": "Gitmek istediğin 3 etkinlik nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Gitmek istediğin 3 etkinlik nedir?",
+      "en": "What are 3 events you want to attend?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-160-tanismak-istedigin-3-unlu-kisi-kimdir",
+    "text": "Tanışmak istediğin 3 ünlü kişi kimdir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Tanışmak istediğin 3 ünlü kişi kimdir?",
+      "en": "Who are 3 famous people you would like to meet?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-161-bir-gun-yapmak-istedigin-3-cilgin-sey-nedir",
+    "text": "Bir gün yapmak istediğin 3 çılgın şey nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Bir gün yapmak istediğin 3 çılgın şey nedir?",
+      "en": "What are 3 crazy things you want to do one day?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-162-izlemek-istedigin-3-canli-performans-nedir",
+    "text": "İzlemek istediğin 3 canlı performans nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "İzlemek istediğin 3 canlı performans nedir?",
+      "en": "What are 3 live performances you want to watch?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-163-almak-istedigin-3-teknolojik-urun-nedir",
+    "text": "Almak istediğin 3 teknolojik ürün nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Almak istediğin 3 teknolojik ürün nedir?",
+      "en": "What are 3 tech products you want to buy?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-164-evin-olsa-icinde-olmasini-istedigin-3-sey-nedir",
+    "text": "Evin olsa içinde olmasını istediğin 3 şey nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Evin olsa içinde olmasını istediğin 3 şey nedir?",
+      "en": "What are 3 things you would want in your home if you had one?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-165-hayalindeki-tatilde-olmasini-istedigin-3-sey-nedir",
+    "text": "Hayalindeki tatilde olmasını istediğin 3 şey nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Hayalindeki tatilde olmasını istediğin 3 şey nedir?",
+      "en": "What are 3 things you would want in your dream vacation?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-166-hayalindeki-is-ortaminda-olmasini-istedigin-3-sey-nedir",
+    "text": "Hayalindeki iş ortamında olmasını istediğin 3 şey nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Hayalindeki iş ortamında olmasını istediğin 3 şey nedir?",
+      "en": "What are 3 things you would want in your dream work environment?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-167-gelecekte-edinmek-istedigin-3-aliskanlik-nedir",
+    "text": "Gelecekte edinmek istediğin 3 alışkanlık nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Gelecekte edinmek istediğin 3 alışkanlık nedir?",
+      "en": "What are 3 habits you want to develop in the future?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-goals-168-daha-cok-zaman-ayirmak-istedigin-3-sey-nedir",
+    "text": "Daha çok zaman ayırmak istediğin 3 şey nedir?",
+    "category": "Goals",
+    "localizedTexts": {
+      "tr": "Daha çok zaman ayırmak istediğin 3 şey nedir?",
+      "en": "What are 3 things you want to spend more time on?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-169-en-sevdigin-3-fotografin-nedir",
+    "text": "En sevdiğin 3 fotoğrafın nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 fotoğrafın nedir?",
+      "en": "What are your 3 favorite photos?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-170-en-sevdigin-3-anin-nedir",
+    "text": "En sevdiğin 3 anın nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 anın nedir?",
+      "en": "What are your 3 favorite memories?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-171-en-gurur-duydugun-3-basarin-nedir",
+    "text": "En gurur duyduğun 3 başarın nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En gurur duyduğun 3 başarın nedir?",
+      "en": "What are the 3 achievements you are most proud of?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-172-en-cok-ozledigin-3-sey-nedir",
+    "text": "En çok özlediğin 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En çok özlediğin 3 şey nedir?",
+      "en": "What are 3 things you miss the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-173-en-cok-tesekkur-etmek-istedigin-3-kisi-kimdir",
+    "text": "En çok teşekkür etmek istediğin 3 kişi kimdir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En çok teşekkür etmek istediğin 3 kişi kimdir?",
+      "en": "Who are 3 people you would most like to thank?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-174-hayatinda-iyi-ki-var-dedigin-3-sey-nedir",
+    "text": "Hayatında iyi ki var dediğin 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Hayatında iyi ki var dediğin 3 şey nedir?",
+      "en": "What are 3 things you are glad to have in your life?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-175-seni-en-cok-gulduren-3-sey-nedir",
+    "text": "Seni en çok güldüren 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Seni en çok güldüren 3 şey nedir?",
+      "en": "What are 3 things that make you laugh the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-176-seni-en-cok-heyecanlandiran-3-sey-nedir",
+    "text": "Seni en çok heyecanlandıran 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Seni en çok heyecanlandıran 3 şey nedir?",
+      "en": "What are 3 things that excite you the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-177-en-sevdigin-3-gelenek-nedir",
+    "text": "En sevdiğin 3 gelenek nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 gelenek nedir?",
+      "en": "What are your 3 favorite traditions?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-178-en-sevdigin-3-kutlama-nedir",
+    "text": "En sevdiğin 3 kutlama nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kutlama nedir?",
+      "en": "What are your 3 favorite celebrations?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-179-en-sevdigin-3-bayram-tatil-donemi-nedir",
+    "text": "En sevdiğin 3 bayram/tatil dönemi nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 bayram/tatil dönemi nedir?",
+      "en": "What are your 3 favorite holiday periods?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-180-en-sevdigin-3-surpriz-turu-nedir",
+    "text": "En sevdiğin 3 sürpriz türü nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 sürpriz türü nedir?",
+      "en": "What are your 3 favorite types of surprises?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-181-en-sevdigin-3-sosyal-medya-platformu-nedir",
+    "text": "En sevdiğin 3 sosyal medya platformu nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 sosyal medya platformu nedir?",
+      "en": "What are your 3 favorite social media platforms?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-182-en-sevdigin-3-youtube-kanali-nedir",
+    "text": "En sevdiğin 3 YouTube kanalı nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 YouTube kanalı nedir?",
+      "en": "What are your 3 favorite YouTube channels?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-183-en-sevdigin-3-podcast-nedir",
+    "text": "En sevdiğin 3 podcast nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 podcast nedir?",
+      "en": "What are your 3 favorite podcasts?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-184-en-sevdigin-3-influencer-icerik-uretici-kimdir",
+    "text": "En sevdiğin 3 influencer/içerik üretici kimdir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 influencer/içerik üretici kimdir?",
+      "en": "Who are your 3 favorite influencers/content creators?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-185-en-sevdigin-3-internet-akimi-nedir",
+    "text": "En sevdiğin 3 internet akımı nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 internet akımı nedir?",
+      "en": "What are your 3 favorite internet trends?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-186-en-cok-kullandigin-3-uygulama-nedir",
+    "text": "En çok kullandığın 3 uygulama nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En çok kullandığın 3 uygulama nedir?",
+      "en": "What are the 3 apps you use the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-187-telefonunda-en-sevdigin-3-ozellik-nedir",
+    "text": "Telefonunda en sevdiğin 3 özellik nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "Telefonunda en sevdiğin 3 özellik nedir?",
+      "en": "What are your 3 favorite features on your phone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-188-en-sevdigin-3-fotograf-filtresi-stili-nedir",
+    "text": "En sevdiğin 3 fotoğraf filtresi/stili nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 fotoğraf filtresi/stili nedir?",
+      "en": "What are your 3 favorite photo filters/styles?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-189-en-sevdigin-3-mesajlasma-cikartmasi-emoji-nedir",
+    "text": "En sevdiğin 3 mesajlaşma çıkartması/emoji nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 mesajlaşma çıkartması/emoji nedir?",
+      "en": "What are your 3 favorite messaging stickers/emojis?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-190-en-cok-takip-etmeyi-sevdigin-3-icerik-turu-nedir",
+    "text": "En çok takip etmeyi sevdiğin 3 içerik türü nedir?",
+    "category": "DigitalLife",
+    "localizedTexts": {
+      "tr": "En çok takip etmeyi sevdiğin 3 içerik türü nedir?",
+      "en": "What are 3 types of content you enjoy following the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-191-en-sevdigin-3-unlu-kisi-kimdir",
+    "text": "En sevdiğin 3 ünlü kişi kimdir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 ünlü kişi kimdir?",
+      "en": "Who are your 3 favorite celebrities?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-192-en-sevdigin-3-komedyen-kimdir",
+    "text": "En sevdiğin 3 komedyen kimdir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 komedyen kimdir?",
+      "en": "Who are your 3 favorite comedians?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-193-en-sevdigin-3-sporcu-kimdir",
+    "text": "En sevdiğin 3 sporcu kimdir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 sporcu kimdir?",
+      "en": "Who are your 3 favorite athletes?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-194-en-sevdigin-3-kurgusal-cift-kimdir",
+    "text": "En sevdiğin 3 kurgusal çift kimdir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kurgusal çift kimdir?",
+      "en": "Who are your 3 favorite fictional couples?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-195-en-sevdigin-3-kurgusal-dostluk-nedir",
+    "text": "En sevdiğin 3 kurgusal dostluk nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kurgusal dostluk nedir?",
+      "en": "What are your 3 favorite fictional friendships?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-196-en-sevdigin-3-super-kahraman-kimdir",
+    "text": "En sevdiğin 3 süper kahraman kimdir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 süper kahraman kimdir?",
+      "en": "Who are your 3 favorite superheroes?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-197-en-sevdigin-3-cizgi-film-karakteri-kimdir",
+    "text": "En sevdiğin 3 çizgi film karakteri kimdir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 çizgi film karakteri kimdir?",
+      "en": "Who are your 3 favorite cartoon characters?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-198-en-sevdigin-3-anime-karakteri-kimdir",
+    "text": "En sevdiğin 3 anime karakteri kimdir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 anime karakteri kimdir?",
+      "en": "Who are your 3 favorite anime characters?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-199-en-sevdigin-3-reality-show-yarisma-programi-nedir",
+    "text": "En sevdiğin 3 reality show / yarışma programı nedir?",
+    "category": "MoviesTV",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 reality show / yarışma programı nedir?",
+      "en": "What are your 3 favorite reality shows/competition programs?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-200-en-sevdigin-3-kiyafet-parcan-nedir",
+    "text": "En sevdiğin 3 kıyafet parçan nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 kıyafet parçan nedir?",
+      "en": "What are your 3 favorite clothing pieces?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-201-en-sevdigin-3-giyim-tarzi-nedir",
+    "text": "En sevdiğin 3 giyim tarzı nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 giyim tarzı nedir?",
+      "en": "What are your 3 favorite clothing styles?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-202-en-sevdigin-3-parfum-koku-nedir",
+    "text": "En sevdiğin 3 parfüm/koku nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 parfüm/koku nedir?",
+      "en": "What are your 3 favorite perfumes/scents?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-203-en-sevdigin-3-sac-modeli-nedir",
+    "text": "En sevdiğin 3 saç modeli nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 saç modeli nedir?",
+      "en": "What are your 3 favorite hairstyles?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-204-en-sevdigin-3-makyaj-urunu-stili-nedir",
+    "text": "En sevdiğin 3 makyaj ürünü/stili nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 makyaj ürünü/stili nedir?",
+      "en": "What are your 3 favorite makeup products/styles?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-205-en-sevdigin-3-canta-turu-nedir",
+    "text": "En sevdiğin 3 çanta türü nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 çanta türü nedir?",
+      "en": "What are your 3 favorite types of bags?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-206-en-sevdigin-3-taki-aksesuar-nedir",
+    "text": "En sevdiğin 3 takı/aksesuar nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 takı/aksesuar nedir?",
+      "en": "What are your 3 favorite jewelry/accessories?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-207-almayi-dusundugun-3-sey-nedir",
+    "text": "Almayı düşündüğün 3 şey nedir?",
+    "category": "Style",
+    "localizedTexts": {
+      "tr": "Almayı düşündüğün 3 şey nedir?",
+      "en": "What are 3 things you are thinking of buying?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-208-en-kullanisli-buldugun-3-esya-nedir",
+    "text": "En kullanışlı bulduğun 3 eşya nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "En kullanışlı bulduğun 3 eşya nedir?",
+      "en": "What are 3 items you find the most useful?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-209-en-gereksiz-buldugun-3-esya-nedir",
+    "text": "En gereksiz bulduğun 3 eşya nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "En gereksiz bulduğun 3 eşya nedir?",
+      "en": "What are 3 items you find the most unnecessary?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-210-evde-en-sevdigin-3-esya-nedir",
+    "text": "Evde en sevdiğin 3 eşya nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "Evde en sevdiğin 3 eşya nedir?",
+      "en": "What are your 3 favorite items at home?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-211-evde-en-cok-kullandigin-3-esya-nedir",
+    "text": "Evde en çok kullandığın 3 eşya nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "Evde en çok kullandığın 3 eşya nedir?",
+      "en": "What are the 3 items you use most at home?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-212-mutfaginda-olmasini-istedigin-3-sey-nedir",
+    "text": "Mutfağında olmasını istediğin 3 şey nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "Mutfağında olmasını istediğin 3 şey nedir?",
+      "en": "What are 3 things you would like to have in your kitchen?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-213-odani-guzellestiren-3-sey-nedir",
+    "text": "Odanı güzelleştiren 3 şey nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "Odanı güzelleştiren 3 şey nedir?",
+      "en": "What are 3 things that make your room look better?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-214-en-sevdigin-3-dekorasyon-tarzi-nedir",
+    "text": "En sevdiğin 3 dekorasyon tarzı nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 dekorasyon tarzı nedir?",
+      "en": "What are your 3 favorite decoration styles?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-215-evde-dinlenirken-yaptigin-3-sey-nedir",
+    "text": "Evde dinlenirken yaptığın 3 şey nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "Evde dinlenirken yaptığın 3 şey nedir?",
+      "en": "What are 3 things you do while relaxing at home?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-216-evde-izlemeyi-sevdigin-3-icerik-turu-nedir",
+    "text": "Evde izlemeyi sevdiğin 3 içerik türü nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "Evde izlemeyi sevdiğin 3 içerik türü nedir?",
+      "en": "What are 3 types of content you like watching at home?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-217-evde-dinlemeyi-sevdigin-3-muzik-turu-nedir",
+    "text": "Evde dinlemeyi sevdiğin 3 müzik türü nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "Evde dinlemeyi sevdiğin 3 müzik türü nedir?",
+      "en": "What are 3 music genres you like listening to at home?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-218-evde-en-sevdigin-3-koku-nedir",
+    "text": "Evde en sevdiğin 3 koku nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "Evde en sevdiğin 3 koku nedir?",
+      "en": "What are your 3 favorite scents at home?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-219-evde-olmasini-istedigin-3-konfor-ogesi-nedir",
+    "text": "Evde olmasını istediğin 3 konfor öğesi nedir?",
+    "category": "Home",
+    "localizedTexts": {
+      "tr": "Evde olmasını istediğin 3 konfor öğesi nedir?",
+      "en": "What are 3 comfort items you would like to have at home?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-220-en-komik-buldugun-3-kelime-nedir",
+    "text": "En komik bulduğun 3 kelime nedir?",
+    "category": "Humor",
+    "localizedTexts": {
+      "tr": "En komik bulduğun 3 kelime nedir?",
+      "en": "What are 3 words you find the funniest?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-221-en-sevdigin-3-sacma-bilgi-nedir",
+    "text": "En sevdiğin 3 saçma bilgi nedir?",
+    "category": "Humor",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 saçma bilgi nedir?",
+      "en": "What are your 3 favorite silly facts?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-222-en-sevdigin-3-gereksiz-ama-eglenceli-sey-nedir",
+    "text": "En sevdiğin 3 gereksiz ama eğlenceli şey nedir?",
+    "category": "Humor",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 gereksiz ama eğlenceli şey nedir?",
+      "en": "What are 3 unnecessary but fun things you like?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-223-en-sevdigin-3-saka-turu-nedir",
+    "text": "En sevdiğin 3 şaka türü nedir?",
+    "category": "Humor",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 şaka türü nedir?",
+      "en": "What are your 3 favorite types of jokes?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-224-en-cok-kullandigin-3-espri-cumle-nedir",
+    "text": "En çok kullandığın 3 espri/cümle nedir?",
+    "category": "Humor",
+    "localizedTexts": {
+      "tr": "En çok kullandığın 3 espri/cümle nedir?",
+      "en": "What are 3 jokes/phrases you use the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-225-en-cok-guldugun-3-meme-nedir",
+    "text": "En çok güldüğün 3 meme nedir?",
+    "category": "Humor",
+    "localizedTexts": {
+      "tr": "En çok güldüğün 3 meme nedir?",
+      "en": "What are 3 memes that make you laugh the most?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-226-en-sevdigin-3-lakap-nedir",
+    "text": "En sevdiğin 3 lakap nedir?",
+    "category": "Humor",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 lakap nedir?",
+      "en": "What are your 3 favorite nicknames?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-227-en-komik-buldugun-3-hayvan-videosu-turu-nedir",
+    "text": "En komik bulduğun 3 hayvan videosu türü nedir?",
+    "category": "Humor",
+    "localizedTexts": {
+      "tr": "En komik bulduğun 3 hayvan videosu türü nedir?",
+      "en": "What are 3 types of animal videos you find the funniest?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-228-en-eglenceli-buldugun-3-insan-aliskanligi-nedir",
+    "text": "En eğlenceli bulduğun 3 insan alışkanlığı nedir?",
+    "category": "Humor",
+    "localizedTexts": {
+      "tr": "En eğlenceli bulduğun 3 insan alışkanlığı nedir?",
+      "en": "What are 3 human habits you find the most entertaining?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-creativity-229-en-sevdigin-3-absurt-karakter-nedir",
+    "text": "En sevdiğin 3 absürt karakter nedir?",
+    "category": "Humor",
+    "localizedTexts": {
+      "tr": "En sevdiğin 3 absürt karakter nedir?",
+      "en": "Who are your 3 favorite absurd characters?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-230-yazi-sevdiren-3-sey-nedir",
+    "text": "Yazı sevdiren 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Yazı sevdiren 3 şey nedir?",
+      "en": "What are 3 things that make summer enjoyable?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-231-kisi-sevdiren-3-sey-nedir",
+    "text": "Kışı sevdiren 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Kışı sevdiren 3 şey nedir?",
+      "en": "What are 3 things that make winter enjoyable?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-232-sehri-sevdiren-3-sey-nedir",
+    "text": "Şehri sevdiren 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Şehri sevdiren 3 şey nedir?",
+      "en": "What are 3 things that make the city enjoyable?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-233-koyu-dogayi-sevdiren-3-sey-nedir",
+    "text": "Köyü/doğayı sevdiren 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Köyü/doğayı sevdiren 3 şey nedir?",
+      "en": "What are 3 things that make the countryside/nature enjoyable?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-234-evde-kalmayi-sevdiren-3-sey-nedir",
+    "text": "Evde kalmayı sevdiren 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Evde kalmayı sevdiren 3 şey nedir?",
+      "en": "What are 3 things that make staying at home enjoyable?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-235-disari-cikmayi-sevdiren-3-sey-nedir",
+    "text": "Dışarı çıkmayı sevdiren 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Dışarı çıkmayı sevdiren 3 şey nedir?",
+      "en": "What are 3 things that make going out enjoyable?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-236-sabah-insani-olmayi-sevdiren-3-sey-nedir",
+    "text": "Sabah insanı olmayı sevdiren 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Sabah insanı olmayı sevdiren 3 şey nedir?",
+      "en": "What are 3 things that make being a morning person enjoyable?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-237-gece-insani-olmayi-sevdiren-3-sey-nedir",
+    "text": "Gece insanı olmayı sevdiren 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Gece insanı olmayı sevdiren 3 şey nedir?",
+      "en": "What are 3 things that make being a night owl enjoyable?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-238-kalabalik-ortamlari-sevdiren-3-sey-nedir",
+    "text": "Kalabalık ortamları sevdiren 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Kalabalık ortamları sevdiren 3 şey nedir?",
+      "en": "What are 3 things that make crowded places enjoyable?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-239-sessiz-ortamlari-sevdiren-3-sey-nedir",
+    "text": "Sessiz ortamları sevdiren 3 şey nedir?",
+    "category": "Personal",
+    "localizedTexts": {
+      "tr": "Sessiz ortamları sevdiren 3 şey nedir?",
+      "en": "What are 3 things that make quiet places enjoyable?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-240-bir-arkadasta-aradigin-3-ozellik-nedir",
+    "text": "Bir arkadaşta aradığın 3 özellik nedir?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Bir arkadaşta aradığın 3 özellik nedir?",
+      "en": "What are 3 qualities you look for in a friend?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-241-bir-iliskide-aradigin-3-ozellik-nedir",
+    "text": "Bir ilişkide aradığın 3 özellik nedir?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Bir ilişkide aradığın 3 özellik nedir?",
+      "en": "What are 3 qualities you look for in a relationship?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-242-seni-mutlu-eden-3-ilgi-gosterme-sekli-nedir",
+    "text": "Seni mutlu eden 3 ilgi gösterme şekli nedir?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Seni mutlu eden 3 ilgi gösterme şekli nedir?",
+      "en": "What are 3 ways of showing care that make you happy?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-243-sevdigin-kisilere-gostermeyi-sevdigin-3-jest-nedir",
+    "text": "Sevdiğin kişilere göstermeyi sevdiğin 3 jest nedir?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Sevdiğin kişilere göstermeyi sevdiğin 3 jest nedir?",
+      "en": "What are 3 gestures you like showing to people you love?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-244-sana-iyi-gelen-3-iletisim-sekli-nedir",
+    "text": "Sana iyi gelen 3 iletişim şekli nedir?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Sana iyi gelen 3 iletişim şekli nedir?",
+      "en": "What are 3 types of communication that feel good to you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-245-tartisirken-onemli-buldugun-3-davranis-nedir",
+    "text": "Tartışırken önemli bulduğun 3 davranış nedir?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Tartışırken önemli bulduğun 3 davranış nedir?",
+      "en": "What are 3 behaviors you find important during an argument?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-246-guven-veren-3-davranis-nedir",
+    "text": "Güven veren 3 davranış nedir?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Güven veren 3 davranış nedir?",
+      "en": "What are 3 behaviors that build trust?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-247-degerli-hissettiren-3-davranis-nedir",
+    "text": "Değerli hissettiren 3 davranış nedir?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Değerli hissettiren 3 davranış nedir?",
+      "en": "What are 3 behaviors that make you feel valued?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-248-bir-insani-unutulmaz-yapan-3-ozellik-nedir",
+    "text": "Bir insanı unutulmaz yapan 3 özellik nedir?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Bir insanı unutulmaz yapan 3 özellik nedir?",
+      "en": "What are 3 qualities that make a person unforgettable?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-relationships-249-yakin-arkadaslarinla-paylasmayi-sevdigin-3-sey-nedir",
+    "text": "Yakın arkadaşlarınla paylaşmayı sevdiğin 3 şey nedir?",
+    "category": "Relationships",
+    "localizedTexts": {
+      "tr": "Yakın arkadaşlarınla paylaşmayı sevdiğin 3 şey nedir?",
+      "en": "What are 3 things you like sharing with close friends?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-250-asla-odun-vermek-istemedigin-3-sey-nedir",
+    "text": "Asla ödün vermek istemediğin 3 şey nedir?",
+    "category": "Boundaries",
+    "localizedTexts": {
+      "tr": "Asla ödün vermek istemediğin 3 şey nedir?",
+      "en": "What are 3 things you never want to compromise on?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-251-hayir-demekte-zorlanmadigin-3-sey-nedir",
+    "text": "Hayır demekte zorlanmadığın 3 şey nedir?",
+    "category": "Boundaries",
+    "localizedTexts": {
+      "tr": "Hayır demekte zorlanmadığın 3 şey nedir?",
+      "en": "What are 3 things you have no trouble saying no to?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-252-seni-rahatsiz-eden-3-aliskanlik-nedir",
+    "text": "Seni rahatsız eden 3 alışkanlık nedir?",
+    "category": "Boundaries",
+    "localizedTexts": {
+      "tr": "Seni rahatsız eden 3 alışkanlık nedir?",
+      "en": "What are 3 habits that bother you?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-253-kalabalikta-seni-yoran-3-sey-nedir",
+    "text": "Kalabalıkta seni yoran 3 şey nedir?",
+    "category": "Boundaries",
+    "localizedTexts": {
+      "tr": "Kalabalıkta seni yoran 3 şey nedir?",
+      "en": "What are 3 things that tire you out in a crowd?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-254-ev-arkadasinda-istemeyecegin-3-davranis-nedir",
+    "text": "Ev arkadaşında istemeyeceğin 3 davranış nedir?",
+    "category": "Boundaries",
+    "localizedTexts": {
+      "tr": "Ev arkadaşında istemeyeceğin 3 davranış nedir?",
+      "en": "What are 3 behaviors you would not want in a roommate?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-255-seyahat-arkadasinda-aradigin-3-ozellik-nedir",
+    "text": "Seyahat arkadaşında aradığın 3 özellik nedir?",
+    "category": "Boundaries",
+    "localizedTexts": {
+      "tr": "Seyahat arkadaşında aradığın 3 özellik nedir?",
+      "en": "What are 3 qualities you look for in a travel companion?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-256-calisma-ortaminda-sevmedigin-3-sey-nedir",
+    "text": "Çalışma ortamında sevmediğin 3 şey nedir?",
+    "category": "Boundaries",
+    "localizedTexts": {
+      "tr": "Çalışma ortamında sevmediğin 3 şey nedir?",
+      "en": "What are 3 things you dislike in a work environment?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-257-sosyal-medyada-gormekten-sikildigin-3-sey-nedir",
+    "text": "Sosyal medyada görmekten sıkıldığın 3 şey nedir?",
+    "category": "Boundaries",
+    "localizedTexts": {
+      "tr": "Sosyal medyada görmekten sıkıldığın 3 şey nedir?",
+      "en": "What are 3 things you are tired of seeing on social media?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-258-sohbette-sevmedigin-3-konu-nedir",
+    "text": "Sohbette sevmediğin 3 konu nedir?",
+    "category": "Boundaries",
+    "localizedTexts": {
+      "tr": "Sohbette sevmediğin 3 konu nedir?",
+      "en": "What are 3 conversation topics you dislike?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-259-plan-yaparken-onem-verdigin-3-sey-nedir",
+    "text": "Plan yaparken önem verdiğin 3 şey nedir?",
+    "category": "Boundaries",
+    "localizedTexts": {
+      "tr": "Plan yaparken önem verdiğin 3 şey nedir?",
+      "en": "What are 3 things you care about when making plans?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-260-sabah-uyaninca-baktigin-ilk-3-sey-nedir",
+    "text": "Sabah uyanınca baktığın ilk 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Sabah uyanınca baktığın ilk 3 şey nedir?",
+      "en": "What are the first 3 things you check when you wake up?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-261-yeni-bir-sehre-gidince-yaptigin-ilk-3-sey-nedir",
+    "text": "Yeni bir şehre gidince yaptığın ilk 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Yeni bir şehre gidince yaptığın ilk 3 şey nedir?",
+      "en": "What are the first 3 things you do when you go to a new city?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-262-yeni-biriyle-tanisinca-fark-ettigin-ilk-3-sey-nedir",
+    "text": "Yeni biriyle tanışınca fark ettiğin ilk 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Yeni biriyle tanışınca fark ettiğin ilk 3 şey nedir?",
+      "en": "What are the first 3 things you notice when you meet someone new?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-263-yeni-bir-restoranda-baktigin-ilk-3-sey-nedir",
+    "text": "Yeni bir restoranda baktığın ilk 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Yeni bir restoranda baktığın ilk 3 şey nedir?",
+      "en": "What are the first 3 things you look at in a new restaurant?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-264-yeni-bir-diziye-baslarken-dikkat-ettigin-ilk-3-sey-nedir",
+    "text": "Yeni bir diziye başlarken dikkat ettiğin ilk 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Yeni bir diziye başlarken dikkat ettiğin ilk 3 şey nedir?",
+      "en": "What are the first 3 things you pay attention to when starting a new TV show?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-265-yeni-bir-kitap-secerken-baktigin-ilk-3-sey-nedir",
+    "text": "Yeni bir kitap seçerken baktığın ilk 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Yeni bir kitap seçerken baktığın ilk 3 şey nedir?",
+      "en": "What are the first 3 things you look at when choosing a new book?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-266-yeni-bir-telefon-alirken-onem-verdigin-ilk-3-ozellik-nedir",
+    "text": "Yeni bir telefon alırken önem verdiğin ilk 3 özellik nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Yeni bir telefon alırken önem verdiğin ilk 3 özellik nedir?",
+      "en": "What are the first 3 features you care about when buying a new phone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-267-yeni-bir-kiyafet-alirken-baktigin-ilk-3-sey-nedir",
+    "text": "Yeni bir kıyafet alırken baktığın ilk 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Yeni bir kıyafet alırken baktığın ilk 3 şey nedir?",
+      "en": "What are the first 3 things you look at when buying new clothes?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-268-yeni-bir-eve-girince-dikkat-ettigin-ilk-3-sey-nedir",
+    "text": "Yeni bir eve girince dikkat ettiğin ilk 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Yeni bir eve girince dikkat ettiğin ilk 3 şey nedir?",
+      "en": "What are the first 3 things you notice when entering a new home?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-269-yeni-bir-uygulama-indirirken-baktigin-ilk-3-sey-nedir",
+    "text": "Yeni bir uygulama indirirken baktığın ilk 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Yeni bir uygulama indirirken baktığın ilk 3 şey nedir?",
+      "en": "What are the first 3 things you look at when downloading a new app?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-270-son-zamanlarda-sevdigin-3-sarki-nedir",
+    "text": "Son zamanlarda sevdiğin 3 şarkı nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Son zamanlarda sevdiğin 3 şarkı nedir?",
+      "en": "What are 3 songs you have liked recently?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-271-son-zamanlarda-izledigin-en-iyi-3-sey-nedir",
+    "text": "Son zamanlarda izlediğin en iyi 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Son zamanlarda izlediğin en iyi 3 şey nedir?",
+      "en": "What are the 3 best things you have watched recently?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-272-son-zamanlarda-yedigin-en-guzel-3-sey-nedir",
+    "text": "Son zamanlarda yediğin en güzel 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Son zamanlarda yediğin en güzel 3 şey nedir?",
+      "en": "What are the 3 best things you have eaten recently?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-273-son-zamanlarda-kesfettigin-3-yer-nedir",
+    "text": "Son zamanlarda keşfettiğin 3 yer nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Son zamanlarda keşfettiğin 3 yer nedir?",
+      "en": "What are 3 places you have discovered recently?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-274-son-zamanlarda-aldigin-en-iyi-3-sey-nedir",
+    "text": "Son zamanlarda aldığın en iyi 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Son zamanlarda aldığın en iyi 3 şey nedir?",
+      "en": "What are the 3 best things you have bought recently?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-275-son-zamanlarda-ogrendigin-3-sey-nedir",
+    "text": "Son zamanlarda öğrendiğin 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Son zamanlarda öğrendiğin 3 şey nedir?",
+      "en": "What are 3 things you have learned recently?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-276-son-zamanlarda-seni-gulduren-3-sey-nedir",
+    "text": "Son zamanlarda seni güldüren 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Son zamanlarda seni güldüren 3 şey nedir?",
+      "en": "What are 3 things that have made you laugh recently?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-277-son-zamanlarda-mutlu-oldugun-3-an-nedir",
+    "text": "Son zamanlarda mutlu olduğun 3 an nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Son zamanlarda mutlu olduğun 3 an nedir?",
+      "en": "What are 3 moments that have made you happy recently?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-278-son-zamanlarda-onerdigin-3-icerik-nedir",
+    "text": "Son zamanlarda önerdiğin 3 içerik nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Son zamanlarda önerdiğin 3 içerik nedir?",
+      "en": "What are 3 pieces of content you have recommended recently?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-daily-279-son-zamanlarda-tekrar-yapmak-istedigin-3-sey-nedir",
+    "text": "Son zamanlarda tekrar yapmak istediğin 3 şey nedir?",
+    "category": "Daily",
+    "localizedTexts": {
+      "tr": "Son zamanlarda tekrar yapmak istediğin 3 şey nedir?",
+      "en": "What are 3 things you have wanted to do again recently?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-280-herkese-onerecegin-3-film-nedir",
+    "text": "Herkese önereceğin 3 film nedir?",
+    "category": "Recommendations",
+    "localizedTexts": {
+      "tr": "Herkese önereceğin 3 film nedir?",
+      "en": "What are 3 movies you would recommend to everyone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-281-herkese-onerecegin-3-dizi-nedir",
+    "text": "Herkese önereceğin 3 dizi nedir?",
+    "category": "Recommendations",
+    "localizedTexts": {
+      "tr": "Herkese önereceğin 3 dizi nedir?",
+      "en": "What are 3 TV shows you would recommend to everyone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-282-herkese-onerecegin-3-kitap-nedir",
+    "text": "Herkese önereceğin 3 kitap nedir?",
+    "category": "Recommendations",
+    "localizedTexts": {
+      "tr": "Herkese önereceğin 3 kitap nedir?",
+      "en": "What are 3 books you would recommend to everyone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-283-herkese-onerecegin-3-sarki-nedir",
+    "text": "Herkese önereceğin 3 şarkı nedir?",
+    "category": "Recommendations",
+    "localizedTexts": {
+      "tr": "Herkese önereceğin 3 şarkı nedir?",
+      "en": "What are 3 songs you would recommend to everyone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-284-herkese-onerecegin-3-yemek-nedir",
+    "text": "Herkese önereceğin 3 yemek nedir?",
+    "category": "Recommendations",
+    "localizedTexts": {
+      "tr": "Herkese önereceğin 3 yemek nedir?",
+      "en": "What are 3 dishes you would recommend to everyone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-285-herkese-onerecegin-3-mekan-nedir",
+    "text": "Herkese önereceğin 3 mekan nedir?",
+    "category": "Recommendations",
+    "localizedTexts": {
+      "tr": "Herkese önereceğin 3 mekan nedir?",
+      "en": "What are 3 places you would recommend to everyone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-286-herkese-onerecegin-3-uygulama-nedir",
+    "text": "Herkese önereceğin 3 uygulama nedir?",
+    "category": "Recommendations",
+    "localizedTexts": {
+      "tr": "Herkese önereceğin 3 uygulama nedir?",
+      "en": "What are 3 apps you would recommend to everyone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-287-herkese-onerecegin-3-aliskanlik-nedir",
+    "text": "Herkese önereceğin 3 alışkanlık nedir?",
+    "category": "Recommendations",
+    "localizedTexts": {
+      "tr": "Herkese önereceğin 3 alışkanlık nedir?",
+      "en": "What are 3 habits you would recommend to everyone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-288-herkese-onerecegin-3-tatil-yeri-nedir",
+    "text": "Herkese önereceğin 3 tatil yeri nedir?",
+    "category": "Recommendations",
+    "localizedTexts": {
+      "tr": "Herkese önereceğin 3 tatil yeri nedir?",
+      "en": "What are 3 vacation spots you would recommend to everyone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-289-herkese-onerecegin-3-kucuk-mutluluk-nedir",
+    "text": "Herkese önereceğin 3 küçük mutluluk nedir?",
+    "category": "Recommendations",
+    "localizedTexts": {
+      "tr": "Herkese önereceğin 3 küçük mutluluk nedir?",
+      "en": "What are 3 little joys you would recommend to everyone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-290-fotografini-cekmeyi-sevdigin-3-sey-nedir",
+    "text": "Fotoğrafını çekmeyi sevdiğin 3 şey nedir?",
+    "category": "Photography",
+    "localizedTexts": {
+      "tr": "Fotoğrafını çekmeyi sevdiğin 3 şey nedir?",
+      "en": "What are 3 things you like taking photos of?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-291-albumunde-sakladigin-en-ozel-3-fotograf-nedir",
+    "text": "Albümünde sakladığın en özel 3 fotoğraf nedir?",
+    "category": "Photography",
+    "localizedTexts": {
+      "tr": "Albümünde sakladığın en özel 3 fotoğraf nedir?",
+      "en": "What are the 3 most special photos you keep in your album?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-292-telefon-galerinde-en-cok-bulunan-3-sey-nedir",
+    "text": "Telefon galerinde en çok bulunan 3 şey nedir?",
+    "category": "Photography",
+    "localizedTexts": {
+      "tr": "Telefon galerinde en çok bulunan 3 şey nedir?",
+      "en": "What are the 3 things that appear most in your phone gallery?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-293-fotograf-cekilmek-istedigin-3-yer-nedir",
+    "text": "Fotoğraf çekilmek istediğin 3 yer nedir?",
+    "category": "Photography",
+    "localizedTexts": {
+      "tr": "Fotoğraf çekilmek istediğin 3 yer nedir?",
+      "en": "What are 3 places where you would like to have your photo taken?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-294-fotografini-saklamak-istedigin-3-an-nedir",
+    "text": "Fotoğrafını saklamak istediğin 3 an nedir?",
+    "category": "Photography",
+    "localizedTexts": {
+      "tr": "Fotoğrafını saklamak istediğin 3 an nedir?",
+      "en": "What are 3 moments you would want to keep a photo of?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-295-sana-birini-hatirlatan-3-fotograf-nedir",
+    "text": "Sana birini hatırlatan 3 fotoğraf nedir?",
+    "category": "Photography",
+    "localizedTexts": {
+      "tr": "Sana birini hatırlatan 3 fotoğraf nedir?",
+      "en": "What are 3 photos that remind you of someone?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-296-sana-bir-yeri-hatirlatan-3-fotograf-nedir",
+    "text": "Sana bir yeri hatırlatan 3 fotoğraf nedir?",
+    "category": "Photography",
+    "localizedTexts": {
+      "tr": "Sana bir yeri hatırlatan 3 fotoğraf nedir?",
+      "en": "What are 3 photos that remind you of a place?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-297-eski-fotograflarda-gormeyi-sevdigin-3-sey-nedir",
+    "text": "Eski fotoğraflarda görmeyi sevdiğin 3 şey nedir?",
+    "category": "Photography",
+    "localizedTexts": {
+      "tr": "Eski fotoğraflarda görmeyi sevdiğin 3 şey nedir?",
+      "en": "What are 3 things you like seeing in old photos?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-298-paylasmayi-en-sevdigin-3-fotograf-turu-nedir",
+    "text": "Paylaşmayı en sevdiğin 3 fotoğraf türü nedir?",
+    "category": "Photography",
+    "localizedTexts": {
+      "tr": "Paylaşmayı en sevdiğin 3 fotoğraf türü nedir?",
+      "en": "What are your 3 favorite types of photos to share?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  },
+  {
+    "contentId": "newqs-personal-299-duvarina-asmak-isteyecegin-3-fotograf-nedir",
+    "text": "Duvarına asmak isteyeceğin 3 fotoğraf nedir?",
+    "category": "Photography",
+    "localizedTexts": {
+      "tr": "Duvarına asmak isteyeceğin 3 fotoğraf nedir?",
+      "en": "What are 3 photos you would like to hang on your wall?"
+    },
+    "answers": [],
+    "favoriteUserIds": []
+  }
+]

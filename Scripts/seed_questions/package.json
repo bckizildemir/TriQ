@@ -1,0 +1,18 @@
+{
+  "name": "ttb-seed-questions",
+  "version": "1.0.0",
+  "description": "Seed script for TTB app questions to Firestore",
+  "main": "seed.js",
+  "scripts": {
+    "seed": "node seed.js",
+    "seed:clean": "node seed.js --clean",
+    "sync": "node sync_with_cli_token.js",
+    "migrate:legacy": "node migrate_legacy_questions.js",
+    "migrate:release-state": "node backfill_release_announcement_state.js",
+    "migrate:question-moderation": "node backfill_question_moderation.js --dry-run",
+    "migrate:remove-share-recipient-rosters": "node remove_share_recipient_rosters.js --dry-run"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}

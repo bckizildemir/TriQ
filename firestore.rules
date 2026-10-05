@@ -1,0 +1,357 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if a user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isPermanentUser() {
+      return isAuthenticated()
+             && (
+               request.auth.token.firebase.sign_in_provider != "anonymous" ||
+               (
+                 request.auth.token.email is string &&
+                 request.auth.token.email.size() > 0
+               )
+             );
+    }
+
+    // Helper function to get the user's admin status
+    function isAdmin() {
+      // Ensure the path to the user document is correct and exists
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // =====================================================================
+    // Questions Collection
+    // =====================================================================
+    match /questions/{questionId} {
+      function isSeededQuestion() {
+        return !(resource.data.keys().hasAny(['source'])) || resource.data.source == 'seeded';
+      }
+
+      function isApprovedUserCreatedQuestion() {
+        return resource.data.source == 'userCreated'
+               && (
+                 !(resource.data.keys().hasAny(['moderationStatus']))
+                 || resource.data.moderationStatus == 'approved'
+               );
+      }
+
+      // Admins can read all moderation queues. Regular users can read seeded
+      // questions, approved community questions, and their own submissions.
+      allow read: if isAdmin()
+                  || (
+                    isAuthenticated()
+                    && (
+                      isSeededQuestion()
+                      || isApprovedUserCreatedQuestion()
+                      || resource.data.createdBy == request.auth.uid
+                    )
+                  );
+
+      // Admins can create/delete any question. Permanent users can publish only
+      // their own public Trio prompts.
+      allow create: if isAdmin() || (
+        isPermanentUser() &&
+        request.resource.data.keys().hasOnly([
+          'text', 'category', 'contentId', 'localizedTexts', 'languageCode', 'source', 'createdAt', 'createdBy', 'creatorUsername', 'isAnnounced', 'moderationStatus', 'featuredPlacement'
+        ]) &&
+        request.resource.data.text is string &&
+        request.resource.data.text.size() >= 8 &&
+        request.resource.data.category is string &&
+        request.resource.data.source == 'userCreated' &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.moderationStatus == 'pending' &&
+        (!(request.resource.data.keys().hasAny(['creatorUsername'])) || request.resource.data.creatorUsername is string) &&
+        (!(request.resource.data.keys().hasAny(['isAnnounced'])) || request.resource.data.isAnnounced == false) &&
+        (!(request.resource.data.keys().hasAny(['featuredPlacement'])) || request.resource.data.featuredPlacement == 'none') &&
+        (!(request.resource.data.keys().hasAny(['contentId'])) || request.resource.data.contentId is string) &&
+        (!(request.resource.data.keys().hasAny(['localizedTexts'])) || request.resource.data.localizedTexts is map) &&
+        (!(request.resource.data.keys().hasAny(['languageCode'])) ||
+          (request.resource.data.languageCode is string && request.resource.data.languageCode.size() <= 16))
+      );
+
+      allow delete: if isAdmin();
+
+      // Update logic: An operation is allowed if the user is an admin OR
+      // if it's a regular user updating only specific, allowed fields.
+      allow update: if isAdmin() || (
+        isPermanentUser() &&
+        resource.data.createdBy == request.auth.uid &&
+        resource.data.source == 'userCreated' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['creatorUsername']) &&
+        request.resource.data.creatorUsername is string
+      );
+
+    }
+
+    // Per-user answer docs can appear under any question path. Keep the rule at
+    // the root so direct reads and collection-group queries share the same policy.
+    match /{path=**}/userAnswers/{userId} {
+      // Direct document reads happen inside saveAnswer's transaction before the
+      // doc may exist, so don't depend on resource.data here.
+      allow get: if isAuthenticated()
+                 && request.auth.uid == userId;
+      // Collection-group listeners query on the stored userId field.
+      allow list: if isAuthenticated()
+                  && resource.data.userId == request.auth.uid;
+      // Writes are handled by Cloud Functions so clients cannot tamper with
+      // answer aggregate counters or per-user answer ownership.
+      allow create, update, delete: if false;
+    }
+
+    // =====================================================================
+    // Users Collection (UPDATED FOR ADMIN TOGGLE FUNCTIONALITY)
+    // =====================================================================
+    match /users/{userId} {
+      // READ: A user can read their own profile, and an admin can read any profile.
+      allow read: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+
+      // CREATE: A user document can be created if the user is authenticated and the document ID matches their UID.
+      // This typically happens during sign-up.
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+
+      // UPDATE: Updated to allow admin toggle functionality and badge progress
+      allow update: if 
+          // Rule for Regular Users: They can update their own document...
+          (isAuthenticated() && request.auth.uid == userId &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'username', 'email', 'updatedAt', 'hasProfilePicture',
+              'usernameNormalized', 'profileImageURL', 'isAnonymous',
+              'onboardingVersion', 'onboardingCompletedAt',
+              'termsAcceptedVersion', 'privacyAcceptedVersion', 'legalAcceptedAt'
+            ]) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['username']))
+              || (request.resource.data.username is string
+                  && request.resource.data.username.size() <= 40)) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['email']))
+              || (request.resource.data.email is string
+                  && request.resource.data.email.size() <= 254)) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['usernameNormalized']))
+              || (request.resource.data.usernameNormalized is string
+                  && request.resource.data.usernameNormalized.size() <= 40)) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['updatedAt']))
+              || request.resource.data.updatedAt is timestamp) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['hasProfilePicture']))
+              || request.resource.data.hasProfilePicture is bool) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['profileImageURL']))
+              || (request.resource.data.profileImageURL is string
+                  && request.resource.data.profileImageURL.size() <= 2048)) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAnonymous']))
+              || request.resource.data.isAnonymous is bool) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['onboardingVersion']))
+              || request.resource.data.onboardingVersion is int) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['onboardingCompletedAt']))
+              || request.resource.data.onboardingCompletedAt is timestamp) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['termsAcceptedVersion']))
+              || request.resource.data.termsAcceptedVersion is string) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['privacyAcceptedVersion']))
+              || request.resource.data.privacyAcceptedVersion is string) &&
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['legalAcceptedAt']))
+              || request.resource.data.legalAcceptedAt is timestamp))
+        || 
+          // Rule for Admins: An admin can update another user's document...
+          (isAdmin() &&
+          // ...Admins can change isAdmin status of other users plus updatedAt
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isAdmin', 'updatedAt']));
+
+      // DELETE: A user can delete their own account.
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+
+      match /notificationDevices/{deviceId} {
+        allow read: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+        allow create, update: if isAuthenticated()
+                              && request.auth.uid == userId
+                              && request.resource.data.keys().hasAll([
+                                'fcmToken', 'localeCode', 'contentUpdatesEnabled',
+                                'authorizationStatus', 'isPushEligible',
+                                'platform', 'appVersion', 'lastRegisteredAt'
+                              ])
+                              && request.resource.data.fcmToken is string
+                              && request.resource.data.fcmToken.size() <= 4096
+                              && request.resource.data.localeCode is string
+                              && request.resource.data.localeCode.size() <= 16
+                              && request.resource.data.contentUpdatesEnabled is bool
+                              && request.resource.data.authorizationStatus is string
+                              && request.resource.data.authorizationStatus in ['notDetermined', 'denied', 'authorized']
+                              && request.resource.data.isPushEligible is bool
+                              && request.resource.data.platform is string
+                              && request.resource.data.platform.size() <= 32
+                              && request.resource.data.appVersion is string
+                              && request.resource.data.appVersion.size() <= 32
+                              && request.resource.data.lastRegisteredAt is timestamp;
+        allow delete: if isAuthenticated() && request.auth.uid == userId;
+      }
+    }
+
+    match /usernames/{usernameId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // =====================================================================
+    // Question Lists
+    // =====================================================================
+    match /questionLists/{listId} {
+      allow read: if isPermanentUser()
+                  && resource.data.ownerId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /questionListShares/{shareId} {
+      function acceptedRecipientPath() {
+        return /databases/$(database)/documents/questionListShares/$(shareId)/recipients/$(request.auth.uid);
+      }
+
+      function isShareOwner() {
+        return isPermanentUser()
+               && resource.data.ownerId == request.auth.uid;
+      }
+
+      function isAcceptedShareRecipient() {
+        return isPermanentUser()
+               && resource.data.status == 'active'
+               && exists(acceptedRecipientPath())
+               && get(acceptedRecipientPath()).data.status == 'accepted'
+               && get(acceptedRecipientPath()).data.recipientId == request.auth.uid;
+      }
+
+      allow read: if isShareOwner() || isAcceptedShareRecipient();
+      allow create, update, delete: if false;
+
+      match /recipients/{recipientId} {
+        function parentSharePath() {
+          return /databases/$(database)/documents/questionListShares/$(shareId);
+        }
+
+        function parentShare() {
+          return get(parentSharePath());
+        }
+
+        allow read: if isPermanentUser()
+                    && (
+                      parentShare().data.ownerId == request.auth.uid
+                      || (
+                        request.auth.uid == recipientId
+                        && resource.data.recipientId == request.auth.uid
+                        && resource.data.status == 'accepted'
+                        && parentShare().data.status == 'active'
+                      )
+                    );
+        allow create, update, delete: if false;
+      }
+    }
+
+    match /{sharePath=**}/recipients/{recipientId} {
+      // Collection-group queries cannot prove constraints from the recipientId
+      // document wildcard, so authorize accepted-recipient reads from fields
+      // the query can constrain instead. Direct document reads use the nested
+      // recipient rule above, which also checks parent share state.
+      allow list: if isPermanentUser()
+                  && resource.data.recipientId == request.auth.uid
+                  && resource.data.status == 'accepted';
+      allow create, update, delete: if false;
+    }
+
+    // =====================================================================
+    // Categories Collection
+    // =====================================================================
+    match /categories/{categoryId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // =====================================================================
+    // Content Releases
+    // =====================================================================
+    match /contentReleases/{releaseId} {
+      allow read: if isAdmin()
+                  || (isAuthenticated() && resource.data.status == 'published');
+      allow create, update, delete: if isAdmin();
+    }
+
+    // =====================================================================
+    // Badges Collection (Global Definitions)
+    // =====================================================================
+    match /badges/{badgeId} {
+      // Any authenticated user can read the global badge definitions
+      allow read: if isAuthenticated();
+      // Only admins can create, update, or delete global badge definitions
+      allow write: if isAdmin();
+    }
+
+    // =====================================================================
+    // AI Collections
+    // =====================================================================
+    
+    // AI Queries - User-specific subcollection
+    match /users/{userId}/aiQueries/{queryId} {
+      // Users can read/delete their own AI queries; admins can read any.
+      allow read: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Validate AI query structure on create/update
+      allow create, update: if
+        (isAuthenticated() && request.auth.uid == userId) &&
+        // Ensure required fields exist and have correct types (matching AIQuery model)
+        request.resource.data.keys().hasAll(['question', 'category', 'responses', 'timestamp']) &&
+        request.resource.data.keys().hasOnly(['question', 'category', 'responses', 'timestamp', 'isSaved', 'isLoading', 'error']) &&
+        request.resource.data.question is string &&
+        request.resource.data.question.size() <= 500 &&
+        request.resource.data.category is string &&
+        request.resource.data.category.size() <= 80 &&
+        request.resource.data.responses is list &&
+        request.resource.data.responses.size() <= 3 &&
+        request.resource.data.timestamp is timestamp &&
+        // Optional fields validation (matching AIQuery model)
+        (!(request.resource.data.keys().hasAny(['isSaved'])) || request.resource.data.isSaved is bool) &&
+        (!(request.resource.data.keys().hasAny(['isLoading'])) || request.resource.data.isLoading is bool) &&
+        (!(request.resource.data.keys().hasAny(['error'])) || request.resource.data.error is string);
+    }
+    
+    // Server-owned AI spend counter. functions/aiUsageLimit.js writes it through the Admin SDK,
+    // which bypasses these rules. No client may touch it: a client that could write this document
+    // could reset its own limit, which is exactly the hole the client-owned counter below left.
+    match /aiUsageDaily/{userId} {
+      allow read, write: if false;
+    }
+
+    // AI Usage Statistics - User-specific subcollection.
+    // NOT a spend control. The owner writes these numbers, so they are display and UX only; the
+    // brake is the server-owned aiUsageDaily counter above.
+    match /users/{userId}/aiUsage/{statsId} { // HATA DÜZELTMESİ: 'aiUsageStats' -> 'aiUsage' olarak değiştirildi
+      // Users can read their own usage stats; admins can read any.
+      allow read: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+      
+      // Validate usage stats structure on create/update
+      allow create, update: if
+        (isAuthenticated() && request.auth.uid == userId) &&
+        // Ensure required fields exist and have correct types (matching AIUsageStats model)
+        request.resource.data.keys().hasAll(['dailyQueries', 'weeklyQueries', 'monthlyQueries', 'totalQueries', 'lastResetDate']) &&
+        request.resource.data.keys().hasOnly(['dailyQueries', 'weeklyQueries', 'monthlyQueries', 'totalQueries', 'lastResetDate', 'lastQueryDate', 'favoriteCategory']) &&
+        request.resource.data.dailyQueries is int &&
+        request.resource.data.weeklyQueries is int &&
+        request.resource.data.monthlyQueries is int &&
+        request.resource.data.totalQueries is int &&
+        request.resource.data.lastResetDate is timestamp &&
+        // Optional fields validation (matching AIUsageStats model)
+        (!(request.resource.data.keys().hasAny(['lastQueryDate'])) || request.resource.data.lastQueryDate is timestamp) &&
+        (!(request.resource.data.keys().hasAny(['favoriteCategory'])) || request.resource.data.favoriteCategory is string);
+    }
+    
+    // Global AI Configuration (admin-only)
+    match /aiConfig/{configId} {
+      // Any authenticated user can read global AI config
+      allow read: if isAuthenticated();
+      // Only admins can modify global AI configuration
+      allow write: if isAdmin();
+    }
+  }
+}

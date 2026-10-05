@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TTB - Uc cevaplik kisisel arsiv</title>
+    <meta
+      name="description"
+      content="TTB, her soruya uc kisa cevap vererek kendine ait sade bir kisisel arsiv olusturdugun mobil uygulama."
+    >
+    <meta property="og:title" content="TTB">
+    <meta
+      property="og:description"
+      content="Uc kisa cevap. Tek sade arsiv. TTB ile gunluk sorulara cevap ver, favorilerini biriktir, zamanla kendine geri don."
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/assets/launch-logo.png">
+    <meta name="theme-color" content="#F7F1E8" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#050506" media="(prefers-color-scheme: dark)">
+    <link rel="icon" href="/assets/launch-logo.png">
+    <script>
+      (() => {
+        try {
+          const storedTheme = localStorage.getItem("ttb-theme");
+          const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.dataset.theme = storedTheme || (systemDark ? "dark" : "light");
+        } catch {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
+    <style>
+      :root {
+        color-scheme: light;
+        --page: #f7f1e8;
+        --page-soft: #fffaf2;
+        --surface: #ffffff;
+        --surface-muted: #f1e8dc;
+        --ink: #202124;
+        --muted: #67625b;
+        --line: #ded4c6;
+        --accent: #0a84ff;
+        --accent-2: #db35f5;
+        --shadow: 0 28px 80px rgb(37 29 18 / 0.16);
+        --screen-shadow: 0 32px 90px rgb(25 18 10 / 0.18);
+      }
+
+      html[data-theme="dark"] {
+        color-scheme: dark;
+        --page: #050506;
+        --page-soft: #101113;
+        --surface: #17181a;
+        --surface-muted: #202124;
+        --ink: #f5f5f7;
+        --muted: #a7a299;
+        --line: #303033;
+        --accent: #1495ff;
+        --accent-2: #df3cff;
+        --shadow: 0 28px 90px rgb(0 0 0 / 0.5);
+        --screen-shadow: 0 32px 100px rgb(0 0 0 / 0.54);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
+        background: var(--page);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 1rem;
+        letter-spacing: 0;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      figure {
+        margin: 0;
+      }
+
+      .shell {
+        width: min(1160px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 0;
+        background: color-mix(in srgb, var(--page) 88%, transparent);
+        backdrop-filter: blur(20px);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 800;
+        font-size: 1.05rem;
+      }
+
+      .brand img {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+      }
+
+      .header-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nav-links {
+        display: none;
+        align-items: center;
+        gap: 18px;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .nav-links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        text-decoration: none;
+      }
+
+      .theme-toggle {
+        display: inline-grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--surface) 78%, transparent);
+        color: var(--ink);
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgb(0 0 0 / 0.06);
+      }
+
+      .theme-toggle svg {
+        width: 19px;
+        height: 19px;
+      }
+
+      .theme-icon-dark,
+      html[data-theme="dark"] .theme-icon-light {
+        display: none;
+      }
+
+      html[data-theme="dark"] .theme-icon-dark {
+        display: block;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 34px;
+        align-items: center;
+        padding: 22px 0 62px;
+      }
+
+      .hero-copy {
+        max-width: 660px;
+      }
+
+      .eyebrow {
+        margin: 0 0 14px;
+        color: var(--accent);
+        font-size: 0.9rem;
+        font-weight: 800;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 10ch;
+        font-size: clamp(3.6rem, 17vw, 7.5rem);
+        line-height: 0.92;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        margin: 22px 0 0;
+        max-width: 37rem;
+        color: var(--muted);
+        font-size: clamp(1.12rem, 4.5vw, 1.38rem);
+        line-height: 1.45;
+      }
+
+      .hero-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 30px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 48px;
+        padding: 0 18px;
+        border: 1px solid var(--ink);
+        border-radius: 10px;
+        background: transparent;
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 760;
+        text-align: center;
+      }
+
+      .button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #ffffff;
+      }
+
+      .button[aria-disabled="true"] {
+        border-color: color-mix(in srgb, var(--ink) 18%, transparent);
+        color: color-mix(in srgb, var(--ink) 48%, transparent);
+        cursor: not-allowed;
+      }
+
+      .hero-showcase {
+        display: flex;
+        justify-content: center;
+        min-height: 660px;
+      }
+
+      .phone-frame {
+        width: min(390px, 100%);
+        aspect-ratio: 916 / 1744;
+        border-radius: 52px;
+        overflow: hidden;
+        background: #000000;
+        box-shadow: var(--screen-shadow);
+      }
+
+      .phone-frame img,
+      .screenshot-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      section {
+        padding: 58px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .section-heading {
+        max-width: 720px;
+        margin-bottom: 28px;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-size: clamp(2rem, 9vw, 3.15rem);
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .section-heading p {
+        margin: 14px 0 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .feature-grid,
+      .proof-grid,
+      .faq-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .feature-card {
+        min-width: 0;
+      }
+
+      .screenshot-stage {
+        display: grid;
+        place-items: center;
+        min-height: 560px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background:
+          radial-gradient(circle at 50% 10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 38%),
+          color-mix(in srgb, var(--surface) 56%, transparent);
+      }
+
+      .screenshot-frame {
+        width: min(284px, 100%);
+        aspect-ratio: 916 / 1744;
+        overflow: hidden;
+        border-radius: 39px;
+        background: #000000;
+        box-shadow: var(--shadow);
+      }
+
+      .feature-card h3,
+      .proof h3,
+      .faq h3 {
+        margin: 16px 0 8px;
+        font-size: 1.12rem;
+      }
+
+      .feature-card p,
+      .proof p,
+      .faq p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .proof,
+      .faq,
+      .download-band {
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--surface) 56%, transparent);
+      }
+
+      .proof h3,
+      .faq h3 {
+        margin-top: 0;
+      }
+
+      .download-band {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 22px;
+        align-items: center;
+      }
+
+      .download-band h2 {
+        margin: 0 0 10px;
+        font-size: clamp(1.8rem, 7vw, 2.8rem);
+        line-height: 1.05;
+      }
+
+      .download-band p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .download-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        width: min(100%, 460px);
+      }
+
+      .store-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .store-action {
+        display: grid;
+        gap: 6px;
+        justify-items: center;
+        min-width: 0;
+      }
+
+      .app-store-badge {
+        width: auto;
+        height: 40px;
+      }
+
+      .store-note {
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 760;
+      }
+
+      .google-play-badge {
+        width: auto;
+        height: 40px;
+      }
+
+      .site-footer {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 28px 0 40px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 18px;
+      }
+
+      .footer-links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+      }
+
+      @media (min-width: 520px) {
+        .store-actions {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (min-width: 768px) {
+        .nav-links {
+          display: flex;
+        }
+
+        .hero {
+          grid-template-columns: minmax(0, 1.02fr) minmax(330px, 0.98fr);
+          gap: 44px;
+          padding: 34px 0 74px;
+        }
+
+        h1 {
+          font-size: clamp(4.8rem, 8vw, 7.5rem);
+        }
+
+        .feature-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 26px;
+        }
+
+        .proof-grid,
+        .faq-grid {
+          grid-template-columns: repeat(3, 1fr);
+          gap: 22px;
+        }
+
+        .download-band {
+          grid-template-columns: 1fr auto;
+          padding: 26px;
+        }
+
+        .site-footer {
+          grid-template-columns: 1fr auto;
+          align-items: center;
+        }
+      }
+
+      @media (min-width: 1120px) {
+        .hero {
+          gap: 54px;
+        }
+
+        .hero-showcase {
+          min-height: 760px;
+        }
+
+        .phone-frame {
+          width: 410px;
+        }
+
+        .feature-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 26px;
+        }
+
+        .screenshot-stage {
+          min-height: 520px;
+          padding: 20px;
+        }
+
+        .screenshot-frame {
+          width: min(245px, 100%);
+        }
+      }
+
+      @media (max-width: 390px) {
+        .shell {
+          width: min(100% - 24px, 1160px);
+        }
+
+        .hero-showcase {
+          min-height: 610px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header shell">
+      <a class="brand" href="/" aria-label="TTB ana sayfa" data-i18n-attr="aria-label:brandLabel">
+        <img src="/assets/launch-logo.png" alt="">
+        <span>TTB</span>
+      </a>
+      <div class="header-actions">
+        <nav class="nav-links" aria-label="Sayfa bolumleri" data-i18n-attr="aria-label:navLabel">
+          <a href="#features" data-i18n="navFeatures">Ozellikler</a>
+          <a href="#download" data-i18n="navDownload">Betaya katil</a>
+          <a href="#faq" data-i18n="navFaq">SSS</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Koyu moda gec" data-i18n-attr="aria-label:themeToggleLabel">
+          <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5.64 5.64 4.22 4.22M19.78 19.78l-1.42-1.42M18.36 5.64l1.42-1.42M4.22 19.78l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20.5 14.3A7.6 7.6 0 0 1 9.7 3.5 8.6 8.6 0 1 0 20.5 14.3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <div class="shell hero">
+        <div class="hero-copy">
+          <p class="eyebrow" data-i18n="heroEyebrow">Sade gunluk cevap alani</p>
+          <h1>TTB</h1>
+          <p class="lead" data-i18n="heroLead">
+            Hayatini uc kisa cevapla yakala, favorilerini biriktir ve zamanla kendine ait sade bir arsiv olustur.
+          </p>
+        </div>
+
+        <div class="hero-showcase" aria-label="TTB uygulama ana ekran goruntusu" data-i18n-attr="aria-label:heroScreenshotLabel">
+          <figure class="phone-frame">
+            <img src="/assets/screens/home.png" alt="TTB ana ekraninda gunluk sorular" data-i18n-attr="alt:screenHomeAlt" fetchpriority="high">
+          </figure>
+        </div>
+      </div>
+
+      <section id="features">
+        <div class="shell">
+          <div class="section-heading">
+            <h2 data-i18n="featuresTitle">Kesfet, favorile ve TTB'yi kendin yap.</h2>
+            <p data-i18n="featuresIntro">
+              Gunluk sorulara cevap ver, sevdiklerini sakla, cevap arsivini buyut ve rozetlerle kendi ritmini takip et.
+            </p>
+          </div>
+
+          <div class="feature-grid">
+            <article class="feature-card">
+              <div class="screenshot-stage">
+                <figure class="screenshot-frame">
+                  <img src="/assets/screens/home.png" alt="TTB ana ekraninda gunluk sorular" data-i18n-attr="alt:screenHomeAlt" loading="lazy">
+                </figure>
+              </div>
+              <h3 data-i18n="screenHomeTitle">Ana ekran</h3>
+              <p data-i18n="screenHomeBody">Gunluk ve kategori bazli sorular tek akista gorunur.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="screenshot-stage">
+                <figure class="screenshot-frame">
+                  <img src="/assets/screens/question-detail.png" alt="TTB soru detayi ve cevap giris alanlari" data-i18n-attr="alt:screenDetailAlt" loading="lazy">
+                </figure>
+              </div>
+              <h3 data-i18n="screenDetailTitle">Soru detayi</h3>
+              <p data-i18n="screenDetailBody">Uc cevaplik alan, hizli oneriler, paylasim ve favori kontrolleri bir aradadir.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="screenshot-stage">
+                <figure class="screenshot-frame">
+                  <img src="/assets/screens/answers.png" alt="TTB cevap arsivi ekraninda kayitli cevaplar" data-i18n-attr="alt:screenAnswersAlt" loading="lazy">
+                </figure>
+              </div>
+              <h3 data-i18n="screenAnswersTitle">Cevap arsivi</h3>
+              <p data-i18n="screenAnswersBody">Eski cevaplarin ve gorsellerin tek yerde saklanir.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="screenshot-stage">
+                <figure class="screenshot-frame">
+                  <img src="/assets/screens/favs.png" alt="TTB favoriler ekraninda yildizlanan sorular" data-i18n-attr="alt:screenFavsAlt" loading="lazy">
+                </figure>
+              </div>
+              <h3 data-i18n="screenFavsTitle">Favoriler</h3>
+              <p data-i18n="screenFavsBody">Geri donmek istedigin sorular yildizlanmis bir listede kalir.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="screenshot-stage">
+                <figure class="screenshot-frame">
+                  <img src="/assets/screens/most-answered-all-time.png" alt="TTB en cok cevaplanan sorular ekrani" data-i18n-attr="alt:screenBestAlt" loading="lazy">
+                </figure>
+              </div>
+              <h3 data-i18n="screenBestTitle">En cok cevaplananlar</h3>
+              <p data-i18n="screenBestBody">Toplulugun daha cok cevapladigi sorulari bugun ve tum zamanlar olarak kesfet.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="screenshot-stage">
+                <figure class="screenshot-frame">
+                  <img src="/assets/screens/create-q-1.png" alt="TTB Trio ekraninda AI soru varyasyonlari" data-i18n-attr="alt:screenCreateOneAlt" loading="lazy">
+                </figure>
+              </div>
+              <h3 data-i18n="screenCreateOneTitle">Trio varyasyonlari</h3>
+              <p data-i18n="screenCreateOneBody">Kisa bir fikirden uc cevaplik yeni soru onerileri uretilir.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="screenshot-stage">
+                <figure class="screenshot-frame">
+                  <img src="/assets/screens/create-q-2.png" alt="TTB Trio ekraninda paylasilabilir soru hazirligi" data-i18n-attr="alt:screenCreateTwoAlt" loading="lazy">
+                </figure>
+              </div>
+              <h3 data-i18n="screenCreateTwoTitle">Soru paylasimi</h3>
+              <p data-i18n="screenCreateTwoBody">Secilen soru kategoriyle birlikte paylasima hazir hale gelir.</p>
+            </article>
+
+            <article class="feature-card">
+              <div class="screenshot-stage">
+                <figure class="screenshot-frame">
+                  <img src="/assets/screens/badges.png" alt="TTB rozetler ve ilerleme ekrani" data-i18n-attr="alt:screenBadgesAlt" loading="lazy">
+                </figure>
+              </div>
+              <h3 data-i18n="screenBadgesTitle">Rozetler</h3>
+              <p data-i18n="screenBadgesBody">Cevap ritmin kategori ve seri rozetleriyle gorunur olur.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="proof">
+        <div class="shell">
+          <div class="section-heading">
+            <h2 data-i18n="proofTitle">Once sakin, durust bir beta.</h2>
+            <p data-i18n="proofIntro">Henuz rating, Product Hunt rozeti veya kullanici sayisi uydurmuyoruz. Ilk surum guven ve sadelik uzerine kurulu.</p>
+          </div>
+          <div class="proof-grid">
+            <article class="proof">
+              <h3 data-i18n="proofBetaTitle">Erken beta</h3>
+              <p data-i18n="proofBetaBody">TestFlight davetleri kontrollu ilerler; geri bildirim dogrudan urune yansir.</p>
+            </article>
+            <article class="proof">
+              <h3 data-i18n="proofPrivacyTitle">Gizlilik bilinci</h3>
+              <p data-i18n="proofPrivacyBody">Cevaplarin kisisel oldugu varsayimiyla tasarlanir; gereksiz pazarlama iddiasi eklenmez.</p>
+            </article>
+            <article class="proof">
+              <h3 data-i18n="proofDailyTitle">Kisa gunluk ritim</h3>
+              <p data-i18n="proofDailyBody">Uygulama kalabalik bir sosyal ag degil; kisa cevaplara donen sade bir alan.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="download">
+        <div class="shell download-band">
+          <div>
+            <h2 data-i18n="downloadTitle">Betaya katil.</h2>
+            <p data-i18n="downloadBody">TTB'yi yayindan once dene ve uygulamayi iyilestirmemize yardim et. Varsayilan mail uygulaman hazir konu satiriyla acilir.</p>
+          </div>
+          <div class="download-actions" aria-label="Beta ve magaza baglantilari" data-i18n-attr="aria-label:downloadActionsLabel">
+            <a class="button primary" href="mailto:bckizildemir@icloud.com?subject=TTB%20TestFlight%20Beta&body=Hi%2C%20I%20would%20like%20to%20join%20the%20TTB%20TestFlight%20beta.">
+              <span data-i18n="testFlightCta">TestFlight beta iste</span>
+            </a>
+            <div class="store-actions">
+              <div class="store-action" aria-disabled="true">
+                <img
+                  class="app-store-badge"
+                  src="/assets/badges/app-store/app-store-tr-black.svg"
+                  alt="Download on the App Store"
+                  data-app-store-badge
+                >
+                <span class="store-note" data-i18n="comingSoon">Yakinda</span>
+              </div>
+              <div class="store-action" aria-disabled="true">
+                <img
+                  class="google-play-badge"
+                  src="/assets/badges/google-play/google-play-tr.svg"
+                  alt="Google Play'den alin"
+                  data-google-play-badge
+                >
+                <span class="store-note" data-i18n="comingLater">iOS sonrasi</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="faq">
+        <div class="shell">
+          <div class="section-heading">
+            <h2 data-i18n="faqTitle">SSS</h2>
+            <p data-i18n="faqIntro">Beta, platform ve gizlilikle ilgili temel cevaplar.</p>
+          </div>
+          <div class="faq-grid">
+            <article class="faq">
+              <h3 data-i18n="faqBetaTitle">Betaya nasil girerim?</h3>
+              <p data-i18n="faqBetaBody">TestFlight istegi gonder. Davet linki hazir oldugunda mail uzerinden paylasilir.</p>
+            </article>
+            <article class="faq">
+              <h3 data-i18n="faqIosTitle">Sadece iPhone mu?</h3>
+              <p data-i18n="faqIosBody">Ilk odak iPhone. Play Store plani iPhone deneyimi oturduktan sonra netlesecek.</p>
+            </article>
+            <article class="faq">
+              <h3 data-i18n="faqPrivacyTitle">Cevaplarim ne olur?</h3>
+              <p data-i18n="faqPrivacyBody">TTB kisisel cevaplar icin tasarlanir. Nihai gizlilik ve kullanim metinleri yayin oncesi guncellenecek.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer shell">
+      <span data-i18n="footerNote">TTB - Uc cevaplik sade kisisel arsiv.</span>
+      <div class="footer-links">
+        <a href="/privacy.html" data-i18n="footerPrivacy">Gizlilik</a>
+        <a href="/terms.html" data-i18n="footerTerms">Sartlar</a>
+        <a href="mailto:bckizildemir@icloud.com?subject=TTB%20Support" data-i18n="footerSupport">Destek</a>
+      </div>
+    </footer>
+
+    <script>
+      const translations = {
+        en: {
+          brandLabel: "TTB home",
+          navLabel: "Page sections",
+          navFeatures: "Features",
+          navDownload: "Join Beta",
+          navFaq: "FAQ",
+          themeToggleLabel: "Switch theme",
+          heroEyebrow: "A quiet daily answer space",
+          heroLead: "Capture your life in three short answers, collect your favorites, and build a simple personal archive over time.",
+          heroScreenshotLabel: "TTB app home screen screenshot",
+          featuresTitle: "Browse, favorite, and make TTB yours.",
+          featuresIntro: "Answer daily questions, save the ones you love, grow your answer archive, and follow your own rhythm with badges.",
+          screenHomeAlt: "TTB home screen with daily questions",
+          screenHomeTitle: "Home",
+          screenHomeBody: "Daily and category questions appear in one direct flow.",
+          screenDetailAlt: "TTB question detail with answer fields",
+          screenDetailTitle: "Question detail",
+          screenDetailBody: "Three answer fields, quick suggestions, sharing, and favorite controls stay together.",
+          screenAnswersAlt: "TTB answer archive with saved answers",
+          screenAnswersTitle: "Answer archive",
+          screenAnswersBody: "Past answers and images stay saved in one place.",
+          screenFavsAlt: "TTB favorites screen with starred questions",
+          screenFavsTitle: "Favorites",
+          screenFavsBody: "Questions you want to revisit stay in a starred list.",
+          screenBestAlt: "TTB most answered questions screen",
+          screenBestTitle: "Most answered",
+          screenBestBody: "Explore questions the community answered more often today and all time.",
+          screenCreateOneAlt: "TTB Trio screen with AI question variations",
+          screenCreateOneTitle: "Trio variations",
+          screenCreateOneBody: "Turn a short idea into new three-answer question suggestions.",
+          screenCreateTwoAlt: "TTB Trio screen preparing a shareable question",
+          screenCreateTwoTitle: "Question sharing",
+          screenCreateTwoBody: "Prepare the selected question with its category for sharing.",
+          screenBadgesAlt: "TTB badges and progress screen",
+          screenBadgesTitle: "Badges",
+          screenBadgesBody: "Your answer rhythm becomes visible through category and series badges.",
+          proofTitle: "A calm, honest beta first.",
+          proofIntro: "No invented ratings, Product Hunt badges, or user counts. The first version is built around trust and simplicity.",
+          proofBetaTitle: "Early beta",
+          proofBetaBody: "TestFlight invites stay controlled; feedback can go straight into the product.",
+          proofPrivacyTitle: "Privacy-conscious",
+          proofPrivacyBody: "Answers are treated as personal by default; the page avoids unnecessary marketing claims.",
+          proofDailyTitle: "Short daily rhythm",
+          proofDailyBody: "This is not a crowded social network; it is a quiet place for short answers.",
+          downloadTitle: "Join the beta.",
+          downloadBody: "Try TTB before release and help us improve the experience. Your default mail app opens with the subject already filled in.",
+          downloadActionsLabel: "Beta and store links",
+          testFlightCta: "Request TestFlight beta",
+          comingSoon: "Coming soon",
+          comingLater: "After iPhone",
+          faqTitle: "FAQ",
+          faqIntro: "Basic answers about beta, platform, and privacy.",
+          faqBetaTitle: "How do I join the beta?",
+          faqBetaBody: "Send a TestFlight request. The invite link will be shared by email when ready.",
+          faqIosTitle: "iPhone only?",
+          faqIosBody: "The first focus is iPhone. Play Store timing will be clearer after the iPhone experience settles.",
+          faqPrivacyTitle: "What happens to my answers?",
+          faqPrivacyBody: "TTB is designed for personal answers. Final privacy and terms pages will be updated before launch.",
+          footerNote: "TTB - A simple personal archive in three answers.",
+          footerPrivacy: "Privacy",
+          footerTerms: "Terms",
+          footerSupport: "Support"
+        }
+      };
+
+      const preferredLanguage = navigator.language && navigator.language.toLowerCase().startsWith("en") ? "en" : "tr";
+      const activeTranslations = translations[preferredLanguage];
+
+      const applyTranslations = () => {
+        if (!activeTranslations) {
+          return;
+        }
+
+        document.documentElement.lang = preferredLanguage;
+
+        document.querySelectorAll("[data-i18n]").forEach((node) => {
+          const key = node.getAttribute("data-i18n");
+          if (activeTranslations[key]) {
+            node.textContent = activeTranslations[key];
+          }
+        });
+
+        document.querySelectorAll("[data-i18n-attr]").forEach((node) => {
+          const pairs = node.getAttribute("data-i18n-attr").split(",");
+          pairs.forEach((pair) => {
+            const [attribute, key] = pair.split(":").map((value) => value.trim());
+            if (attribute && key && activeTranslations[key]) {
+              node.setAttribute(attribute, activeTranslations[key]);
+            }
+          });
+        });
+      };
+
+      const updateStoreBadge = () => {
+        const badge = document.querySelector("[data-app-store-badge]");
+        const googlePlayBadge = document.querySelector("[data-google-play-badge]");
+        const locale = document.documentElement.lang === "en" ? "us" : "tr";
+        const googleLocale = document.documentElement.lang === "en" ? "en" : "tr";
+
+        if (badge) {
+          badge.src = `/assets/badges/app-store/app-store-${locale}-black.svg`;
+        }
+
+        if (googlePlayBadge) {
+          googlePlayBadge.src = `/assets/badges/google-play/google-play-${googleLocale}.svg`;
+          googlePlayBadge.alt = document.documentElement.lang === "en" ? "Get it on Google Play" : "Google Play'den alin";
+        }
+      };
+
+      const updateThemeToggle = () => {
+        const toggle = document.querySelector("[data-theme-toggle]");
+        if (!toggle) {
+          return;
+        }
+
+        const isDark = document.documentElement.dataset.theme === "dark";
+        const trLabel = isDark ? "Acik moda gec" : "Koyu moda gec";
+        const enLabel = isDark ? "Switch to light mode" : "Switch to dark mode";
+        toggle.setAttribute("aria-label", document.documentElement.lang === "en" ? enLabel : trLabel);
+      };
+
+      const setupThemeToggle = () => {
+        const toggle = document.querySelector("[data-theme-toggle]");
+        if (!toggle) {
+          return;
+        }
+
+        toggle.addEventListener("click", () => {
+          const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+          document.documentElement.dataset.theme = nextTheme;
+          try {
+            localStorage.setItem("ttb-theme", nextTheme);
+          } catch {
+            // Ignore storage failures and keep the in-page theme change.
+          }
+          updateThemeToggle();
+        });
+      };
+
+      applyTranslations();
+      updateStoreBadge();
+      updateThemeToggle();
+      setupThemeToggle();
+    </script>
+  </body>
+</html>

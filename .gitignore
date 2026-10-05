@@ -1,0 +1,104 @@
+# Xcode
+#
+# gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
+
+## User settings
+xcuserdata/
+
+## Obj-C/Swift specific
+*.hmap
+
+## App packaging
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Package Manager
+#
+# Add this line if you want to avoid checking in source code from Swift Package Manager dependencies.
+# Packages/
+# Package.pins
+# Package.resolved
+# *.xcodeproj
+#
+# Xcode automatically generates this directory with a .xcworkspacedata file and xcuserdata
+# hence it is not needed unless you have added a package configuration file to your project
+# .swiftpm
+
+.build/
+
+# CocoaPods
+#
+# We recommend against adding the Pods directory to your .gitignore. However
+# you should judge for yourself, the pros and cons are mentioned at:
+# https://guides.cocoapods.org/using/using-cocoapods.html#should-i-check-the-pods-directory-into-source-control
+#
+# Pods/
+#
+# Add this line if you want to avoid checking in source code from the Xcode workspace
+# *.xcworkspace
+
+# Carthage
+#
+# Add this line if you want to avoid checking in source code from Carthage dependencies.
+# Carthage/Checkouts
+
+Carthage/Build/
+
+# fastlane
+#
+# It is recommended to not store the screenshots in the git repo.
+# Instead, use fastlane to re-generate the screenshots whenever they are needed.
+# For more information about the recommended setup visit:
+# https://docs.fastlane.tools/best-practices/source-control/#source-control
+
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Secrets - NEVER commit API keys
+TTB/Secrets.xcconfig
+Secrets.xcconfig
+**/Secrets.xcconfig
+
+# Firebase service account keys
+**/serviceAccountKey.json
+Scripts/seed_questions/node_modules/
+functions/node_modules/
+
+# Local debug logs
+firebase-debug.log
+/firepit-log.txt
+
+# Local Xcode build outputs
+/build/
+
+# Local XcodeBuildMCP defaults
+.xcodebuildmcp/
+
+# Local agent skill installs
+.agents/skills/
+skills-lock.json
+
+# Other agent tools and editors: the repo ships Claude Code config only (CLAUDE.md, AGENTS.md, .claude/)
+.windsurf/
+.windsurfrules
+.cursor/
+.cursorrules
+.kilo/
+.kilocode/
+.codex/
+.vscode/
+
+# Claude Code: share rules and project settings, keep machine-local state out
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
+
+# Local build-server config (absolute paths)
+buildServer.json

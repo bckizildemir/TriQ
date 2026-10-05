@@ -1,0 +1,6 @@
+interface:
+  display_name: "TTB Share Links"
+  short_description: "Maintain TTB sharing and deep links"
+  default_prompt: "Use $ttb-share-link-deep-links to debug this TTB share URL or Universal Link flow."
+policy:
+  allow_implicit_invocation: true

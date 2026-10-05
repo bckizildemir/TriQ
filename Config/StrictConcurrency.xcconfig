@@ -1,0 +1,166 @@
+// HARD RULE: never set SWIFT_STRICT_CONCURRENCY (or any setting below) on the
+// `xcodebuild` command line or project-wide. A command-line setting also
+// applies to the SwiftPM package targets, and in CatCareCalendar
+// SWIFT_STRICT_CONCURRENCY = complete crashed the Swift compiler on the
+// FirebaseAuth package target. Set these on TTB's own targets only, one
+// target at a time, never at the project level.
+
+
+// StrictConcurrency.xcconfig
+//
+// Measured settings for the staged Swift 6 concurrency migration.
+// Full measurements, diagnostic categories and rationale:
+//   docs/swift6-concurrency-assessment.md
+//
+// Every setting in this file is commented out, and no target is based on this
+// file. It changes NOTHING. It is committed unwired on purpose, so that the
+// first commit of this migration does not touch project.pbxproj and cannot
+// conflict with an in-flight branch.
+//
+// Wiring note: the TTB app target's Debug and Release configurations are
+// already based on TTB/Secrets.xcconfig, and a configuration takes only one
+// base file. Git ignores TTB/Secrets.xcconfig, so an #include added there is
+// never committed. To wire this file into the app target, set the stage's
+// setting on the target directly, or add the #include to
+// TTB/Secrets.xcconfig.template and to every local TTB/Secrets.xcconfig. The
+// two test targets have no base file today.
+//
+// Measured 2026-10-03 on Apple Swift 6.4 (swiftlang-6.4.0.34.1) / Xcode 27.0
+// (27A266a), base main @ ca435bb, Debug configuration,
+// 'generic/platform=iOS Simulator', IPHONEOS_DEPLOYMENT_TARGET = 18.2,
+// SWIFT_VERSION = 5.0. Counts are unique repository diagnostics. Baseline: the
+// app target has 0 errors and 12 warnings in 5 files (181/181 files compiled);
+// the unit test target has 1 warning. Re-measure on a new toolchain before you
+// trust these counts.
+
+
+// ---------------------------------------------------------------------------
+// Stage 1 - UI test target (TTBUITests)
+// ---------------------------------------------------------------------------
+// Measured 2026-10-03: ** TEST BUILD SUCCEEDED **, 718 warnings -> 56.
+// With `complete` alone the UI tests report 718 warnings in 14 of 14 files,
+// all main-actor access from a nonisolated XCTest method (XCUIApplication is
+// main-actor-isolated). Adding main-actor-by-default removes 662 of them.
+//
+// Apply to TTBUITests ONLY. Do not apply main-actor-by-default to TTBTests
+// without measuring it first.
+//
+//   SWIFT_STRICT_CONCURRENCY = complete
+//   SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor
+//
+// 56 override-isolation warnings remain: 14 files x 4 - init(),
+// init(invocation:), init(selector:), setUpWithError(). Each is now
+// main-actor-isolated while the XCTestCase declaration it overrides is
+// nonisolated. Run the UI tests on iPhone 12 / iOS 26.5 after this stage.
+//
+// APPLIED 2026-10-04 (issue #45): both settings are set directly on the
+// TTBUITests target, Debug and Release; this file stays unwired. Re-measured
+// on the same toolchain, base main @ cfcc9b9: baseline 0, `complete` alone 717
+// (one fewer than 2026-10-03), both settings 56, after the fix 0.
+//
+// The fix: each test class is `nonisolated final class X: XCTestCase`, holding
+// only its constants and setUpWithError(), and every test and helper sits in an
+// `@MainActor extension X`. The CCC fix (an explicit @MainActor class, and
+// setUp() async throws) clears setUpWithError() only: the inherited
+// initializers stay main-actor, and init(invocation:) cannot be overridden
+// because NSInvocation is unavailable in Swift.
+
+
+// ---------------------------------------------------------------------------
+// Stage 2 - app target (TTB), warning mode
+// ---------------------------------------------------------------------------
+// Measured 2026-10-03: 202 warnings in 40 files, 0 errors, 181/181 files
+// compiled, build succeeds. A second build produced the identical list. No
+// blocker to clear first.
+//
+// APPLIED (issue #46): set directly on the TTB target's Debug and Release
+// configurations in project.pbxproj, not through this file; the line below
+// stays commented out and this file stays unwired. Re-measured
+// 2026-10-04 on base main @ cfcc9b9: 0 errors, 202 warnings in 40 files,
+// 181/181 files compiled - unchanged from 2026-10-03.
+//
+//   SWIFT_STRICT_CONCURRENCY = complete
+//
+// SWIFT_STRICT_CONCURRENCY = targeted is not offered: measured 2026-10-03 at
+// 29 warnings in 11 files. It gives no safety that `complete` does not, and it
+// hides the 112 region-isolation warnings that are the bulk of the work.
+
+
+// ---------------------------------------------------------------------------
+// Stage 3 - unit test target (TTBTests), warning mode
+// ---------------------------------------------------------------------------
+// Measured 2026-10-03: 31 warnings in 8 files (baseline 1), 0 errors, 49/49
+// files compiled. Do not skip this stage: CatCareCalendar skipped its test
+// targets here and its first SWIFT_VERSION = 6.0 attempt failed on the UI
+// tests.
+//
+//   SWIFT_STRICT_CONCURRENCY = complete
+//
+// APPLIED 2026-10-04 (issue #47): set directly on the TTBTests Debug and
+// Release configurations in project.pbxproj. Re-measured on base main @
+// cfcc9b9 with the Appendix A method: 1 warning -> 31 warnings in 8 files,
+// 0 errors, 49/49 files compiled; the app target stayed at 12.
+
+
+// ---------------------------------------------------------------------------
+// Stage 4 - source fixes by category
+// ---------------------------------------------------------------------------
+// Tickets 4.1-4.10 in the assessment. It has no setting.
+
+
+// ---------------------------------------------------------------------------
+// Stage 5 - app target, default actor isolation (DECIDE ON EVIDENCE, NOT NOW)
+// ---------------------------------------------------------------------------
+// Two separate settings, two separate decisions, after stage 4.
+//
+// Measured 2026-10-03, on top of `complete`: 202 warnings in 32 files, 0
+// errors, 181/181 files compiled. Net change 0 (202 -> 202): it removes all
+// of categories B (73) and F (9) and most of G, and adds 93 new warnings that
+// move the cost into the service actors.
+// Re-measure after stage 4 and choose then.
+//
+//   SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor
+//
+// Measured 2026-10-03, on top of `complete` alone: the BUILD FAILS, 26 errors
+// (all in Services/InMemoryQuestionListShareService.swift) and 42 warnings,
+// 112/181 files compiled. On top of main-actor-by-default it changes nothing:
+// 202 warnings in 32 files, identical list. Find the cause of the 26 errors
+// before you turn it on.
+//
+//   SWIFT_UPCOMING_FEATURE_NONISOLATED_NONSENDING_BY_DEFAULT = YES
+
+
+// ---------------------------------------------------------------------------
+// Stage 6 - language mode, LAST
+// ---------------------------------------------------------------------------
+// Flip this only when stages 2 and 3 report 0 warnings AND 0 macro-expansion
+// diagnostics. Set it on all 6 configurations, then remove
+// SWIFT_STRICT_CONCURRENCY (Swift 6 implies `complete`).
+//
+// Measured 2026-10-03 on the app target: the BUILD FAILS, 22 errors and 4
+// warnings, 158/181 files compiled. That is a lower bound, because error mode
+// stops the module before every file reports. On the test targets: 13 errors
+// and 12 unit-test warnings in 7 files, 18/49 unit files and 0/14 UI files
+// compiled.
+//
+// It does NOT raise the minimum iOS version: no build in any stage produced an
+// availability diagnostic against iOS 18.2.
+//
+//   SWIFT_VERSION = 6.0
+//
+// Keep Task.immediate, InlineArray and withTaskPriorityEscalationHandler out of
+// the app target: each carries an iOS 26.0 floor (CatCareCalendar probe).
+// Synchronization.Mutex (iOS 18.0) fits. isolated deinit was probed on 18.4
+// only and is unverified on 18.2.
+
+
+// ---------------------------------------------------------------------------
+// Measurement aid, not a shipping setting
+// ---------------------------------------------------------------------------
+// Measured 2026-10-03 on top of SWIFT_VERSION = 6.0: 37 errors and 9 warnings,
+// but coverage FELL from 158/181 to 135/181 files, and the two runs disagree on
+// which files they saw. It does not help error mode. That is the reason this
+// migration measures in warning mode and flips the language mode once, at the
+// end.
+//
+//   OTHER_SWIFT_FLAGS = $(inherited) -continue-building-after-errors

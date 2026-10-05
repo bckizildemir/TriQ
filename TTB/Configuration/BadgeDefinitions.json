@@ -1,0 +1,646 @@
+[
+  {
+    "id": "first_answer",
+    "title": "İlk Adım",
+    "description": "İlk sorunuzu cevapladınız! Yolculuğunuz başladı.",
+    "icon": "1.circle.fill",
+    "requirement": "1 soru cevaplayın",
+    "targetCount": 1,
+    "type": "total",
+    "titleLocalizations": {
+      "tr": "İlk Adım",
+      "en": "First step"
+    },
+    "descriptionLocalizations": {
+      "tr": "İlk sorunuzu cevapladınız! Yolculuğunuz başladı.",
+      "en": "You answered your first question! Your journey has begun."
+    },
+    "requirementLocalizations": {
+      "tr": "1 soru cevaplayın",
+      "en": "answer 1 question"
+    }
+  },
+  {
+    "id": "five_answers",
+    "title": "Başlangıç",
+    "description": "5 soru cevapladınız. Harika bir başlangıç!",
+    "icon": "5.circle.fill",
+    "requirement": "5 soru cevaplayın",
+    "targetCount": 5,
+    "type": "total",
+    "titleLocalizations": {
+      "tr": "Başlangıç",
+      "en": "Beginning"
+    },
+    "descriptionLocalizations": {
+      "tr": "5 soru cevapladınız. Harika bir başlangıç!",
+      "en": "You answered 5 questions. A great start!"
+    },
+    "requirementLocalizations": {
+      "tr": "5 soru cevaplayın",
+      "en": "answer 5 questions"
+    }
+  },
+  {
+    "id": "ten_answers",
+    "title": "Kararlı",
+    "description": "10 soru cevapladınız. Kararlılığınız takdire şayan!",
+    "icon": "star.circle.fill",
+    "requirement": "10 soru cevaplayın",
+    "targetCount": 10,
+    "type": "total",
+    "titleLocalizations": {
+      "tr": "Kararlı",
+      "en": "Decisive"
+    },
+    "descriptionLocalizations": {
+      "tr": "10 soru cevapladınız. Kararlılığınız takdire şayan!",
+      "en": "You answered 10 questions. Your determination is admirable!"
+    },
+    "requirementLocalizations": {
+      "tr": "10 soru cevaplayın",
+      "en": "answer 10 questions"
+    }
+  },
+  {
+    "id": "twentyfive_answers",
+    "title": "Düzenli",
+    "description": "25 soru cevapladınız. Düzenli çalışmanız mükemmel!",
+    "icon": "star.fill",
+    "requirement": "25 soru cevaplayın",
+    "targetCount": 25,
+    "type": "total",
+    "titleLocalizations": {
+      "tr": "Düzenli",
+      "en": "Organised"
+    },
+    "descriptionLocalizations": {
+      "tr": "25 soru cevapladınız. Düzenli çalışmanız mükemmel!",
+      "en": "You answered 25 questions. Your regular work is excellent!"
+    },
+    "requirementLocalizations": {
+      "tr": "25 soru cevaplayın",
+      "en": "Answer 25 questions"
+    }
+  },
+  {
+    "id": "fifty_answers",
+    "title": "Deneyimli",
+    "description": "50 soru cevapladınız. Artık bir uzman sayılırsınız!",
+    "icon": "crown.fill",
+    "requirement": "50 soru cevaplayın",
+    "targetCount": 50,
+    "type": "total",
+    "titleLocalizations": {
+      "tr": "Deneyimli",
+      "en": "Experienced"
+    },
+    "descriptionLocalizations": {
+      "tr": "50 soru cevapladınız. Artık bir uzman sayılırsınız!",
+      "en": "You answered 50 questions. You are now an expert!"
+    },
+    "requirementLocalizations": {
+      "tr": "50 soru cevaplayın",
+      "en": "answer 50 questions"
+    }
+  },
+  {
+    "id": "hundred_answers",
+    "title": "Usta",
+    "description": "100 soru cevapladınız. İnanılmaz bir başarı!",
+    "icon": "trophy.fill",
+    "requirement": "100 soru cevaplayın",
+    "targetCount": 100,
+    "type": "total",
+    "titleLocalizations": {
+      "tr": "Usta",
+      "en": "Expert"
+    },
+    "descriptionLocalizations": {
+      "tr": "100 soru cevapladınız. İnanılmaz bir başarı!",
+      "en": "You answered 100 questions. An incredible achievement!"
+    },
+    "requirementLocalizations": {
+      "tr": "100 soru cevaplayın",
+      "en": "Answer 100 questions"
+    }
+  },
+  {
+    "id": "two_hundred_answers",
+    "title": "Tutkulu",
+    "description": "200 soru cevapladınız. Tutkunuz ilham verici!",
+    "icon": "medal.fill",
+    "requirement": "200 soru cevaplayın",
+    "targetCount": 200,
+    "type": "total",
+    "titleLocalizations": {
+      "tr": "Tutkulu",
+      "en": "Passionate"
+    },
+    "descriptionLocalizations": {
+      "tr": "200 soru cevapladınız. Tutkunuz ilham verici!",
+      "en": "You answered 200 questions. Your passion is inspiring!"
+    },
+    "requirementLocalizations": {
+      "tr": "200 soru cevaplayın",
+      "en": "Answer 200 questions"
+    }
+  },
+  {
+    "id": "three_sixty_five_answers",
+    "title": "Yıllık Bilge",
+    "description": "365 soru cevapladınız. Her güne bir soru — bir yıllık bilgelik!",
+    "icon": "graduationcap.fill",
+    "requirement": "365 soru cevaplayın",
+    "targetCount": 365,
+    "type": "total",
+    "titleLocalizations": {
+      "tr": "Yıllık Bilge",
+      "en": "Annual Sage"
+    },
+    "descriptionLocalizations": {
+      "tr": "365 soru cevapladınız. Her güne bir soru — bir yıllık bilgelik!",
+      "en": "You answered 365 questions. One question a day — a year's worth of wisdom!"
+    },
+    "requirementLocalizations": {
+      "tr": "365 soru cevaplayın",
+      "en": "Answer 365 questions"
+    }
+  },
+  {
+    "id": "five_hundred_answers",
+    "title": "Efsane",
+    "description": "500 soru cevapladınız. Efsanevi bir başarı!",
+    "icon": "wand.and.stars",
+    "requirement": "500 soru cevaplayın",
+    "targetCount": 500,
+    "type": "total",
+    "titleLocalizations": {
+      "tr": "Efsane",
+      "en": "Myth"
+    },
+    "descriptionLocalizations": {
+      "tr": "500 soru cevapladınız. Efsanevi bir başarı!",
+      "en": "You answered 500 questions. A legendary achievement!"
+    },
+    "requirementLocalizations": {
+      "tr": "500 soru cevaplayın",
+      "en": "Answer 500 questions"
+    }
+  },
+  {
+    "id": "thousand_answers",
+    "title": "Grandmaster",
+    "description": "1000 soru cevapladınız. Sınırsız bilgelik!",
+    "icon": "sparkles",
+    "requirement": "1000 soru cevaplayın",
+    "targetCount": 1000,
+    "type": "total",
+    "titleLocalizations": {
+      "tr": "Grandmaster",
+      "en": "Grandmaster"
+    },
+    "descriptionLocalizations": {
+      "tr": "1000 soru cevapladınız. Sınırsız bilgelik!",
+      "en": "You answered 1000 questions. Unlimited wisdom!"
+    },
+    "requirementLocalizations": {
+      "tr": "1000 soru cevaplayın",
+      "en": "Answer 1000 questions"
+    }
+  },
+  {
+    "id": "daily_explorer",
+    "title": "Günlük Kaşif",
+    "description": "Günlük kategorisinde 10 soru cevapladınız.",
+    "icon": "target",
+    "requirement": "Günlük kategorisinde 10 soru cevaplayın",
+    "targetCount": 10,
+    "type": "category",
+    "category": "Daily",
+    "titleLocalizations": {
+      "tr": "Günlük Kaşif",
+      "en": "Daily Explorer"
+    },
+    "descriptionLocalizations": {
+      "tr": "Günlük kategorisinde 10 soru cevapladınız.",
+      "en": "You answered 10 questions in the Diary category."
+    },
+    "requirementLocalizations": {
+      "tr": "Günlük kategorisinde 10 soru cevaplayın",
+      "en": "Answer 10 questions in the daily category"
+    }
+  },
+  {
+    "id": "personal_growth",
+    "title": "Kişisel Gelişimci",
+    "description": "Kişisel Gelişim kategorisinde 10 soru cevapladınız.",
+    "icon": "person.fill.checkmark",
+    "requirement": "Kişisel Gelişim kategorisinde 10 soru cevaplayın",
+    "targetCount": 10,
+    "type": "category",
+    "category": "Personal",
+    "titleLocalizations": {
+      "tr": "Kişisel Gelişimci",
+      "en": "Personal Developmentist"
+    },
+    "descriptionLocalizations": {
+      "tr": "Kişisel Gelişim kategorisinde 10 soru cevapladınız.",
+      "en": "You answered 10 questions in the Personal Development category."
+    },
+    "requirementLocalizations": {
+      "tr": "Kişisel Gelişim kategorisinde 10 soru cevaplayın",
+      "en": "Answer 10 questions in the Personal Development category"
+    }
+  },
+  {
+    "id": "relationship_expert",
+    "title": "İlişki Uzmanı",
+    "description": "İlişkiler kategorisinde 10 soru cevapladınız.",
+    "icon": "heart.fill",
+    "requirement": "İlişkiler kategorisinde 10 soru cevaplayın",
+    "targetCount": 10,
+    "type": "category",
+    "category": "Relationships",
+    "titleLocalizations": {
+      "tr": "İlişki Uzmanı",
+      "en": "Relationship Expert"
+    },
+    "descriptionLocalizations": {
+      "tr": "İlişkiler kategorisinde 10 soru cevapladınız.",
+      "en": "You answered 10 questions in the Relationships category."
+    },
+    "requirementLocalizations": {
+      "tr": "İlişkiler kategorisinde 10 soru cevaplayın",
+      "en": "Answer 10 questions in the Relationships category"
+    }
+  },
+  {
+    "id": "career_focused",
+    "title": "Kariyer Odaklı",
+    "description": "Kariyer kategorisinde 10 soru cevapladınız.",
+    "icon": "briefcase.fill",
+    "requirement": "Kariyer kategorisinde 10 soru cevaplayın",
+    "targetCount": 10,
+    "type": "category",
+    "category": "Career",
+    "titleLocalizations": {
+      "tr": "Kariyer Odaklı",
+      "en": "Career Oriented"
+    },
+    "descriptionLocalizations": {
+      "tr": "Kariyer kategorisinde 10 soru cevapladınız.",
+      "en": "You answered 10 questions in the Career category."
+    },
+    "requirementLocalizations": {
+      "tr": "Kariyer kategorisinde 10 soru cevaplayın",
+      "en": "Answer 10 questions in the career category"
+    }
+  },
+  {
+    "id": "health_conscious",
+    "title": "Sağlık Bilincinde",
+    "description": "Sağlık kategorisinde 10 soru cevapladınız.",
+    "icon": "heart.text.square.fill",
+    "requirement": "Sağlık kategorisinde 10 soru cevaplayın",
+    "targetCount": 10,
+    "type": "category",
+    "category": "Health",
+    "titleLocalizations": {
+      "tr": "Sağlık Bilincinde",
+      "en": "Health Conscious"
+    },
+    "descriptionLocalizations": {
+      "tr": "Sağlık kategorisinde 10 soru cevapladınız.",
+      "en": "You answered 10 questions in the health category."
+    },
+    "requirementLocalizations": {
+      "tr": "Sağlık kategorisinde 10 soru cevaplayın",
+      "en": "Answer 10 questions in the health category"
+    }
+  },
+  {
+    "id": "goal_setter",
+    "title": "Hedef Belirleyici",
+    "description": "Hedefler kategorisinde 10 soru cevapladınız.",
+    "icon": "flag.fill",
+    "requirement": "Hedefler kategorisinde 10 soru cevaplayın",
+    "targetCount": 10,
+    "type": "category",
+    "category": "Goals",
+    "titleLocalizations": {
+      "tr": "Hedef Belirleyici",
+      "en": "Goal Setter"
+    },
+    "descriptionLocalizations": {
+      "tr": "Hedefler kategorisinde 10 soru cevapladınız.",
+      "en": "You answered 10 questions in the Goals category."
+    },
+    "requirementLocalizations": {
+      "tr": "Hedefler kategorisinde 10 soru cevaplayın",
+      "en": "Answer 10 questions in the Goals category"
+    }
+  },
+  {
+    "id": "creative_mind",
+    "title": "Yaratıcı Zihin",
+    "description": "Yaratıcılık kategorisinde 10 soru cevapladınız.",
+    "icon": "paintbrush.fill",
+    "requirement": "Yaratıcılık kategorisinde 10 soru cevaplayın",
+    "targetCount": 10,
+    "type": "category",
+    "category": "Creativity",
+    "titleLocalizations": {
+      "tr": "Yaratıcı Zihin",
+      "en": "Creative Mind"
+    },
+    "descriptionLocalizations": {
+      "tr": "Yaratıcılık kategorisinde 10 soru cevapladınız.",
+      "en": "You answered 10 questions in the Creativity category."
+    },
+    "requirementLocalizations": {
+      "tr": "Yaratıcılık kategorisinde 10 soru cevaplayın",
+      "en": "Answer 10 questions in the Creativity category"
+    }
+  },
+  {
+    "id": "daily_master",
+    "title": "Günlük Ustası",
+    "description": "Günlük kategorisinde 25 soru cevapladınız. Gününüze yön veriyorsunuz!",
+    "icon": "sun.max.fill",
+    "requirement": "Günlük kategorisinde 25 soru cevaplayın",
+    "targetCount": 25,
+    "type": "category",
+    "category": "Daily",
+    "titleLocalizations": {
+      "tr": "Günlük Ustası",
+      "en": "Diary Master"
+    },
+    "descriptionLocalizations": {
+      "tr": "Günlük kategorisinde 25 soru cevapladınız. Gününüze yön veriyorsunuz!",
+      "en": "You answered 25 questions in the Diary category. You direct your day!"
+    },
+    "requirementLocalizations": {
+      "tr": "Günlük kategorisinde 25 soru cevaplayın",
+      "en": "Answer 25 questions in the Daily category"
+    }
+  },
+  {
+    "id": "personal_master",
+    "title": "Kendini Tanıyan",
+    "description": "Kişisel Gelişimde 25 soru cevapladınız. Kendinizi keşfediyorsunuz!",
+    "icon": "figure.mind.and.body",
+    "requirement": "Kişisel Gelişim kategorisinde 25 soru cevaplayın",
+    "targetCount": 25,
+    "type": "category",
+    "category": "Personal",
+    "titleLocalizations": {
+      "tr": "Kendini Tanıyan",
+      "en": "Self-Knowing"
+    },
+    "descriptionLocalizations": {
+      "tr": "Kişisel Gelişimde 25 soru cevapladınız. Kendinizi keşfediyorsunuz!",
+      "en": "You answered 25 questions in Personal Development. You are discovering yourself!"
+    },
+    "requirementLocalizations": {
+      "tr": "Kişisel Gelişim kategorisinde 25 soru cevaplayın",
+      "en": "Answer 25 questions in the Personal Development category"
+    }
+  },
+  {
+    "id": "relationship_master",
+    "title": "Gönül Uzmanı",
+    "description": "İlişkiler kategorisinde 25 soru cevapladınız. Gönül dili konuşuyorsunuz!",
+    "icon": "heart.circle.fill",
+    "requirement": "İlişkiler kategorisinde 25 soru cevaplayın",
+    "targetCount": 25,
+    "type": "category",
+    "category": "Relationships",
+    "titleLocalizations": {
+      "tr": "Gönül Uzmanı",
+      "en": "Heart Expert"
+    },
+    "descriptionLocalizations": {
+      "tr": "İlişkiler kategorisinde 25 soru cevapladınız. Gönül dili konuşuyorsunuz!",
+      "en": "You answered 25 questions in the Relationships category. You speak the language of the heart!"
+    },
+    "requirementLocalizations": {
+      "tr": "İlişkiler kategorisinde 25 soru cevaplayın",
+      "en": "Answer 25 questions in the Relationships category"
+    }
+  },
+  {
+    "id": "career_master",
+    "title": "İş Dünyası Lideri",
+    "description": "Kariyer kategorisinde 25 soru cevapladınız. Liderlik yolundasınız!",
+    "icon": "building.2.fill",
+    "requirement": "Kariyer kategorisinde 25 soru cevaplayın",
+    "targetCount": 25,
+    "type": "category",
+    "category": "Career",
+    "titleLocalizations": {
+      "tr": "İş Dünyası Lideri",
+      "en": "Business Leader"
+    },
+    "descriptionLocalizations": {
+      "tr": "Kariyer kategorisinde 25 soru cevapladınız. Liderlik yolundasınız!",
+      "en": "You answered 25 questions in the career category. You are on the path to leadership!"
+    },
+    "requirementLocalizations": {
+      "tr": "Kariyer kategorisinde 25 soru cevaplayın",
+      "en": "Answer 25 questions in the career category"
+    }
+  },
+  {
+    "id": "health_master",
+    "title": "Sağlık Gurusu",
+    "description": "Sağlık kategorisinde 25 soru cevapladınız. Sağlıklı yaşam uzmanısınız!",
+    "icon": "cross.circle.fill",
+    "requirement": "Sağlık kategorisinde 25 soru cevaplayın",
+    "targetCount": 25,
+    "type": "category",
+    "category": "Health",
+    "titleLocalizations": {
+      "tr": "Sağlık Gurusu",
+      "en": "Health Guru"
+    },
+    "descriptionLocalizations": {
+      "tr": "Sağlık kategorisinde 25 soru cevapladınız. Sağlıklı yaşam uzmanısınız!",
+      "en": "You answered 25 questions in the health category. You are a wellness expert!"
+    },
+    "requirementLocalizations": {
+      "tr": "Sağlık kategorisinde 25 soru cevaplayın",
+      "en": "Answer 25 questions in the health category"
+    }
+  },
+  {
+    "id": "goal_master",
+    "title": "Hedef Avcısı",
+    "description": "Hedefler kategorisinde 25 soru cevapladınız. Hedeflerinizi kovalıyorsunuz!",
+    "icon": "scope",
+    "requirement": "Hedefler kategorisinde 25 soru cevaplayın",
+    "targetCount": 25,
+    "type": "category",
+    "category": "Goals",
+    "titleLocalizations": {
+      "tr": "Hedef Avcısı",
+      "en": "Target Hunter"
+    },
+    "descriptionLocalizations": {
+      "tr": "Hedefler kategorisinde 25 soru cevapladınız. Hedeflerinizi kovalıyorsunuz!",
+      "en": "You answered 25 questions in the Goals category. You are chasing your goals!"
+    },
+    "requirementLocalizations": {
+      "tr": "Hedefler kategorisinde 25 soru cevaplayın",
+      "en": "Answer 25 questions in the Goals category"
+    }
+  },
+  {
+    "id": "creativity_master",
+    "title": "Sanat Dehası",
+    "description": "Yaratıcılık kategorisinde 25 soru cevapladınız. İlham kaynağısınız!",
+    "icon": "paintpalette.fill",
+    "requirement": "Yaratıcılık kategorisinde 25 soru cevaplayın",
+    "targetCount": 25,
+    "type": "category",
+    "category": "Creativity",
+    "titleLocalizations": {
+      "tr": "Sanat Dehası",
+      "en": "Art Genius"
+    },
+    "descriptionLocalizations": {
+      "tr": "Yaratıcılık kategorisinde 25 soru cevapladınız. İlham kaynağısınız!",
+      "en": "You answered 25 questions in the Creativity category. You are an inspiration!"
+    },
+    "requirementLocalizations": {
+      "tr": "Yaratıcılık kategorisinde 25 soru cevaplayın",
+      "en": "Answer 25 questions in the Creativity category"
+    }
+  },
+  {
+    "id": "three_day_streak",
+    "title": "3 Günlük Seri",
+    "description": "3 gün üst üste soru cevapladınız!",
+    "icon": "flame.fill",
+    "requirement": "3 gün üst üste soru cevaplayın",
+    "targetCount": 3,
+    "type": "streak",
+    "titleLocalizations": {
+      "tr": "3 Günlük Seri",
+      "en": "3 Day Series"
+    },
+    "descriptionLocalizations": {
+      "tr": "3 gün üst üste soru cevapladınız!",
+      "en": "You answered questions 3 days in a row!"
+    },
+    "requirementLocalizations": {
+      "tr": "3 gün üst üste soru cevaplayın",
+      "en": "Answer questions 3 days in a row"
+    }
+  },
+  {
+    "id": "five_day_streak",
+    "title": "5 Günlük Seri",
+    "description": "5 gün üst üste soru cevapladınız! Momentum kazanıyorsun!",
+    "icon": "bolt.fill",
+    "requirement": "5 gün üst üste soru cevaplayın",
+    "targetCount": 5,
+    "type": "streak",
+    "titleLocalizations": {
+      "tr": "5 Günlük Seri",
+      "en": "5 Day Series"
+    },
+    "descriptionLocalizations": {
+      "tr": "5 gün üst üste soru cevapladınız! Momentum kazanıyorsun!",
+      "en": "You answered questions 5 days in a row! You're gaining momentum!"
+    },
+    "requirementLocalizations": {
+      "tr": "5 gün üst üste soru cevaplayın",
+      "en": "Answer questions 5 days in a row"
+    }
+  },
+  {
+    "id": "week_streak",
+    "title": "Haftalık Seri",
+    "description": "7 gün üst üste soru cevapladınız! Harika bir disiplin!",
+    "icon": "flame.circle.fill",
+    "requirement": "7 gün üst üste soru cevaplayın",
+    "targetCount": 7,
+    "type": "streak",
+    "titleLocalizations": {
+      "tr": "Haftalık Seri",
+      "en": "Weekly Series"
+    },
+    "descriptionLocalizations": {
+      "tr": "7 gün üst üste soru cevapladınız! Harika bir disiplin!",
+      "en": "You answered questions 7 days in a row! Great discipline!"
+    },
+    "requirementLocalizations": {
+      "tr": "7 gün üst üste soru cevaplayın",
+      "en": "Answer questions 7 days in a row"
+    }
+  },
+  {
+    "id": "two_week_streak",
+    "title": "2 Haftalık Seri",
+    "description": "14 gün üst üste soru cevapladınız! Alışkanlık oluşuyor!",
+    "icon": "bolt.circle.fill",
+    "requirement": "14 gün üst üste soru cevaplayın",
+    "targetCount": 14,
+    "type": "streak",
+    "titleLocalizations": {
+      "tr": "2 Haftalık Seri",
+      "en": "2 Week Series"
+    },
+    "descriptionLocalizations": {
+      "tr": "14 gün üst üste soru cevapladınız! Alışkanlık oluşuyor!",
+      "en": "You answered questions 14 days in a row! Habit is forming!"
+    },
+    "requirementLocalizations": {
+      "tr": "14 gün üst üste soru cevaplayın",
+      "en": "Answer questions 14 days in a row"
+    }
+  },
+  {
+    "id": "month_streak",
+    "title": "Aylık Seri",
+    "description": "30 gün üst üste soru cevapladınız! İnanılmaz bir başarı!",
+    "icon": "flame.circle",
+    "requirement": "30 gün üst üste soru cevaplayın",
+    "targetCount": 30,
+    "type": "streak",
+    "titleLocalizations": {
+      "tr": "Aylık Seri",
+      "en": "Monthly Series"
+    },
+    "descriptionLocalizations": {
+      "tr": "30 gün üst üste soru cevapladınız! İnanılmaz bir başarı!",
+      "en": "You answered questions 30 days in a row! An incredible achievement!"
+    },
+    "requirementLocalizations": {
+      "tr": "30 gün üst üste soru cevaplayın",
+      "en": "Answer questions 30 days in a row"
+    }
+  },
+  {
+    "id": "hundred_day_streak",
+    "title": "100 Günlük Efsane",
+    "description": "100 gün üst üste soru cevapladınız! Efsane disiplin!",
+    "icon": "checkmark.shield.fill",
+    "requirement": "100 gün üst üste soru cevaplayın",
+    "targetCount": 100,
+    "type": "streak",
+    "titleLocalizations": {
+      "tr": "100 Günlük Efsane",
+      "en": "100 Day Legend"
+    },
+    "descriptionLocalizations": {
+      "tr": "100 gün üst üste soru cevapladınız! Efsane disiplin!",
+      "en": "You answered questions 100 days in a row! Legendary discipline!"
+    },
+    "requirementLocalizations": {
+      "tr": "100 gün üst üste soru cevaplayın",
+      "en": "Answer questions 100 days in a row"
+    }
+  }
+]

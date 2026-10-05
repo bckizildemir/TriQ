@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TTB - Her gun uc cevaplik bir soru</title>
+    <meta
+      name="description"
+      content="TTB, dusunduren sorulara uc kisa cevap verip kendi trio'nu olusturdugun sade bir iOS uygulamasi."
+    >
+    <meta property="og:title" content="TTB">
+    <meta
+      property="og:description"
+      content="Her gun uc cevaplik sorular. Kendi cevaplarini kaydet, favorilerini biriktir, en cok yanitlananlari kesfet."
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/assets/launch-logo.png">
+    <meta name="theme-color" content="#F7F1E8">
+    <link rel="icon" href="/assets/launch-logo.png">
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f7f1e8;
+        --ink: #202124;
+        --muted: #65625d;
+        --line: #ddd4c7;
+        --accent: #326a5f;
+        --accent-strong: #1f4f47;
+        --blue: #385f8c;
+        --rose: #a64f56;
+        --card: #fffaf2;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: 0;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 22px 0;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 1.05rem;
+      }
+
+      .brand img {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+      }
+
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .hero {
+        min-height: calc(100vh - 82px);
+        display: grid;
+        grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.98fr);
+        gap: 54px;
+        align-items: center;
+        padding: 28px 0 74px;
+      }
+
+      .hero-copy {
+        max-width: 660px;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 11ch;
+        font-size: clamp(4rem, 8vw, 7.5rem);
+        line-height: 0.9;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        margin: 26px 0 0;
+        max-width: 620px;
+        color: #44413c;
+        font-size: clamp(1.15rem, 2vw, 1.5rem);
+        line-height: 1.45;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 34px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0 18px;
+        border: 1px solid var(--ink);
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 750;
+      }
+
+      .button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: white;
+      }
+
+      .button.primary:hover {
+        background: var(--accent-strong);
+      }
+
+      .showcase {
+        position: relative;
+        min-height: 540px;
+      }
+
+      .phone {
+        position: absolute;
+        inset: 10px 42px 0 auto;
+        width: min(360px, 82vw);
+        height: 690px;
+        max-height: calc(100vh - 130px);
+        min-height: 520px;
+        border: 12px solid #181818;
+        border-radius: 46px;
+        background: #fbf7ef;
+        box-shadow: 0 28px 80px rgb(36 30 20 / 0.22);
+        overflow: hidden;
+      }
+
+      .phone-screen {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 28px 22px;
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      .app-title {
+        margin-top: 34px;
+        font-size: 1.9rem;
+        line-height: 1.05;
+        font-weight: 850;
+      }
+
+      .question-card {
+        margin-top: 24px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--card);
+      }
+
+      .category {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--blue);
+        font-size: 0.82rem;
+        font-weight: 760;
+      }
+
+      .question {
+        margin: 16px 0 20px;
+        font-size: 1.4rem;
+        line-height: 1.16;
+        font-weight: 820;
+      }
+
+      .answer {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        padding: 11px 12px;
+        margin-top: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: #3e3b36;
+        background: #ffffff;
+        font-size: 0.95rem;
+      }
+
+      .answer span {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 24px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #efe8dc;
+        color: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 800;
+      }
+
+      .metric-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: auto;
+      }
+
+      .metric {
+        padding: 14px 10px;
+        border-radius: 8px;
+        background: #efe8dc;
+      }
+
+      .metric strong {
+        display: block;
+        color: var(--rose);
+        font-size: 1.2rem;
+      }
+
+      .metric small {
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      section {
+        padding: 72px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+      }
+
+      .feature h2 {
+        margin: 0 0 10px;
+        font-size: 1.1rem;
+      }
+
+      .feature p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      footer {
+        padding: 28px 0 40px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 860px) {
+        nav {
+          display: none;
+        }
+
+        .hero {
+          min-height: auto;
+          grid-template-columns: 1fr;
+          gap: 34px;
+          padding: 28px 0 56px;
+        }
+
+        h1 {
+          font-size: clamp(3.6rem, 18vw, 5.8rem);
+        }
+
+        .showcase {
+          min-height: 560px;
+        }
+
+        .phone {
+          position: relative;
+          inset: auto;
+          margin: 0 auto;
+          width: min(356px, 100%);
+          height: 610px;
+        }
+
+        .features {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="shell">
+      <a class="brand" href="/" aria-label="TTB ana sayfa">
+        <img src="/assets/launch-logo.png" alt="">
+        <span>TTB</span>
+      </a>
+      <nav aria-label="Sayfa bolumleri">
+        <a href="#sorular">Sorular</a>
+        <a href="#trio">Trio</a>
+        <a href="#paylas">Paylas</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="shell hero">
+        <div class="hero-copy">
+          <h1>TTB</h1>
+          <p class="lead">
+            Her gun dusunduren bir soru, uc kisa cevap ve zamanla sana ait hale gelen sade bir arsiv.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="#paylas">Sorulari kesfet</a>
+            <a class="button" href="/q/demo">Paylasim sayfasini gor</a>
+          </div>
+        </div>
+
+        <div class="showcase" aria-label="TTB uygulama onizlemesi">
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="status">
+                <span>Bugunun sorusu</span>
+                <span>3 cevap</span>
+              </div>
+              <div class="app-title">Kendini en cok hangi uc yerde evinde hissediyorsun?</div>
+              <div class="question-card">
+                <div class="category"># Gunluk yasam</div>
+                <p class="question">Cevaplarini kisa tut, sonra geri donup nasil degistigini gor.</p>
+                <div class="answer"><span>1</span> Deniz kenari</div>
+                <div class="answer"><span>2</span> Eski mahallem</div>
+                <div class="answer"><span>3</span> Sessiz kafeler</div>
+              </div>
+              <div class="metric-row">
+                <div class="metric"><strong>42</strong><small>soru</small></div>
+                <div class="metric"><strong>3</strong><small>cevap</small></div>
+                <div class="metric"><strong>12</strong><small>favori</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section id="sorular">
+        <div class="shell features">
+          <div class="feature">
+            <h2>Gunluk sorular</h2>
+            <p>Kategorilere ayrilmis sorularla dusuncelerini kisa ve duzenli sekilde kaydet.</p>
+          </div>
+          <div class="feature" id="trio">
+            <h2>Trio formati</h2>
+            <p>Her soru uc cevaba odaklanir; fazla dagilmadan net bir cevap listesi olusturursun.</p>
+          </div>
+          <div class="feature" id="paylas">
+            <h2>Paylasilabilir linkler</h2>
+            <p>Begendigin sorulari web linkiyle gonder, uygulama varsa link dogrudan TTB icinde acilir.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="shell">
+      TTB - Firebase Hosting uzerinde yayinlanir.
+    </footer>
+  </body>
+</html>

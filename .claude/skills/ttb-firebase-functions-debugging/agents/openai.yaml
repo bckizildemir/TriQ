@@ -1,0 +1,6 @@
+interface:
+  display_name: "TTB Firebase Debugging"
+  short_description: "Debug TTB Functions and Firestore flows"
+  default_prompt: "Use $ttb-firebase-functions-debugging to diagnose this TTB Firebase callable or Firestore failure."
+policy:
+  allow_implicit_invocation: true
