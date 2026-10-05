@@ -356,3 +356,79 @@ function createSnapshot(id, path, data) {
     },
   };
 }
+
+test("saveQuestionAnswers refuses ids, answers and image URLs that reach past the caller's own data", async () => {
+  const request = (data) => saveQuestionAnswers({
+    db: { collection: () => assert.fail("no Firestore access for invalid input") },
+    user: { uid: "attacker", isAnonymous: false },
+    data: {
+      questionId: "q1",
+      answers: ["One", "Two", "Three"],
+      imageURLs: ["", "", ""],
+      imageAttributions: [{}, {}, {}],
+      ...data,
+    },
+    createTimestampFromDate: (date) => date,
+  });
+
+  await assert.rejects(request({ questionId: "q1/userAnswers/victim" }), /questionId is not a valid id/);
+  await assert.rejects(request({ questionId: "__name__" }), /questionId is not a valid id/);
+});
+
+function answerLimitDb(previousAnswer) {
+  return createFakeDb({
+    "questions/q1": { source: "seeded", category: "Daily", answerStats: {}, totalRespondents: 0 },
+    "users/user-1": { totalAnswered: 0, completedQuestionIds: [], categoryAnswers: {} },
+    ...(previousAnswer ? { "questions/q1/userAnswers/user-1": previousAnswer } : {}),
+  });
+}
+
+function saveAnswers(db, data) {
+  return saveQuestionAnswers({
+    db,
+    user: { uid: "user-1", isAnonymous: true },
+    data: { questionId: "q1", imageURLs: ["", "", ""], imageAttributions: [{}, {}, {}], ...data },
+    createTimestampFromDate: (date) => date,
+  });
+}
+
+test("saveQuestionAnswers shortens a new long answer instead of refusing it", async () => {
+  const db = answerLimitDb();
+  await saveAnswers(db, { answers: ["x".repeat(250), "Two", "Three"] });
+
+  assert.equal(db.getDocument("questions/q1/userAnswers/user-1").answers[0], "x".repeat(200));
+});
+
+test("saveQuestionAnswers keeps an unchanged legacy answer and image URL", async () => {
+  const legacyAnswer = "y".repeat(250);
+  const legacyURL = "https://legacy.example/old.jpg";
+  const db = answerLimitDb({ answers: [legacyAnswer, "Two", "Three"], imageURLs: [legacyURL, "", ""] });
+
+  await saveAnswers(db, { answers: [legacyAnswer, "Two edited", "Three"], imageURLs: [legacyURL, "", ""] });
+
+  const saved = db.getDocument("questions/q1/userAnswers/user-1");
+  assert.equal(saved.answers[0], legacyAnswer);
+  assert.equal(saved.answers[1], "Two edited");
+  assert.equal(saved.imageURLs[0], legacyURL);
+});
+
+test("saveQuestionAnswers refuses a new image URL outside Firebase Storage", async () => {
+  await assert.rejects(
+    saveAnswers(answerLimitDb(), {
+      answers: ["One", "Two", "Three"],
+      imageURLs: ["https://attacker.example/pixel.gif", "", ""],
+    }),
+    /Firebase Storage download URLs/
+  );
+});
+
+test("toggleQuestionFavorite refuses a path-walking id", async () => {
+  await assert.rejects(
+    toggleQuestionFavorite({
+      db: { collection: () => assert.fail("no Firestore access for invalid input") },
+      user: { uid: "attacker" },
+      data: { questionId: "q1/userAnswers/victim" },
+    }),
+    /questionId is not a valid id/
+  );
+});

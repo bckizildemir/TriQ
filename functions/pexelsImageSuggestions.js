@@ -1,4 +1,5 @@
 const crypto = require("node:crypto");
+const { isDocId } = require("./firestoreIds");
 
 let HttpsError;
 try {
@@ -16,6 +17,9 @@ const PEXELS_SEARCH_URL = "https://api.pexels.com/v1/search";
 const PEXELS_IMAGE_HOST = "images.pexels.com";
 const MAX_ANSWER_LENGTH = 120;
 const VALID_SLOT_INDEXES = new Set([0, 1, 2]);
+const MAX_SAVED_IMAGE_BYTES = 5 * 1024 * 1024;
+// storage.rules accepts only JPEG from the app, so the server keeps to raster types too.
+const SAVABLE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 async function suggestAnswerImages({
   user,
@@ -69,6 +73,7 @@ async function suggestAnswerImages({
 }
 
 async function saveSuggestedAnswerImage({
+  db,
   user,
   data,
   bucket,
@@ -89,8 +94,15 @@ async function saveSuggestedAnswerImage({
   }
 
   const sourceURL = new URL(suggestion.fullSizeURL);
-  if (sourceURL.hostname !== PEXELS_IMAGE_HOST) {
+  if (sourceURL.protocol !== "https:" || sourceURL.hostname !== PEXELS_IMAGE_HOST) {
     throw new HttpsError("invalid-argument", "Only Pexels image URLs can be saved.");
+  }
+
+  // Without this check every call could add a new file under a made-up question id, and the
+  // account-deletion purge only finds files for questions the user answered.
+  const questionSnapshot = await db.collection("questions").doc(questionId).get();
+  if (!questionSnapshot.exists) {
+    throw new HttpsError("not-found", "Question not found.");
   }
 
   const response = await fetchImpl(sourceURL);
@@ -98,14 +110,26 @@ async function saveSuggestedAnswerImage({
     throw new HttpsError("unavailable", "Selected image could not be downloaded.");
   }
 
-  const contentType = response.headers.get("content-type") || "image/jpeg";
-  if (!contentType.startsWith("image/")) {
+  // fetch follows redirects, so the host check must also hold for where the body came from.
+  if (response.url) {
+    const finalURL = new URL(response.url);
+    if (finalURL.protocol !== "https:" || finalURL.hostname !== PEXELS_IMAGE_HOST) {
+      throw new HttpsError("invalid-argument", "Only Pexels image URLs can be saved.");
+    }
+  }
+
+  const contentType = (response.headers.get("content-type") || "image/jpeg").split(";")[0].trim();
+  if (!SAVABLE_IMAGE_TYPES.has(contentType)) {
     throw new HttpsError("invalid-argument", "Selected URL is not an image.");
   }
 
-  const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-  if (buffer.length === 0 || buffer.length > 5 * 1024 * 1024) {
+  const declaredLength = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_SAVED_IMAGE_BYTES) {
+    throw new HttpsError("invalid-argument", "Selected image size is invalid.");
+  }
+
+  const buffer = await readBodyWithLimit(response, MAX_SAVED_IMAGE_BYTES);
+  if (buffer.length === 0) {
     throw new HttpsError("invalid-argument", "Selected image size is invalid.");
   }
 
@@ -156,7 +180,7 @@ function normalizedQuestionId(value) {
     return "";
   }
   const trimmed = value.trim();
-  return trimmed.includes("/") ? "" : trimmed;
+  return isDocId(trimmed) ? trimmed : "";
 }
 
 function normalizedSlotIndex(value) {
@@ -256,6 +280,35 @@ function normalizePexelsPhoto(photo) {
 
 function stringValue(value) {
   return typeof value === "string" ? value : "";
+}
+
+// Reads at most limit bytes, so a missing or false Content-Length cannot make the function hold
+// an arbitrarily large body in memory.
+async function readBodyWithLimit(response, limit) {
+  const reader = response.body?.getReader?.();
+  if (!reader) {
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (buffer.length > limit) {
+      throw new HttpsError("invalid-argument", "Selected image size is invalid.");
+    }
+    return buffer;
+  }
+
+  const chunks = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    total += value.byteLength;
+    if (total > limit) {
+      await reader.cancel();
+      throw new HttpsError("invalid-argument", "Selected image size is invalid.");
+    }
+    chunks.push(Buffer.from(value));
+  }
+  return Buffer.concat(chunks);
 }
 
 function firebaseDownloadURL(bucketName, storagePath, token) {

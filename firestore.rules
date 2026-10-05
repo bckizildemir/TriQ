@@ -27,6 +27,38 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
 
+    // The placeholder names AuthModelDependencies.defaultUserData writes before a user claims a
+    // username (auth.placeholder.guestUser / auth.placeholder.user in Localizable.xcstrings).
+    // Add the new strings here when the app gains a language.
+    function isPlaceholderUsername(name) {
+      return name in ['Guest User', 'User', 'Misafir Kullanıcı', 'Kullanıcı'];
+    }
+
+    // A placeholder with its normalized form. The placeholders are fixed strings, so lower() is
+    // safe here; for other names the registry, not lower(), is the source of the normalized form.
+    function isPlaceholderPair(data) {
+      return data.username is string
+             && isPlaceholderUsername(data.username)
+             && data.usernameNormalized == data.username.lower();
+    }
+
+    // True when the usernames registry, which only the usernameRegistry callables write, gives
+    // this exact display name to the caller.
+    function callerOwnsRegisteredName(normalizedName, displayName) {
+      return normalizedName is string
+             && normalizedName.size() > 0
+             && normalizedName.size() <= 64
+             && exists(/databases/$(database)/documents/usernames/$(normalizedName))
+             && get(/databases/$(database)/documents/usernames/$(normalizedName)).data.uid == request.auth.uid
+             && get(/databases/$(database)/documents/usernames/$(normalizedName)).data.username == displayName;
+    }
+
+    // QuestionService and AIModel send the stored username trimmed.
+    function isOwnUsername(name, userDoc) {
+      return userDoc.data.username is string
+             && (name == userDoc.data.username || name == userDoc.data.username.trim());
+    }
+
     // =====================================================================
     // Questions Collection
     // =====================================================================
@@ -64,16 +96,25 @@ service cloud.firestore {
         ]) &&
         request.resource.data.text is string &&
         request.resource.data.text.size() >= 8 &&
+        request.resource.data.text.size() <= 1000 &&
         request.resource.data.category is string &&
+        request.resource.data.category.size() <= 80 &&
         request.resource.data.source == 'userCreated' &&
+        // The client sends Date(), so allow clock skew but not a far-future date that pins the
+        // question to the top of a newest-first list.
         request.resource.data.createdAt is timestamp &&
+        request.resource.data.createdAt < request.time + duration.value(1, 'd') &&
         request.resource.data.createdBy == request.auth.uid &&
         request.resource.data.moderationStatus == 'pending' &&
-        (!(request.resource.data.keys().hasAny(['creatorUsername'])) || request.resource.data.creatorUsername is string) &&
+        (!(request.resource.data.keys().hasAny(['creatorUsername'])) ||
+          isOwnUsername(request.resource.data.creatorUsername,
+                        get(/databases/$(database)/documents/users/$(request.auth.uid)))) &&
         (!(request.resource.data.keys().hasAny(['isAnnounced'])) || request.resource.data.isAnnounced == false) &&
         (!(request.resource.data.keys().hasAny(['featuredPlacement'])) || request.resource.data.featuredPlacement == 'none') &&
-        (!(request.resource.data.keys().hasAny(['contentId'])) || request.resource.data.contentId is string) &&
-        (!(request.resource.data.keys().hasAny(['localizedTexts'])) || request.resource.data.localizedTexts is map) &&
+        (!(request.resource.data.keys().hasAny(['contentId'])) ||
+          (request.resource.data.contentId is string && request.resource.data.contentId.size() <= 128)) &&
+        (!(request.resource.data.keys().hasAny(['localizedTexts'])) ||
+          (request.resource.data.localizedTexts is map && request.resource.data.localizedTexts.size() <= 16)) &&
         (!(request.resource.data.keys().hasAny(['languageCode'])) ||
           (request.resource.data.languageCode is string && request.resource.data.languageCode.size() <= 16))
       );
@@ -87,7 +128,10 @@ service cloud.firestore {
         resource.data.createdBy == request.auth.uid &&
         resource.data.source == 'userCreated' &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['creatorUsername']) &&
-        request.resource.data.creatorUsername is string
+        // ProfileModel.commitProfileUpdate renames the user and their questions in one batch, so
+        // the attribution must equal the user's username after that batch.
+        isOwnUsername(request.resource.data.creatorUsername,
+                      getAfter(/databases/$(database)/documents/users/$(request.auth.uid)))
       );
 
     }
@@ -114,9 +158,42 @@ service cloud.firestore {
       // READ: A user can read their own profile, and an admin can read any profile.
       allow read: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
 
-      // CREATE: A user document can be created if the user is authenticated and the document ID matches their UID.
-      // This typically happens during sign-up.
-      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // CREATE: the owner creates the doc during sign-up (AuthModelDependencies.defaultUserData) or
+      // through BadgeModel's merge write. Only the fields those writes send are allowed, with
+      // starting values. isAdmin is never one of them: a user who deletes and re-creates their
+      // own doc must not be able to grant themselves admin, and must not forge stats or a
+      // registered username.
+      allow create: if isAuthenticated() && request.auth.uid == userId &&
+        request.resource.data.keys().hasOnly([
+          'username', 'usernameNormalized', 'email', 'isAnonymous', 'createdAt', 'updatedAt',
+          'dailyAnswers', 'weeklyAnswers', 'totalAnswered', 'completedQuestionIds',
+          'categoryAnswers', 'currentStreak', 'unlockedBadges', 'badgeProgress',
+          // OnboardingStateStore merges these and creates the doc when an earlier create failed.
+          'onboardingVersion', 'onboardingCompletedAt',
+          'termsAcceptedVersion', 'privacyAcceptedVersion', 'legalAcceptedAt'
+        ]) &&
+        (!(request.resource.data.keys().hasAny(['username', 'usernameNormalized']))
+          || isPlaceholderPair(request.resource.data)) &&
+        (!(request.resource.data.keys().hasAny(['onboardingVersion'])) || request.resource.data.onboardingVersion is int) &&
+        (!(request.resource.data.keys().hasAny(['onboardingCompletedAt'])) || request.resource.data.onboardingCompletedAt == request.time) &&
+        (!(request.resource.data.keys().hasAny(['legalAcceptedAt'])) || request.resource.data.legalAcceptedAt == request.time) &&
+        (!(request.resource.data.keys().hasAny(['termsAcceptedVersion']))
+          || (request.resource.data.termsAcceptedVersion is string && request.resource.data.termsAcceptedVersion.size() <= 32)) &&
+        (!(request.resource.data.keys().hasAny(['privacyAcceptedVersion']))
+          || (request.resource.data.privacyAcceptedVersion is string && request.resource.data.privacyAcceptedVersion.size() <= 32)) &&
+        (!(request.resource.data.keys().hasAny(['email']))
+          || (request.resource.data.email is string && request.resource.data.email.size() <= 254)) &&
+        (!(request.resource.data.keys().hasAny(['isAnonymous'])) || request.resource.data.isAnonymous is bool) &&
+        (!(request.resource.data.keys().hasAny(['createdAt'])) || request.resource.data.createdAt == request.time) &&
+        (!(request.resource.data.keys().hasAny(['updatedAt'])) || request.resource.data.updatedAt == request.time) &&
+        (!(request.resource.data.keys().hasAny(['dailyAnswers'])) || request.resource.data.dailyAnswers == 0) &&
+        (!(request.resource.data.keys().hasAny(['weeklyAnswers'])) || request.resource.data.weeklyAnswers == 0) &&
+        (!(request.resource.data.keys().hasAny(['totalAnswered'])) || request.resource.data.totalAnswered == 0) &&
+        (!(request.resource.data.keys().hasAny(['currentStreak'])) || request.resource.data.currentStreak == 0) &&
+        (!(request.resource.data.keys().hasAny(['completedQuestionIds'])) || request.resource.data.completedQuestionIds == []) &&
+        (!(request.resource.data.keys().hasAny(['unlockedBadges'])) || request.resource.data.unlockedBadges == []) &&
+        (!(request.resource.data.keys().hasAny(['categoryAnswers'])) || request.resource.data.categoryAnswers == {}) &&
+        (!(request.resource.data.keys().hasAny(['badgeProgress'])) || request.resource.data.badgeProgress == {});
 
       // UPDATE: Updated to allow admin toggle functionality and badge progress
       allow update: if 
@@ -128,15 +205,19 @@ service cloud.firestore {
               'onboardingVersion', 'onboardingCompletedAt',
               'termsAcceptedVersion', 'privacyAcceptedVersion', 'legalAcceptedAt'
             ]) &&
+            // A new name must be a placeholder or a name the claimUsername callable registered to
+            // this user. Otherwise a user could show another user's name to share recipients.
             (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['username']))
-              || (request.resource.data.username is string
-                  && request.resource.data.username.size() <= 40)) &&
+              || isPlaceholderPair(request.resource.data)
+              || callerOwnsRegisteredName(request.resource.data.usernameNormalized, request.resource.data.username)) &&
+            // usernameNormalized alone is never shown. AuthModelDependencies.ensureExists backfills
+            // it for old docs, and the username check above always reads it from the registry.
+            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['usernameNormalized']))
+              || (request.resource.data.usernameNormalized is string
+                  && request.resource.data.usernameNormalized.size() <= 64)) &&
             (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['email']))
               || (request.resource.data.email is string
                   && request.resource.data.email.size() <= 254)) &&
-            (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['usernameNormalized']))
-              || (request.resource.data.usernameNormalized is string
-                  && request.resource.data.usernameNormalized.size() <= 40)) &&
             (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['updatedAt']))
               || request.resource.data.updatedAt is timestamp) &&
             (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['hasProfilePicture']))
@@ -151,9 +232,11 @@ service cloud.firestore {
             (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['onboardingCompletedAt']))
               || request.resource.data.onboardingCompletedAt is timestamp) &&
             (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['termsAcceptedVersion']))
-              || request.resource.data.termsAcceptedVersion is string) &&
+              || (request.resource.data.termsAcceptedVersion is string
+                  && request.resource.data.termsAcceptedVersion.size() <= 32)) &&
             (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['privacyAcceptedVersion']))
-              || request.resource.data.privacyAcceptedVersion is string) &&
+              || (request.resource.data.privacyAcceptedVersion is string
+                  && request.resource.data.privacyAcceptedVersion.size() <= 32)) &&
             (!(request.resource.data.diff(resource.data).affectedKeys().hasAny(['legalAcceptedAt']))
               || request.resource.data.legalAcceptedAt is timestamp))
         || 
@@ -170,6 +253,11 @@ service cloud.firestore {
         allow create, update: if isAuthenticated()
                               && request.auth.uid == userId
                               && request.resource.data.keys().hasAll([
+                                'fcmToken', 'localeCode', 'contentUpdatesEnabled',
+                                'authorizationStatus', 'isPushEligible',
+                                'platform', 'appVersion', 'lastRegisteredAt'
+                              ])
+                              && request.resource.data.keys().hasOnly([
                                 'fcmToken', 'localeCode', 'contentUpdatesEnabled',
                                 'authorizationStatus', 'isPushEligible',
                                 'platform', 'appVersion', 'lastRegisteredAt'
@@ -309,11 +397,19 @@ service cloud.firestore {
         request.resource.data.category.size() <= 80 &&
         request.resource.data.responses is list &&
         request.resource.data.responses.size() <= 3 &&
+        (request.resource.data.responses.size() < 1 ||
+          (request.resource.data.responses[0] is string && request.resource.data.responses[0].size() <= 10000)) &&
+        (request.resource.data.responses.size() < 2 ||
+          (request.resource.data.responses[1] is string && request.resource.data.responses[1].size() <= 10000)) &&
+        (request.resource.data.responses.size() < 3 ||
+          (request.resource.data.responses[2] is string && request.resource.data.responses[2].size() <= 10000)) &&
         request.resource.data.timestamp is timestamp &&
         // Optional fields validation (matching AIQuery model)
         (!(request.resource.data.keys().hasAny(['isSaved'])) || request.resource.data.isSaved is bool) &&
         (!(request.resource.data.keys().hasAny(['isLoading'])) || request.resource.data.isLoading is bool) &&
-        (!(request.resource.data.keys().hasAny(['error'])) || request.resource.data.error is string);
+        // AIQuery.toFirestore writes NSNull when there is no error.
+        (!(request.resource.data.keys().hasAny(['error'])) || request.resource.data.error == null ||
+          (request.resource.data.error is string && request.resource.data.error.size() <= 2000));
     }
     
     // Server-owned AI spend counter. functions/aiUsageLimit.js writes it through the Admin SDK,

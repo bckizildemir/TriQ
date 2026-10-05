@@ -53,9 +53,13 @@ const {
 } = require("./aiProviderProxy");
 const {
   AI_QUERY_GROUP,
+  IMAGE_SAVE_GROUP,
+  IMAGE_SUGGESTION_GROUP,
   QUICK_ANSWER_GROUP,
+  SHARE_WRITE_GROUP,
   withDailyQuota,
 } = require("./aiUsageLimit");
+const { requiredDocId } = require("./firestoreIds");
 const {
   appListShareUrl,
   appQuestionUrl,
@@ -316,7 +320,8 @@ exports.deleteQuestionList = onCall({ region: REGION }, async (request) => {
   await revokeSharesForSourceList({
     db,
     ownerId: request.auth.uid,
-    sourceListId: request.data?.listId,
+    // The same trimmed id deleteQuestionList used, or a padded id would leave the shares live.
+    sourceListId: requiredDocId(request.data?.listId, "listId"),
     createServerTimestamp: () => admin.firestore.FieldValue.serverTimestamp(),
   });
   return result;
@@ -334,7 +339,7 @@ exports.setQuestionInList = onCall({ region: REGION }, async (request) => {
   });
 });
 
-exports.createQuestionListShare = onCall({ region: REGION }, async (request) => {
+exports.createQuestionListShare = onCall({ region: REGION }, withDailyQuota({ db, group: SHARE_WRITE_GROUP }, async (request) => {
   return createQuestionListShare({
     db,
     user: {
@@ -344,7 +349,7 @@ exports.createQuestionListShare = onCall({ region: REGION }, async (request) => 
     data: request.data,
     createServerTimestamp: () => admin.firestore.FieldValue.serverTimestamp(),
   });
-});
+}));
 
 exports.previewQuestionListShare = onCall({ region: REGION }, async (request) => {
   return previewQuestionListShare({
@@ -414,7 +419,7 @@ exports.leaveQuestionListShare = onCall({ region: REGION }, async (request) => {
   });
 });
 
-exports.sendQuestionListShareReply = onCall({ region: REGION }, async (request) => {
+exports.sendQuestionListShareReply = onCall({ region: REGION }, withDailyQuota({ db, group: SHARE_WRITE_GROUP }, async (request) => {
   return sendQuestionListShareReply({
     db,
     user: {
@@ -424,7 +429,7 @@ exports.sendQuestionListShareReply = onCall({ region: REGION }, async (request) 
     data: request.data,
     createServerTimestamp: () => admin.firestore.FieldValue.serverTimestamp(),
   });
-});
+}));
 
 exports.markQuestionListShareReplySeen = onCall({ region: REGION }, async (request) => {
   return markQuestionListShareReplySeen({
@@ -438,24 +443,30 @@ exports.markQuestionListShareReplySeen = onCall({ region: REGION }, async (reque
   });
 });
 
+// Both image callables spend shared resources (the Pexels quota, Storage bytes), so they need
+// the same two guards as the AI callables: App Check and a per-uid daily limit.
 exports.suggestAnswerImages = onCall(
-  { region: REGION, secrets: [PEXELS_API_KEY] },
-  async (request) => {
+  { region: REGION, secrets: [PEXELS_API_KEY], enforceAppCheck: true },
+  withDailyQuota({ db, group: IMAGE_SUGGESTION_GROUP }, async (request) => {
     return suggestAnswerImages({
       user: { uid: request.auth?.uid },
       data: request.data,
       pexelsApiKey: PEXELS_API_KEY.value() || process.env.PEXELS_API_KEY,
     });
-  }
+  })
 );
 
-exports.saveSuggestedAnswerImage = onCall({ region: REGION }, async (request) => {
-  return saveSuggestedAnswerImage({
-    user: { uid: request.auth?.uid },
-    data: request.data,
-    bucket: storage.bucket(),
-  });
-});
+exports.saveSuggestedAnswerImage = onCall(
+  { region: REGION, enforceAppCheck: true },
+  withDailyQuota({ db, group: IMAGE_SAVE_GROUP }, async (request) => {
+    return saveSuggestedAnswerImage({
+      db,
+      user: { uid: request.auth?.uid },
+      data: request.data,
+      bucket: storage.bucket(),
+    });
+  })
+);
 
 exports.askAIQuestion = aiCallable(AI_QUERY_GROUP, async (request) => {
   return askAIQuestion(aiFunctionContext(request));
@@ -497,7 +508,10 @@ exports.claimUsername = onCall({ region: REGION }, async (request) => {
   });
 });
 
-exports.resolveUsername = onCall({ region: REGION }, async (request) => {
+// Username sign-in needs this before the user is signed in, so it cannot require auth. It returns
+// an email, so without App Check a script could walk usernames and collect every user's email.
+// The app attests with App Attest (AppCheckInstaller), the same token the AI callables require.
+exports.resolveUsername = onCall({ region: REGION, enforceAppCheck: true }, async (request) => {
   return resolveUsername({
     db,
     username: request.data?.username,

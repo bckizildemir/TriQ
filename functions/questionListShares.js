@@ -1,5 +1,6 @@
 const crypto = require("node:crypto");
 const { HttpsError } = require("firebase-functions/v2/https");
+const { requiredDocId } = require("./firestoreIds");
 const { canonicalListShareUrl } = require("./shareRoutes");
 
 const DEFAULT_RECIPIENT_CAP = 25;
@@ -13,7 +14,7 @@ async function createQuestionListShare({
   createShareCode = generateShareCode,
 }) {
   const uid = permanentUID(user);
-  const listId = requiredString(data?.listId, "listId");
+  const listId = requiredDocId(data?.listId, "listId");
   const includeOwnerAnswers = optionalBoolean(data?.includeOwnerAnswers, false);
   const listRef = db.collection("questionLists").doc(listId);
   const shareRef = db.collection("questionListShares").doc();
@@ -51,7 +52,7 @@ async function createQuestionListShare({
 }
 
 async function previewQuestionListShare({ db, user, data }) {
-  const shareCode = requiredString(data?.shareCode, "shareCode");
+  const shareCode = requiredDocId(data?.shareCode, "shareCode");
   const shareSnapshot = await shareSnapshotForCode(db, shareCode);
   const share = shareSnapshot.data() || {};
   const ownerDisplayName = await refreshShareOwnerDisplayName(db, shareSnapshot);
@@ -95,7 +96,7 @@ async function acceptQuestionListShare({
   createServerTimestamp,
 }) {
   const uid = permanentUID(user);
-  const shareCode = requiredString(data?.shareCode, "shareCode");
+  const shareCode = requiredDocId(data?.shareCode, "shareCode");
   const shareSnapshot = await shareSnapshotForCode(db, shareCode);
   const shareRef = shareSnapshot.ref;
   const share = shareSnapshot.data() || {};
@@ -172,7 +173,7 @@ async function disableQuestionListShare({
   createServerTimestamp,
 }) {
   const uid = permanentUID(user);
-  const shareId = requiredString(data?.shareId, "shareId");
+  const shareId = requiredDocId(data?.shareId, "shareId");
   const shareRef = db.collection("questionListShares").doc(shareId);
   const now = createServerTimestamp();
 
@@ -196,7 +197,7 @@ async function regenerateQuestionListShareLink({
   createShareCode = generateShareCode,
 }) {
   const uid = permanentUID(user);
-  const shareId = requiredString(data?.shareId, "shareId");
+  const shareId = requiredDocId(data?.shareId, "shareId");
   const shareRef = db.collection("questionListShares").doc(shareId);
   const shareCode = createShareCode();
   const now = createServerTimestamp();
@@ -224,7 +225,7 @@ async function revokeQuestionListShare({
   createServerTimestamp,
 }) {
   const uid = permanentUID(user);
-  const shareId = requiredString(data?.shareId, "shareId");
+  const shareId = requiredDocId(data?.shareId, "shareId");
   const shareRef = db.collection("questionListShares").doc(shareId);
   await revokeShareRef({
     db,
@@ -242,7 +243,7 @@ async function leaveQuestionListShare({
   createServerTimestamp,
 }) {
   const uid = permanentUID(user);
-  const shareId = requiredString(data?.shareId, "shareId");
+  const shareId = requiredDocId(data?.shareId, "shareId");
   const shareRef = db.collection("questionListShares").doc(shareId);
   const recipientRef = shareRef.collection("recipients").doc(uid);
   const now = createServerTimestamp();
@@ -282,7 +283,7 @@ async function sendQuestionListShareReply({
   createServerTimestamp,
 }) {
   const uid = permanentUID(user);
-  const shareId = requiredString(data?.shareId, "shareId");
+  const shareId = requiredDocId(data?.shareId, "shareId");
   const shareRef = db.collection("questionListShares").doc(shareId);
   const recipientRef = shareRef.collection("recipients").doc(uid);
   const now = createServerTimestamp();
@@ -320,8 +321,8 @@ async function markQuestionListShareReplySeen({
   createServerTimestamp,
 }) {
   const uid = permanentUID(user);
-  const shareId = requiredString(data?.shareId, "shareId");
-  const recipientId = requiredString(data?.recipientId, "recipientId");
+  const shareId = requiredDocId(data?.shareId, "shareId");
+  const recipientId = requiredDocId(data?.recipientId, "recipientId");
   const shareRef = db.collection("questionListShares").doc(shareId);
   const recipientRef = shareRef.collection("recipients").doc(recipientId);
   const now = createServerTimestamp();

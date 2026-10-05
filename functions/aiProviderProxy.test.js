@@ -161,9 +161,13 @@ test("provider 401, 403, 429, and 5xx errors map correctly", async () => {
     () => askAIQuestion({
       ...baseOptions,
       data: { question: "Question?", category: "Life" },
-      fetchImpl: failureFetch(403, { error: { message: "forbidden" } }),
+      fetchImpl: failureFetch(403, { error: { message: "forbidden: org-123 model gpt-x" } }),
     }),
-    /forbidden/
+    (error) => {
+      assert.equal(error.code, "permission-denied");
+      assert.equal(error.message, "AI provider request failed.");
+      return true;
+    }
   );
 
   await assert.rejects(

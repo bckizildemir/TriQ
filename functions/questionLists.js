@@ -1,4 +1,5 @@
 const { HttpsError } = require("firebase-functions/v2/https");
+const { requiredDocId } = require("./firestoreIds");
 
 const MAX_QUESTION_LIST_ITEMS = 500;
 
@@ -31,7 +32,7 @@ async function createQuestionList({
 
 async function updateQuestionList({ db, user, data, createServerTimestamp }) {
   const uid = permanentUID(user);
-  const listId = requiredString(data?.listId, "listId");
+  const listId = requiredDocId(data?.listId, "listId");
   const name = normalizedListName(data?.name);
   const listRef = db.collection("questionLists").doc(listId);
 
@@ -50,7 +51,7 @@ async function updateQuestionList({ db, user, data, createServerTimestamp }) {
 
 async function deleteQuestionList({ db, user, data }) {
   const uid = permanentUID(user);
-  const listId = requiredString(data?.listId, "listId");
+  const listId = requiredDocId(data?.listId, "listId");
   const listRef = db.collection("questionLists").doc(listId);
 
   await db.runTransaction(async (transaction) => {
@@ -64,8 +65,8 @@ async function deleteQuestionList({ db, user, data }) {
 
 async function setQuestionInList({ db, user, data, createServerTimestamp }) {
   const uid = permanentUID(user);
-  const listId = requiredString(data?.listId, "listId");
-  const questionId = requiredString(data?.questionId, "questionId");
+  const listId = requiredDocId(data?.listId, "listId");
+  const questionId = requiredDocId(data?.questionId, "questionId");
   const isIncluded = requiredBoolean(data?.isIncluded, "isIncluded");
   const listRef = db.collection("questionLists").doc(listId);
   const questionRef = db.collection("questions").doc(questionId);

@@ -1,11 +1,23 @@
 const { HttpsError } = require("firebase-functions/v2/https");
+const { isDocId, requiredDocId } = require("./firestoreIds");
 
 // A guest can hold at most 10 favorites, so this only has to cover migration plus headroom.
 const MAX_FAVORITE_ADDITIONS = 50;
 
+// Answers become keys of the public answerStats map on the question doc, which every reader
+// downloads and which must stay under Firestore's 1 MiB document limit.
+const MAX_ANSWER_LENGTH = 200;
+const MAX_ANSWER_STATS_KEYS_PER_SLOT = 300;
+const MAX_IMAGE_URL_LENGTH = 2048;
+// Answer images are Storage download URLs (ImageService and saveSuggestedAnswerImage).
+const ANSWER_IMAGE_URL_PREFIX = "https://firebasestorage.googleapis.com/";
+// AnswerImageAttribution.firestoreValue.
+const ATTRIBUTION_FIELDS = ["provider", "photoId", "photographer", "photographerURL", "photoURL"];
+const MAX_ATTRIBUTION_FIELD_LENGTH = 512;
+
 async function toggleQuestionFavorite({ db, user, data }) {
   const uid = authenticatedUID(user);
-  const questionId = requiredString(data?.questionId, "questionId");
+  const questionId = requiredDocId(data?.questionId, "questionId");
   const questionRef = db.collection("questions").doc(questionId);
 
   return db.runTransaction(async (transaction) => {
@@ -102,7 +114,7 @@ async function saveQuestionAnswers({
   createTimestampFromDate,
 }) {
   const uid = authenticatedUID(user);
-  const questionId = requiredString(data?.questionId, "questionId");
+  const questionId = requiredDocId(data?.questionId, "questionId");
   const answers = normalizedStringSlots(data?.answers, "answers");
   const imageURLs = normalizedOptionalStringSlots(data?.imageURLs);
   const imageAttributions = normalizedAttributionSlots(data?.imageAttributions);
@@ -140,6 +152,20 @@ async function saveQuestionAnswers({
       ? previousAnswerData.answers.filter((answer) => typeof answer === "string")
       : [];
     const previousFilledCount = previousAnswers.filter((answer) => answer.length > 0).length;
+
+    // AnswerDraft re-sends all three slots on every save, so a value stored before these limits
+    // existed passes unchanged; only new values must meet them.
+    answers.forEach((answer, index) => {
+      if (answer !== previousAnswers[index]) {
+        answers[index] = capAnswerLength(answer);
+      }
+    });
+    const previousImageURLs = Array.isArray(previousAnswerData.imageURLs) ? previousAnswerData.imageURLs : [];
+    imageURLs.forEach((url, index) => {
+      if (url.length > 0 && url !== previousImageURLs[index] && !isAnswerImageURL(url)) {
+        throw new HttpsError("invalid-argument", "imageURLs must be Firebase Storage download URLs.");
+      }
+    });
     const answeredAt = timestampToDate(previousAnswerData.answeredAt);
     const answeredToday = answeredAt ? sameUTCDate(answeredAt, new Date()) : false;
     const isExistingUser = userAnswerSnapshot.exists;
@@ -281,6 +307,9 @@ function requiredIDList(value, field, maximumCount) {
   if (ids.length === 0) {
     throw new HttpsError("invalid-argument", `${field} must contain at least one id.`);
   }
+  if (!ids.every(isDocId)) {
+    throw new HttpsError("invalid-argument", `${field} contains an invalid id.`);
+  }
   if (ids.length > maximumCount) {
     throw new HttpsError("invalid-argument", `${field} accepts at most ${maximumCount} ids.`);
   }
@@ -299,6 +328,15 @@ function normalizedStringSlots(value, field) {
   return slots.slice(0, 3);
 }
 
+// Shortens a new answer instead of refusing it: the app has no input limit, and a refused save
+// rolls the answer back with only a generic error.
+function capAnswerLength(answer) {
+  const characters = Array.from(answer);
+  return characters.length > MAX_ANSWER_LENGTH
+    ? characters.slice(0, MAX_ANSWER_LENGTH).join("")
+    : answer;
+}
+
 function normalizedOptionalStringSlots(value) {
   const slots = Array.isArray(value) ? value : [];
   const normalized = slots.map((item) => typeof item === "string" ? item.trim() : "");
@@ -308,6 +346,10 @@ function normalizedOptionalStringSlots(value) {
   return normalized.slice(0, 3);
 }
 
+function isAnswerImageURL(url) {
+  return url.length <= MAX_IMAGE_URL_LENGTH && url.startsWith(ANSWER_IMAGE_URL_PREFIX);
+}
+
 function normalizedAttributionSlots(value) {
   const slots = Array.isArray(value) ? value : [];
   const normalized = slots.map((item) => {
@@ -315,7 +357,9 @@ function normalizedAttributionSlots(value) {
       return {};
     }
     return Object.fromEntries(
-      Object.entries(item).filter(([, entry]) => typeof entry === "string")
+      Object.entries(item).filter(([key, entry]) => ATTRIBUTION_FIELDS.includes(key)
+        && typeof entry === "string"
+        && entry.length <= MAX_ATTRIBUTION_FIELD_LENGTH)
     );
   });
   while (normalized.length < 3) {
@@ -383,6 +427,11 @@ function incrementAnswerStats(answerStats, answers) {
     }
     const slot = `${index}`;
     const slotStats = answerStats[slot] || {};
+    // A full slot still counts answers it already holds, but takes no new distinct ones.
+    if (!Object.hasOwn(slotStats, answer) && Object.keys(slotStats).length >= MAX_ANSWER_STATS_KEYS_PER_SLOT) {
+      answerStats[slot] = slotStats;
+      return;
+    }
     slotStats[answer] = numberOrZero(slotStats[answer]) + 1;
     answerStats[slot] = slotStats;
   });
