@@ -134,6 +134,8 @@ struct AuthModelDependencies {
 }
 
 final class LiveAuthModelAuthProvider: AuthModelAuthProviding {
+    // Computed, not stored: the provider keeps no non-Sendable Firebase state, so it
+    // is Sendable. The SDK returns the same cached instance on every call.
     private nonisolated var auth: Auth { Auth.auth() }
 
     var currentUser: AuthModelUser? {
