@@ -11,7 +11,11 @@ import Foundation
 /// wider, because each maps to a distinct Firestore write with its own field rules — and those rules
 /// are what `Question`'s moderation operations mirror locally. Collapsing them would put the store in
 /// the business of deciding which write to make.
-protocol QuestionModerating {
+///
+/// `Sendable` because the `@MainActor` store hands this existential to `nonisolated async`
+/// requirements on every call. The live adapter is an `actor` and the test fake is `@MainActor`, so
+/// both conform without `@unchecked`.
+protocol QuestionModerating: Sendable {
     /// The whole `questions` collection, unfiltered — pending and rejected included.
     ///
     /// This is the corpus a moderation screen exists to work through, and it is deliberately not the

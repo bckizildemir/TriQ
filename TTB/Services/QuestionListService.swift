@@ -3,7 +3,7 @@ import FirebaseFunctions
 import Foundation
 import os
 
-protocol QuestionListServicing {
+protocol QuestionListServicing: Sendable {
     func setupQuestionListsListener(
         userId: String,
         completion: @escaping (Result<[QuestionList], Error>) -> Void
