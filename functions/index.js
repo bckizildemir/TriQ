@@ -59,6 +59,7 @@ const {
   SHARE_WRITE_GROUP,
   withDailyQuota,
 } = require("./aiUsageLimit");
+const { withSingleUseAppCheck } = require("./appCheckReplay");
 const { requiredDocId } = require("./firestoreIds");
 const {
   appListShareUrl,
@@ -104,16 +105,20 @@ const OPENROUTER_API_KEY = defineSecret("OPENROUTER_API_KEY");
 // anonymous sign-in makes a uid free to obtain. Enforcement rejects any caller that does not
 // attest, so a build without the App Check SDK cannot use the AI features at all. The other
 // callables stay unenforced for now; their blast radius is the caller's own data.
+// consumeAppCheckToken marks each App Check token used, so withSingleUseAppCheck can refuse a
+// replayed one. The runtime service account needs the "Firebase App Check Token Verifier" role.
 const AI_FUNCTION_OPTIONS = {
   region: REGION,
   secrets: [GROQ_API_KEY, OPENROUTER_API_KEY],
   enforceAppCheck: true,
+  consumeAppCheckToken: true,
 };
 
-// App Check answers "is this our app". The daily quota answers "how much may this account spend".
-// Both are needed: an attested copy of our app can still be driven in a loop.
+// App Check answers "is this our app". Single use stops one captured token from driving a script.
+// The daily quota answers "how much may this account, and the project, spend". All are needed: an
+// attested copy of our app can still be driven in a loop.
 const aiCallable = (group, handler) =>
-  onCall(AI_FUNCTION_OPTIONS, withDailyQuota({ db, group }, handler));
+  onCall(AI_FUNCTION_OPTIONS, withSingleUseAppCheck(withDailyQuota({ db, group }, handler)));
 
 exports.questionSharePage = onRequest({ region: REGION }, async (request, response) => {
   const listShareCode = listShareCodeFromPath(request.path || request.originalUrl || request.url || "");
@@ -448,15 +453,17 @@ exports.markQuestionListShareReplySeen = onCall({ region: REGION }, async (reque
 
 // Both image callables spend shared resources (the Pexels quota, Storage bytes), so they need
 // the same two guards as the AI callables: App Check and a per-uid daily limit.
+// suggestAnswerImages also takes single-use tokens: abuse traffic on our Pexels key could get the
+// key throttled or revoked for every user.
 exports.suggestAnswerImages = onCall(
-  { region: REGION, secrets: [PEXELS_API_KEY], enforceAppCheck: true },
-  withDailyQuota({ db, group: IMAGE_SUGGESTION_GROUP }, async (request) => {
+  { region: REGION, secrets: [PEXELS_API_KEY], enforceAppCheck: true, consumeAppCheckToken: true },
+  withSingleUseAppCheck(withDailyQuota({ db, group: IMAGE_SUGGESTION_GROUP }, async (request) => {
     return suggestAnswerImages({
       user: { uid: request.auth?.uid },
       data: request.data,
       pexelsApiKey: PEXELS_API_KEY.value(),
     });
-  })
+  }))
 );
 
 exports.saveSuggestedAnswerImage = onCall(
