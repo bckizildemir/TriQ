@@ -23,14 +23,19 @@ extension AITrioComposerUITests {
         XCTAssertTrue(waitForPublishReady(publishButton, in: app, timeout: 12))
         publishButton.tap()
 
+        // The toast lives in its own overlay window for about 4 seconds, and the composer sheet
+        // dismisses 0.9 seconds after raising it — so the toast cannot be required to overlap the
+        // sheet, and nothing may wait longer than its lifetime before looking for it.
         let success = app.descendants(matching: .any)["trio-publish-success-toast"].firstMatch
         XCTAssertTrue(
-            waitUntil(timeout: 8) {
-                success.exists
-                    && app.descendants(matching: .any)["trio-create-question-sheet"].firstMatch.exists
-            }
-                || success.waitForExistence(timeout: 2)
-                || app.staticTexts["Submitted for review"].waitForExistence(timeout: 2)
+            success.waitForExistence(timeout: 3),
+            "Publishing should raise the success toast"
+        )
+
+        let sheet = app.descendants(matching: .any)["trio-create-question-sheet"].firstMatch
+        XCTAssertTrue(
+            waitUntil(timeout: 5) { !sheet.exists },
+            "A successful publish should close the composer sheet"
         )
     }
 

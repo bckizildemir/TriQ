@@ -208,7 +208,26 @@ extension GuestFavoriteUpgradeFunnelUITests {
             waitUntil(timeout: 3) { Self.hasKeyboardFocus(field) },
             "The field should take keyboard focus before any text is typed"
         )
+        if field.elementType == .secureTextField {
+            declineStrongPasswordSuggestion(in: app)
+        }
         field.typeText(text)
+    }
+
+    /// The password fields are `.newPassword`, so iOS AutoFill can slide up its "Use Strong
+    /// Password?" panel a moment after one takes focus. It arrives mid-`typeText`, swallows every
+    /// keystroke after the first, and covers the Confirm field so it is never hittable. Whether it
+    /// appears depends on the simulator's Passwords state, so wait for it briefly and close it if
+    /// it shows; the field keeps keyboard focus.
+    private func declineStrongPasswordSuggestion(in app: XCUIApplication) {
+        let panel = app.windows.containing(.button, identifier: "GenerateStrongPasswordButton").firstMatch
+        guard panel.waitForExistence(timeout: 2) else { return }
+
+        panel.buttons["xmark"].tap()
+        XCTAssertTrue(
+            waitUntil(timeout: 3) { !app.buttons["GenerateStrongPasswordButton"].exists },
+            "The strong password suggestion should close"
+        )
     }
 
     /// `hasKeyboardFocus` is not in `XCUIElement`'s public surface, so this reads it through KVC.
