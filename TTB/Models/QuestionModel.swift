@@ -69,7 +69,9 @@ class QuestionModel: ObservableObject {
         updateGroupedQuestions()
     }
 
-    deinit {
+    /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
+    /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
+    isolated deinit {
         seededQuestionsListener?.remove()
         featuredHomeQuestionsListener?.remove()
         trioListener?.remove()
@@ -256,6 +258,20 @@ class QuestionModel: ObservableObject {
         self.seededQuestions = seededQuestions
         self.featuredHomeQuestions = featuredHomeQuestions
         updatePublicQuestions()
+    }
+
+    /// Puts the given registrations where the Firestore listeners live, so a test can see `deinit`
+    /// remove them without a signed-in user or a live `QuestionService`.
+    func installListenersForTesting(
+        seeded: any ListenerRegistration,
+        featuredHome: any ListenerRegistration,
+        trio: any ListenerRegistration,
+        userAnswers: any ListenerRegistration
+    ) {
+        seededQuestionsListener = seeded
+        featuredHomeQuestionsListener = featuredHome
+        trioListener = trio
+        userAnswersListener = userAnswers
     }
     #endif
 
