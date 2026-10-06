@@ -13,7 +13,7 @@ jobs:
   build:
     name: Build app and tests
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -44,9 +44,60 @@ jobs:
             > build.log 2>&1 || { grep -E 'error:' build.log | head -50; exit 1; }
           tail -n 3 build.log
 
-      - name: Upload build log
+      - name: Run unit tests
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for r in sorted(d, reverse=True) if "iOS" in r for x in d[r] if x["name"].startswith("iPhone")))')
+          echo "Simulator: $UDID"
+          xcodebuild test \
+            -project TTB.xcodeproj \
+            -scheme TTBTests \
+            -destination "id=$UDID" \
+            -clonedSourcePackagesDirPath ~/Library/Caches/ci-spm \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            > test.log 2>&1 || { grep -E 'error:|failed|Failing tests' test.log | head -80; exit 1; }
+          grep -E 'Executed|Test run with|TEST SUCCEEDED' test.log | tail -n 5
+
+      - name: Upload logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: build-log
-          path: build.log
+          name: build-logs
+          path: |
+            build.log
+            test.log
+          if-no-files-found: ignore
+
+  functions:
+    name: Functions and security rules tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: functions
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Security rules tests (emulator)
+        run: npx -y firebase-tools@latest emulators:exec --project demo-ttb-rules --only firestore,storage "node --test rules-emulator/securityRules.spec.js"
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
