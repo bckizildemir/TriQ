@@ -3,6 +3,8 @@ import FirebaseFunctions
 import Foundation
 import os
 
+/// `Sendable` because the `@MainActor` `QuestionListStore` hands this existential to `nonisolated async`
+/// requirements. `QuestionListService` and the test mock are both `actor`s.
 protocol QuestionListServicing: Sendable {
     func setupQuestionListsListener(
         userId: String,
