@@ -43,6 +43,7 @@ enum AIServiceError: LocalizedError {
     case serverError(Int)
     case parsingError
     case insufficientResponses(Int)
+    case refused(CallableRefusal)
     
     var errorDescription: String? {
         switch self {
@@ -82,6 +83,8 @@ enum AIServiceError: LocalizedError {
                 locale: AppLocalization.currentLocale,
                 count
             )
+        case .refused(let refusal):
+            return refusal.message
         }
     }
 }
@@ -334,7 +337,10 @@ actor AIService: AIServiceProtocol {
 
     private func callDictionary(_ functionName: String, payload: [String: Any]) async throws -> [String: Any] {
         do {
-            let result = try await functions.httpsCallable(functionName).call(payload)
+            // The AI callables accept each App Check token once (functions/appCheckReplay.js), so
+            // every call must ask for a fresh limited-use token instead of the cached one.
+            let options = HTTPSCallableOptions(requireLimitedUseAppCheckTokens: true)
+            let result = try await functions.httpsCallable(functionName, options: options).call(payload)
             guard let data = result.data as? [String: Any] else {
                 throw AIServiceError.invalidResponse
             }
@@ -376,6 +382,9 @@ actor AIService: AIServiceProtocol {
                 return .timeout
             }
             return .networkError(error)
+        }
+        if let refusal = CallableRefusal(nsError) {
+            return .refused(refusal)
         }
 
         switch FunctionsErrorCode(rawValue: nsError.code) {

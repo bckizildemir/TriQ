@@ -5,6 +5,7 @@ enum AnswerImageSuggestionServiceError: LocalizedError {
     case invalidResponse
     case noResults
     case serviceUnavailable(Error)
+    case refused(CallableRefusal)
 
     var errorDescription: String? {
         switch self {
@@ -18,6 +19,8 @@ enum AnswerImageSuggestionServiceError: LocalizedError {
                 : "Bu cevap için uygun görsel bulamadık. Daha farklı bir ifade dene."
         case let .serviceUnavailable(error):
             return error.localizedDescription
+        case let .refused(refusal):
+            return refusal.message
         }
     }
 }
@@ -38,7 +41,9 @@ actor AnswerImageSuggestionService {
         ]
 
         do {
-            let result = try await functions.httpsCallable("suggestAnswerImages").call(payload)
+            // suggestAnswerImages accepts each App Check token once (functions/appCheckReplay.js).
+            let options = HTTPSCallableOptions(requireLimitedUseAppCheckTokens: true)
+            let result = try await functions.httpsCallable("suggestAnswerImages", options: options).call(payload)
             guard let data = result.data as? [String: Any],
                   let rawSuggestions = data["suggestions"] as? [Any]
             else {
@@ -53,6 +58,9 @@ actor AnswerImageSuggestionService {
         } catch let error as AnswerImageSuggestionServiceError {
             throw error
         } catch {
+            if let refusal = CallableRefusal(error as NSError) {
+                throw AnswerImageSuggestionServiceError.refused(refusal)
+            }
             throw AnswerImageSuggestionServiceError.serviceUnavailable(error)
         }
     }
@@ -81,6 +89,9 @@ actor AnswerImageSuggestionService {
         } catch let error as AnswerImageSuggestionServiceError {
             throw error
         } catch {
+            if let refusal = CallableRefusal(error as NSError) {
+                throw AnswerImageSuggestionServiceError.refused(refusal)
+            }
             throw AnswerImageSuggestionServiceError.serviceUnavailable(error)
         }
     }
