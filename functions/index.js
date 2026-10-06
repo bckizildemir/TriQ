@@ -164,6 +164,9 @@ exports.questionSharePage = onRequest({ region: REGION }, async (request, respon
     }
 
     const questionText = localizedQuestionText(question);
+    // Public question pages only: the Hosting CDN absorbs repeat hits. List pages stay
+    // uncached because a share can be revoked.
+    response.set("Cache-Control", "public, max-age=300, s-maxage=600");
     response.status(200).send(renderQuestionSharePage({
       title: `${questionText} - TTB`,
       description: "Bu soruyu TTB'de uc cevapla yanitla.",
