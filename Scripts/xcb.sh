@@ -29,7 +29,8 @@ Options:
 
 Environment:
   XCB_JOBS            Parallel compile jobs (default 4)
-  XCB_SIMULATOR       Simulator name (default "iPhone 12")
+  XCB_SIMULATOR       Simulator name (default "iPhone 12"; "iPhone 12 (iOS VERSION)"
+                      also matches)
   XCB_CACHE_ROOT      Shared cache root (default ~/Library/Caches/xcb)
   XCB_LOCK_TIMEOUT    Seconds to wait for the build lock (default 3600)
   XCB_DRY_RUN=1       Print the xcodebuild command; take no lock, build nothing
@@ -89,12 +90,14 @@ name, version = sys.argv[1], sys.argv[2]
 runtime_suffix = "iOS-" + version.replace(".", "-")
 devices = json.loads(subprocess.check_output(
     ["xcrun", "simctl", "list", "devices", "available", "-j"], text=True))["devices"]
-for runtime, entries in devices.items():
-    if runtime.endswith(runtime_suffix):
-        for device in entries:
-            if device["name"] == name:
-                print(device["udid"])
-                sys.exit(0)
+# An exact name wins; a simulator renamed to "<name> (iOS <version>)" also matches.
+for wanted in (name, f"{name} (iOS {version})"):
+    for runtime, entries in devices.items():
+        if runtime.endswith(runtime_suffix):
+            for device in entries:
+                if device["name"] == wanted:
+                    print(device["udid"])
+                    sys.exit(0)
 sys.exit(1)
 PY
 }
