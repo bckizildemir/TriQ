@@ -22,7 +22,7 @@ protocol BadgeUserTransaction {
 /// every bit of badge business logic — progress math, streak calculation, unlock detection — and
 /// this seam carries only the network calls, so a fixture never has to reimplement that logic to
 /// stand in for Firestore.
-protocol BadgeStoring {
+protocol BadgeStoring: Sendable {
     func getUserDocument(userId: String) async throws -> (exists: Bool, data: [String: Any])
     func setUserDocument(userId: String, data: [String: Any], merge: Bool) async throws
     func getBadgeDefinitionDocuments() async throws -> [(id: String, data: [String: Any])]
@@ -37,8 +37,12 @@ protocol BadgeStoring {
 }
 
 /// The production adapter: every operation goes straight to Firestore.
+///
+/// Holds no `Firestore` instance: Firebase does not mark it `Sendable`, so storing one would stop
+/// this struct being `Sendable`. `Firestore.firestore()` returns the same cached default instance
+/// on every call.
 struct LiveBadgeStore: BadgeStoring {
-    private let db = Firestore.firestore()
+    private var db: Firestore { Firestore.firestore() }
 
     func getUserDocument(userId: String) async throws -> (exists: Bool, data: [String: Any]) {
         let snapshot = try await db.collection("users").document(userId).getDocument()

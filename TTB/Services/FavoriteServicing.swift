@@ -14,7 +14,7 @@ protocol FavoriteListenerHandle {
 /// The fake is the point — it is what lets the store's precedence ladder, its optimistic
 /// rollback, and its reconciliation against a snapshot be exercised without Firebase, and
 /// without the `service == nil` local-mode branch that the models grew instead.
-protocol FavoriteServicing {
+protocol FavoriteServicing: Sendable {
     /// Streams the questions the user has favorited, re-emitting on every change.
     ///
     /// Membership in the snapshot is the truth. The `isFavorite` flag carried by these
