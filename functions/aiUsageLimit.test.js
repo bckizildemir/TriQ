@@ -3,6 +3,9 @@ const assert = require("node:assert/strict");
 
 const {
   AI_QUERY_GROUP,
+  IMAGE_SUGGESTION_GROUP,
+  PROJECT_DAILY_LIMITS,
+  PROJECT_USAGE_COLLECTION,
   QUICK_ANSWER_GROUP,
   USAGE_COLLECTION,
   consumeDailyQuota,
@@ -228,6 +231,111 @@ test("a failed handler still consumes the attempt, because the provider call is 
     db.documents.get(`${USAGE_COLLECTION}/user-1`).counts[AI_QUERY_GROUP],
     1
   );
+});
+
+test("a capped group also counts against the project-wide total for the UTC day", async () => {
+  const db = createFakeDb();
+
+  await consumeDailyQuota({
+    db,
+    uid: "user-1",
+    group: AI_QUERY_GROUP,
+    isAnonymous: false,
+    now: new Date("2026-07-31T09:00:00Z"),
+  });
+
+  assert.deepEqual(db.documents.get(`${PROJECT_USAGE_COLLECTION}/2026-07-31`), {
+    dayKey: "2026-07-31",
+    counts: { [AI_QUERY_GROUP]: 1 },
+    updatedAt: "2026-07-31T09:00:00.000Z",
+  });
+});
+
+test("a fresh uid is rejected once the project total is spent, so new anonymous accounts do not reset it", async () => {
+  const projectLimit = PROJECT_DAILY_LIMITS[AI_QUERY_GROUP];
+  const db = createFakeDb({
+    [`${PROJECT_USAGE_COLLECTION}/2026-07-31`]: {
+      dayKey: "2026-07-31",
+      counts: { [AI_QUERY_GROUP]: projectLimit },
+      updatedAt: "2026-07-31T08:00:00.000Z",
+    },
+  });
+
+  await assert.rejects(
+    () => consumeDailyQuota({
+      db,
+      uid: "fresh-guest",
+      group: AI_QUERY_GROUP,
+      isAnonymous: true,
+      now: new Date("2026-07-31T09:00:00Z"),
+    }),
+    (error) => error.code === "resource-exhausted" && error.details.reason === "project-daily-limit"
+  );
+
+  // The rejected attempt writes nothing: neither the caller's counter nor the project total moves.
+  assert.equal(db.documents.get(`${USAGE_COLLECTION}/fresh-guest`), undefined);
+  assert.equal(
+    db.documents.get(`${PROJECT_USAGE_COLLECTION}/2026-07-31`).counts[AI_QUERY_GROUP],
+    projectLimit
+  );
+});
+
+test("the project total starts again on a new UTC day", async () => {
+  const db = createFakeDb({
+    [`${PROJECT_USAGE_COLLECTION}/2026-07-30`]: {
+      dayKey: "2026-07-30",
+      counts: { [AI_QUERY_GROUP]: PROJECT_DAILY_LIMITS[AI_QUERY_GROUP] },
+      updatedAt: "2026-07-30T23:00:00.000Z",
+    },
+  });
+
+  const result = await consumeDailyQuota({
+    db,
+    uid: "user-1",
+    group: AI_QUERY_GROUP,
+    isAnonymous: false,
+    now: new Date("2026-07-31T00:10:00Z"),
+  });
+
+  assert.deepEqual(result, { used: 1, limit: 20 });
+});
+
+test("a caller over their own limit does not spend the project total", async () => {
+  const db = createFakeDb({
+    [`${USAGE_COLLECTION}/user-1`]: {
+      dayKey: "2026-07-31",
+      counts: { [AI_QUERY_GROUP]: 20 },
+      updatedAt: "2026-07-31T08:00:00.000Z",
+    },
+  });
+
+  await assert.rejects(
+    () => consumeDailyQuota({
+      db,
+      uid: "user-1",
+      group: AI_QUERY_GROUP,
+      isAnonymous: false,
+      now: new Date("2026-07-31T09:00:00Z"),
+    }),
+    (error) => error.details.reason === "daily-limit"
+  );
+
+  assert.equal(db.documents.get(`${PROJECT_USAGE_COLLECTION}/2026-07-31`), undefined);
+});
+
+test("a group without a project cap writes no project document", async () => {
+  assert.equal(PROJECT_DAILY_LIMITS[IMAGE_SUGGESTION_GROUP], undefined);
+  const db = createFakeDb();
+
+  await consumeDailyQuota({
+    db,
+    uid: "user-1",
+    group: IMAGE_SUGGESTION_GROUP,
+    isAnonymous: false,
+    now: new Date("2026-07-31T09:00:00Z"),
+  });
+
+  assert.equal(db.documents.get(`${PROJECT_USAGE_COLLECTION}/2026-07-31`), undefined);
 });
 
 function createFakeDb(initialDocuments = {}) {

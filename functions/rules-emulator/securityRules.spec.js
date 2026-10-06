@@ -284,6 +284,34 @@ describe("user subcollections", () => {
   });
 });
 
+describe("AI spend and config", () => {
+  const anonymous = { firebase: { sign_in_provider: "anonymous" } };
+
+  test("an anonymous caller cannot read aiConfig", async () => {
+    await seed((firestore) => firestore.doc("aiConfig/global").set({ provider: "groq" }));
+    await assertFails(db("guest-1", anonymous).doc("aiConfig/global").get());
+  });
+
+  test("a permanent non-admin caller cannot read aiConfig", async () => {
+    await seed((firestore) => firestore.doc("aiConfig/global").set({ provider: "groq" }));
+    await assertFails(db("alice").doc("aiConfig/global").get());
+  });
+
+  test("an admin can read aiConfig", async () => {
+    await seed(async (firestore) => {
+      await firestore.doc("aiConfig/global").set({ provider: "groq" });
+      await firestore.doc("users/admin-1").set({ isAdmin: true });
+    });
+    await assertSucceeds(db("admin-1").doc("aiConfig/global").get());
+  });
+
+  test("no client can read or reset the project-wide AI counter", async () => {
+    await seed((firestore) => firestore.doc("aiUsageProjectDaily/2026-10-06").set({ counts: { aiQuery: 1000 } }));
+    await assertFails(db("alice").doc("aiUsageProjectDaily/2026-10-06").get());
+    await assertFails(db("alice").doc("aiUsageProjectDaily/2026-10-06").set({ counts: {} }));
+  });
+});
+
 describe("storage", () => {
   const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
 

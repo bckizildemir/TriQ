@@ -419,6 +419,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Project-wide AI spend counter, one document per UTC day. Server-owned like aiUsageDaily:
+    // a client that could write it could reset the project's ceiling.
+    match /aiUsageProjectDaily/{dayKey} {
+      allow read, write: if false;
+    }
+
     // AI Usage Statistics - User-specific subcollection.
     // NOT a spend control. The owner writes these numbers, so they are display and UX only; the
     // brake is the server-owned aiUsageDaily counter above.
@@ -442,12 +448,11 @@ service cloud.firestore {
         (!(request.resource.data.keys().hasAny(['favoriteCategory'])) || request.resource.data.favoriteCategory is string);
     }
     
-    // Global AI Configuration (admin-only)
+    // Global AI Configuration (admin-only). No client or function reads it today; the provider
+    // and model come from the functions' environment. Anonymous sign-in makes isAuthenticated()
+    // free, so a read for any signed-in user was a read for anyone.
     match /aiConfig/{configId} {
-      // Any authenticated user can read global AI config
-      allow read: if isAuthenticated();
-      // Only admins can modify global AI configuration
-      allow write: if isAdmin();
+      allow read, write: if isAdmin();
     }
   }
 }

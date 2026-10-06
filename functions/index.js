@@ -454,7 +454,7 @@ exports.suggestAnswerImages = onCall(
     return suggestAnswerImages({
       user: { uid: request.auth?.uid },
       data: request.data,
-      pexelsApiKey: PEXELS_API_KEY.value() || process.env.PEXELS_API_KEY,
+      pexelsApiKey: PEXELS_API_KEY.value(),
     });
   })
 );
@@ -539,8 +539,8 @@ function aiFunctionContext(request) {
     data: request.data,
     provider: process.env.AI_PROVIDER,
     model: process.env.AI_MODEL,
-    groqApiKey: GROQ_API_KEY.value() || process.env.GROQ_API_KEY,
-    openRouterApiKey: OPENROUTER_API_KEY.value() || process.env.OPENROUTER_API_KEY,
+    groqApiKey: GROQ_API_KEY.value(),
+    openRouterApiKey: OPENROUTER_API_KEY.value(),
   };
 }
 
