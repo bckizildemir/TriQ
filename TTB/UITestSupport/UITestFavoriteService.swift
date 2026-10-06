@@ -6,6 +6,9 @@ import Foundation
 /// The harnesses run on fixture data, so they need a `FavoriteServicing` that answers from memory.
 /// Toggles are applied locally and re-published to the listener, so the store behaves as it would
 /// against a backend that confirms instantly.
+///
+/// `@MainActor` because the seam is `Sendable` and this class holds mutable state.
+@MainActor
 final class UITestFavoriteService: FavoriteServicing {
     private var favoritesByID: [String: Question]
     private var onChange: ((Result<[Question], Error>) -> Void)?
