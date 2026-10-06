@@ -342,7 +342,7 @@ exports.setQuestionInList = onCall({ region: REGION }, async (request) => {
   });
 });
 
-exports.createQuestionListShare = onCall({ region: REGION }, withDailyQuota({ db, group: SHARE_WRITE_GROUP }, async (request) => {
+exports.createQuestionListShare = onCall({ region: REGION, enforceAppCheck: true }, withDailyQuota({ db, group: SHARE_WRITE_GROUP }, async (request) => {
   return createQuestionListShare({
     db,
     user: {
@@ -422,7 +422,7 @@ exports.leaveQuestionListShare = onCall({ region: REGION }, async (request) => {
   });
 });
 
-exports.sendQuestionListShareReply = onCall({ region: REGION }, withDailyQuota({ db, group: SHARE_WRITE_GROUP }, async (request) => {
+exports.sendQuestionListShareReply = onCall({ region: REGION, enforceAppCheck: true }, withDailyQuota({ db, group: SHARE_WRITE_GROUP }, async (request) => {
   return sendQuestionListShareReply({
     db,
     user: {
@@ -497,7 +497,7 @@ exports.generateTrioQuestionSuggestions = aiCallable(AI_QUERY_GROUP, async (requ
   return generateTrioQuestionSuggestions(aiFunctionContext(request));
 });
 
-exports.claimUsername = onCall({ region: REGION }, async (request) => {
+exports.claimUsername = onCall({ region: REGION, enforceAppCheck: true }, async (request) => {
   const signInProvider = request.auth?.token?.firebase?.sign_in_provider;
   return claimUsername({
     db,
@@ -521,7 +521,7 @@ exports.resolveUsername = onCall({ region: REGION, enforceAppCheck: true }, asyn
   });
 });
 
-exports.releaseUsername = onCall({ region: REGION }, async (request) => {
+exports.releaseUsername = onCall({ region: REGION, enforceAppCheck: true }, async (request) => {
   return releaseUsername({
     db,
     user: { uid: request.auth?.uid },
