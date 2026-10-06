@@ -36,8 +36,8 @@ struct AdminReleaseManagerModelTests {
 
         #expect(model.errorMessage == nil)
         #expect(model.testNotificationMessage?.contains("1") == true)
-        #expect(service.sentLocalizedTitle == ["en": "Fresh prompts"])
-        #expect(service.sentLocalizedBody == ["en": "Open the app"])
+        #expect(await service.sentLocalizedTitle == ["en": "Fresh prompts"])
+        #expect(await service.sentLocalizedBody == ["en": "Open the app"])
     }
 
     @Test
@@ -69,7 +69,7 @@ struct AdminReleaseManagerModelTests {
     }
 }
 
-private final class MockContentReleaseService: ContentReleaseServicing {
+private actor MockContentReleaseService: ContentReleaseServicing {
     var sentLocalizedTitle: [String: String]?
     var sentLocalizedBody: [String: String]?
 
@@ -84,7 +84,7 @@ private final class MockContentReleaseService: ContentReleaseServicing {
         self.testNotificationError = testNotificationError
     }
 
-    func listenToReleases(
+    nonisolated func listenToReleases(
         completion: @escaping (Result<[ContentRelease], Error>) -> Void
     ) -> any ListenerRegistration {
         MockContentReleaseListener()
@@ -118,7 +118,7 @@ private final class MockContentReleaseService: ContentReleaseServicing {
         []
     }
 
-    func suggestedCopy(
+    nonisolated func suggestedCopy(
         categoryIDs: [String],
         questions: [Question],
         categories: [TTB.Category]

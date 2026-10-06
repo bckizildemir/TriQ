@@ -2,12 +2,14 @@ import FirebaseAuth
 import FirebaseFirestore
 import Foundation
 
-protocol CategoryReading {
+protocol CategoryReading: Sendable {
     func fetchCategories(ids: [String]) async throws -> [Category]
 }
 
 final class CategoryService {
-    private let db = Firestore.firestore()
+    // Computed, not stored: the service keeps no non-Sendable Firebase state, so it
+    // is Sendable. The SDK returns the same cached instance on every call.
+    private var db: Firestore { Firestore.firestore() }
 
     func listenToCategories(
         completion: @escaping (Result<[Category], Error>) -> Void

@@ -49,7 +49,7 @@ struct ContentReleaseNotificationSendResult: Equatable {
     )
 }
 
-protocol ContentReleaseReading {
+protocol ContentReleaseReading: Sendable {
     func fetchRelease(id: String) async throws -> ContentRelease?
     func fetchQuestions(ids: [String]) async throws -> [Question]
 }
@@ -76,8 +76,10 @@ protocol ContentReleaseServicing: ContentReleaseReading {
 }
 
 final class ContentReleaseService: ContentReleaseServicing {
-    private let db = Firestore.firestore()
-    private let functions = Functions.functions(region: "europe-west1")
+    // Computed, not stored: the service keeps no non-Sendable Firebase state, so it
+    // is Sendable. The SDK returns the same cached instance on every call.
+    private var db: Firestore { Firestore.firestore() }
+    private var functions: Functions { Functions.functions(region: "europe-west1") }
 
     func listenToReleases(
         completion: @escaping (Result<[ContentRelease], Error>) -> Void
