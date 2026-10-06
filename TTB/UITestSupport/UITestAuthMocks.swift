@@ -89,9 +89,10 @@ final class UITestAuthProvider: AuthModelAuthProviding {
         return nil
     }
 
-    func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?) {
+    /// `AuthModel` calls this from its nonisolated `deinit`, so it cannot clear `stateDidChange`.
+    /// The provider is released with that `AuthModel`, so the stale listener is never called.
+    nonisolated func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?) {
         _ = handle
-        stateDidChange = nil
     }
 }
 

@@ -78,7 +78,7 @@ final class MockAuthProvider: AuthModelAuthProviding {
         return nil
     }
 
-    func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?) {
+    nonisolated func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?) {
         _ = handle
     }
 
@@ -88,6 +88,7 @@ final class MockAuthProvider: AuthModelAuthProviding {
     }
 }
 
+@MainActor
 final class MockUsernameService: UsernameServiceProtocol {
     private(set) var claimCalls: [(username: String, email: String?, isAnonymous: Bool?)] = []
     private(set) var releaseCalls: [(username: String, restoreUsername: String?, restoreEmail: String?, restoreIsAnonymous: Bool?)] = []

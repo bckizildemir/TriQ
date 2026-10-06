@@ -9,7 +9,7 @@ import FirebaseFunctions
 import Foundation
 
 // MARK: - AI Service Protocol
-protocol AIServiceProtocol {
+protocol AIServiceProtocol: Sendable {
     func askQuestion(_ question: String, category: AICategory) async throws -> [String]
     func suggestAnswers(for question: String) async throws -> [String]
     func suggestQuickAnswers(

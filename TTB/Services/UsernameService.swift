@@ -34,8 +34,8 @@ enum UsernameServiceError: LocalizedError {
   }
 }
 
-final class UsernameService {
-  private let functions = Functions.functions(region: "europe-west1")
+final class UsernameService: Sendable {
+  private var functions: Functions { Functions.functions(region: "europe-west1") }
 
   func claimUsername(
     _ username: String,
