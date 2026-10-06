@@ -241,7 +241,9 @@ final class QuestionModerationStoreTests: XCTestCase {
 // MARK: - Fake
 
 /// In-memory adapter. It records calls and can be told to fail the next write, which is what makes the
-/// backend-first ordering assertable.
+/// backend-first ordering assertable. `@MainActor` like the suite, so the tests read its recorded calls
+/// without an `await` and `QuestionModerating`'s `Sendable` requirement holds.
+@MainActor
 private final class FakeQuestionModerationService: QuestionModerating {
     struct ModerationCall {
         let questionId: String

@@ -3,7 +3,9 @@ import FirebaseFunctions
 import Foundation
 import os
 
-protocol QuestionListServicing {
+/// `Sendable` because the `@MainActor` `QuestionListStore` hands this existential to `nonisolated async`
+/// requirements. `QuestionListService` and the test mock are both `actor`s.
+protocol QuestionListServicing: Sendable {
     func setupQuestionListsListener(
         userId: String,
         completion: @escaping (Result<[QuestionList], Error>) -> Void
