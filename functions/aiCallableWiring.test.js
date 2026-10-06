@@ -103,3 +103,20 @@ test("resolveUsername requires App Check because it returns an email before sign
 
   assert.match(source, /exports\.resolveUsername = onCall\(\{ region: REGION, enforceAppCheck: true \}/);
 });
+
+test("username and list-share write callables require App Check", () => {
+  const source = readIndex().replace(/\s+/g, " ");
+
+  for (const name of [
+    "claimUsername",
+    "releaseUsername",
+    "createQuestionListShare",
+    "sendQuestionListShareReply",
+  ]) {
+    assert.match(
+      source,
+      new RegExp(`exports\\.${name} = onCall\\(\\{ region: REGION, enforceAppCheck: true \\}`),
+      `${name} must keep enforceAppCheck: true`
+    );
+  }
+});
