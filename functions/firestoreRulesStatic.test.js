@@ -29,6 +29,18 @@ test("the AI spend counter is server-owned and closed to every client", () => {
   assert.match(rules, /match \/aiUsageDaily\/\{userId\} \{ allow read, write: if false; \}/);
 });
 
+test("the project-wide AI spend counter is server-owned and closed to every client", () => {
+  const rules = compact(fs.readFileSync(rulesPath, "utf8"));
+
+  assert.match(rules, /match \/aiUsageProjectDaily\/\{dayKey\} \{ allow read, write: if false; \}/);
+});
+
+test("AI config is admin-only, because anonymous sign-in makes any signed-in check free", () => {
+  const rules = compact(fs.readFileSync(rulesPath, "utf8"));
+
+  assert.match(rules, /match \/aiConfig\/\{configId\} \{ allow read, write: if isAdmin\(\); \}/);
+});
+
 test("question list share rules deny all direct client writes", () => {
   const rules = compact(fs.readFileSync(rulesPath, "utf8"));
 

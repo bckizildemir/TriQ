@@ -29,7 +29,7 @@ test("the AI callable options require App Check", () => {
 
   assert.match(
     source,
-    /const AI_FUNCTION_OPTIONS = \{ region: REGION, secrets: \[GROQ_API_KEY, OPENROUTER_API_KEY\], enforceAppCheck: true, \}/
+    /const AI_FUNCTION_OPTIONS = \{ region: REGION, secrets: \[GROQ_API_KEY, OPENROUTER_API_KEY\], enforceAppCheck: true, consumeAppCheckToken: true, \}/
   );
 });
 
@@ -48,7 +48,7 @@ test("every paid AI callable goes through the quota wrapper", () => {
 test("no callable uses the AI options without the quota wrapper", () => {
   const source = readIndex();
 
-  assert.match(source, /const aiCallable = \(group, handler\) =>\s*onCall\(AI_FUNCTION_OPTIONS, withDailyQuota\(\{ db, group \}, handler\)\);/);
+  assert.match(source, /const aiCallable = \(group, handler\) =>\s*onCall\(AI_FUNCTION_OPTIONS, withSingleUseAppCheck\(withDailyQuota\(\{ db, group \}, handler\)\)\);/);
 
   // The wrapper itself is the one permitted use. A second one is a callable that skipped the quota.
   const directUses = source.match(/onCall\(AI_FUNCTION_OPTIONS/g) ?? [];
@@ -59,17 +59,14 @@ test("no callable uses the AI options without the quota wrapper", () => {
 // the two above only catch a callable that copies AI_FUNCTION_OPTIONS itself, which is exactly
 // what suggestAnswerImages does NOT do: it has its own inline options with its own secret.
 //
-// ADR-0006 ("Not claimed") records that suggestAnswerImages spends a third-party (Pexels) quota
-// rather than money, and deliberately leaves it unattested — the other 24 callables get the same
-// pass because nothing behind them costs money. A new callable that reaches for a secret is asking
-// the same question this one already answered, so it must either go through aiCallable or be added
-// here with the same kind of recorded reason, not silently.
+// ADR-0006 ("Not claimed") once left suggestAnswerImages unattested because it spends a third-party
+// (Pexels) quota rather than money. It now enforces App Check with single-use tokens, because abuse
+// on our key could get the key throttled for every user. A new callable that reaches for a secret
+// must either go through aiCallable or be added here with a recorded reason, not silently.
 test("every callable declaring its own secret is either quota-wrapped or an explicit, reasoned exception", () => {
   const source = readIndex();
 
-  const EXPLICIT_EXCEPTIONS = new Set([
-    "suggestAnswerImages", // ADR-0006 "Not claimed": spends Pexels' quota, not ours.
-  ]);
+  const EXPLICIT_EXCEPTIONS = new Set([]);
 
   const exportPattern = /exports\.(\w+)\s*=\s*onCall\(\s*\{([^}]*)\}/g;
   const secretBearingExports = [];
@@ -119,4 +116,13 @@ test("username and list-share write callables require App Check", () => {
       `${name} must keep enforceAppCheck: true`
     );
   }
+});
+
+test("the callables that spend a provider quota accept each App Check token once", () => {
+  const source = readIndex().replace(/\s+/g, " ");
+
+  assert.match(
+    source,
+    /exports\.suggestAnswerImages = onCall\( \{ region: REGION, secrets: \[PEXELS_API_KEY\], enforceAppCheck: true, consumeAppCheckToken: true \}, withSingleUseAppCheck\(withDailyQuota\(/
+  );
 });

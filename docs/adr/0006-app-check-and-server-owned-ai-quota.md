@@ -117,7 +117,7 @@ cause.
   provisioning profile, so a Release build signed with a *development* identity may now fail to sign.
   Both keys were verified in the simulator only, which never checks a profile. See the FIX-5 entry in
   `Documentation/ARCHITECTURE_DEEPENING_AUDIT.md`.
-- The other 24 callables remain unattested, `suggestAnswerImages` among them, which spends a
+- The other 24 callables remain unattested, `suggestAnswerImages` among them (superseded: ADR-0011 attests it with single-use tokens), which spends a
   third-party quota rather than money.
 - One counter document per uid means concurrent calls contend on it. `QuestionCardExpandedView` asks
   for answer chips from a `.task(id:)` per card, so a fast scroll can overlap several. The Admin SDK

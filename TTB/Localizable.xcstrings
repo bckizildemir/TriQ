@@ -8236,6 +8236,57 @@
     "Categories" : {
 
     },
+    "callable.error.appVerification" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not verify the app. Try again."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulama doğrulanamadı. Tekrar dene."
+          }
+        }
+      }
+    },
+    "callable.error.dailyLimit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You used today's limit for this feature. It resets at %@."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu özellik için bugünkü hakkını kullandın. Hakkın %@ saatinde yenilenir."
+          }
+        }
+      }
+    },
+    "callable.error.serviceBusyToday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This service is busy today. Try again tomorrow."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu servis bugün çok yoğun. Yarın tekrar dene."
+          }
+        }
+      }
+    },
     "category.career" : {
       "extractionState" : "manual",
       "localizations" : {
