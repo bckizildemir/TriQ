@@ -645,7 +645,10 @@ extension AIModel {
     static let sample: AIModel = {
         let model = AIModel()
         model.recentQueries = AIQuery.sampleQueries
+        // The testing hook exists only in DEBUG; Release still compiles previews that use `sample`.
+        #if DEBUG
         model.setUsageStatsForTesting(AIUsageStats.sample)
+        #endif
         return model
     }()
 }

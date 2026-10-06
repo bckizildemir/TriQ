@@ -59,6 +59,22 @@ jobs:
             > test.log 2>&1 || { grep -E 'error:|failed|Failing tests' test.log | head -80; exit 1; }
           grep -E 'Executed|Test run with|TEST SUCCEEDED' test.log | tail -n 5
 
+      # The archive for TestFlight builds Release for a device. Debug-only code (#if DEBUG) that
+      # Release code still calls compiles in the steps above and fails only here.
+      - name: Build Release for device
+        run: |
+          xcodebuild build \
+            -project TTB.xcodeproj \
+            -scheme TTB \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -clonedSourcePackagesDirPath ~/Library/Caches/ci-spm \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            > release.log 2>&1 || { grep -E 'error:' release.log | head -50; exit 1; }
+          tail -n 3 release.log
+
       - name: Upload logs
         if: failure()
         uses: actions/upload-artifact@v4
@@ -67,6 +83,7 @@ jobs:
           path: |
             build.log
             test.log
+            release.log
           if-no-files-found: ignore
 
   functions:
