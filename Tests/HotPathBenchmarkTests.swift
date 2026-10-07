@@ -229,7 +229,7 @@ final class HotPathBenchmarkTests: XCTestCase {
     /// A store on `.account` with `favorites` already snapshotted, so the favorite benchmarks
     /// measure the precedence ladder rather than the signed-out guard.
     ///
-    /// `setIdentity` and `emit` are both async and `measure` is not, so they run through the same
+    /// `setIdentity` is async and `measure` is not, so the setup runs through the same
     /// expectation-and-wait pattern the toggle benchmark uses — once, here, outside the measured
     /// block.
     @MainActor
@@ -246,7 +246,7 @@ final class HotPathBenchmarkTests: XCTestCase {
         let ready = expectation(description: "account snapshot")
         Task { @MainActor in
             await store.setIdentity(.account(userId: "benchmark-user"))
-            await service.emit(favorites)
+            service.emit(favorites)
             ready.fulfill()
         }
         wait(for: [ready], timeout: 5)

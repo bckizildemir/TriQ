@@ -4,7 +4,10 @@ import Foundation
 ///
 /// Exists so the seam never names a Firebase type: the live adapter wraps a
 /// `ListenerRegistration`, and a test adapter returns something that does nothing.
-protocol FavoriteListenerHandle {
+///
+/// `Sendable` because the live adapter is an actor and hands the handle back to the main-actor
+/// store. `cancel()` is synchronous and safe to call more than once.
+protocol FavoriteListenerHandle: Sendable {
     func cancel()
 }
 
@@ -20,9 +23,12 @@ protocol FavoriteServicing: Sendable {
     /// Membership in the snapshot is the truth. The `isFavorite` flag carried by these
     /// questions is not read — it is decoded from ambient auth state and says nothing the
     /// snapshot has not already said.
+    ///
+    /// `onChange` runs on the main actor: its one consumer is `FavoriteStore`, so the adapter
+    /// makes the hop once and the store applies each snapshot synchronously.
     func favoritesListener(
         userId: String,
-        onChange: @escaping (Result<[Question], Error>) -> Void
+        onChange: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
     ) async -> FavoriteListenerHandle
 
     /// Flips one question's favorite state and returns the state the server settled on, which

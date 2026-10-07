@@ -2,9 +2,9 @@ import Foundation
 import FirebaseFirestore
 import FirebaseFunctions
 import os
+import Synchronization
 
 actor FavoriteService {
-    private let db = Firestore.firestore()
     private let functions = Functions.functions(region: "europe-west1")
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
@@ -30,33 +30,33 @@ actor FavoriteService {
         }
     }
     
+    /// Returns a `sending` registration so the caller can hand it to a `Sendable` handle. That only
+    /// holds because `Firestore` is fetched here: a registration built from a stored `Firestore`
+    /// would join the actor's region and could not leave it.
     func setupFavoritesListener(
         userId: String,
-        completion: @escaping (Result<[Question], Error>) -> Void
-    ) -> ListenerRegistration {
+        completion: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
+    ) -> sending ListenerRegistration {
+        let questions = Firestore.firestore().collection("questions")
         guard !userId.isEmpty else {
-            completion(.failure(FavoriteError.invalidUserId))
-            return db.collection("questions").addSnapshotListener { _, _ in }
+            Task { @MainActor in completion(.failure(FavoriteError.invalidUserId)) }
+            return questions.addSnapshotListener { _, _ in }
         }
-        
-        return db.collection("questions")
+
+        return questions
             .whereField("favoriteUserIds", arrayContains: userId)
             .addSnapshotListener { snapshot, error in
+                let result: Result<[Question], Error>
                 if let error = error {
-                    completion(.failure(FavoriteError.unknown(error)))
-                    return
+                    result = .failure(FavoriteError.unknown(error))
+                } else {
+                    let documents = snapshot?.documents ?? []
+                    result = .success(documents.compactMap { document in
+                        Question.fromFirestore(document.data(), id: document.documentID)
+                    })
                 }
-                
-                guard let documents = snapshot?.documents else {
-                    completion(.success([]))
-                    return
-                }
-                
-                let questions = documents.compactMap { document in
-                    Question.fromFirestore(document.data(), id: document.documentID)
-                }
-                
-                completion(.success(questions))
+
+                Task { @MainActor in completion(result) }
             }
     }
     
@@ -119,7 +119,7 @@ actor FavoriteService {
 extension FavoriteService: FavoriteServicing {
     func favoritesListener(
         userId: String,
-        onChange: @escaping (Result<[Question], Error>) -> Void
+        onChange: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
     ) -> FavoriteListenerHandle {
         FirestoreFavoriteListenerHandle(
             registration: setupFavoritesListener(userId: userId, completion: onChange)
@@ -135,10 +135,20 @@ extension FavoriteService: FavoriteServicing {
     }
 }
 
-private struct FirestoreFavoriteListenerHandle: FavoriteListenerHandle {
-    let registration: ListenerRegistration
+/// Owns the Firebase registration, which is not `Sendable`, behind a lock, so the handle can
+/// cross from this actor to the main-actor store. The first `cancel()` removes the registration;
+/// later calls do nothing.
+final class FirestoreFavoriteListenerHandle: FavoriteListenerHandle {
+    private let registration: Mutex<ListenerRegistration?>
+
+    init(registration: sending ListenerRegistration) {
+        self.registration = Mutex(registration)
+    }
 
     func cancel() {
-        registration.remove()
+        registration.withLock { registration in
+            registration?.remove()
+            registration = nil
+        }
     }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 @testable import TTB
 
 /// Test adapter at the favorites seam.
@@ -7,10 +8,14 @@ import Foundation
 /// snapshots when it chooses, which is what lets the store's precedence ladder, rollback and
 /// reconciliation be driven deterministically without Firebase.
 final class FakeFavoriteListenerHandle: FavoriteListenerHandle {
-    private(set) var isCancelled = false
+    private let cancelled = Mutex(false)
+
+    var isCancelled: Bool {
+        cancelled.withLock { $0 }
+    }
 
     func cancel() {
-        isCancelled = true
+        cancelled.withLock { $0 = true }
     }
 }
 
@@ -29,11 +34,11 @@ final class FakeFavoriteService: FavoriteServicing {
     private(set) var listenerUserIDs: [String] = []
     private(set) var handles: [FakeFavoriteListenerHandle] = []
 
-    private var onChange: ((Result<[Question], Error>) -> Void)?
+    private var onChange: (@MainActor @Sendable (Result<[Question], Error>) -> Void)?
 
     func favoritesListener(
         userId: String,
-        onChange: @escaping (Result<[Question], Error>) -> Void
+        onChange: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
     ) -> FavoriteListenerHandle {
         listenerUserIDs.append(userId)
         self.onChange = onChange
@@ -64,28 +69,21 @@ final class FakeFavoriteService: FavoriteServicing {
 
     // MARK: - Driving the store
 
-    /// Pushes a snapshot and lets the store's main-actor hop run before returning, so a test can
-    /// assert on the next line. The store receives snapshots from a Firestore callback that may
-    /// arrive off-main, so it hops — which means a bare synchronous emit would race the assertion.
-    func emit(_ questions: [Question]) async {
+    /// Pushes a snapshot. The seam's callback is main-actor isolated and so is this fake, so the
+    /// store has applied the snapshot by the time this returns and a test can assert on the next
+    /// line.
+    func emit(_ questions: [Question]) {
         onChange?(.success(questions))
-        await settle()
     }
 
-    func emitFailure(_ error: Error) async {
+    func emitFailure(_ error: Error) {
         onChange?(.failure(error))
-        await settle()
     }
 
     /// The callback registered by the current listener, for tests that need to fire a snapshot
     /// from a listener the store has since replaced.
-    func currentListener() -> (Result<[Question], Error>) -> Void {
+    func currentListener() -> @MainActor @Sendable (Result<[Question], Error>) -> Void {
         onChange ?? { _ in }
-    }
-
-    func settle() async {
-        await Task.yield()
-        await Task.yield()
     }
 }
 

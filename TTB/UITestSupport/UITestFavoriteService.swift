@@ -7,13 +7,12 @@ import Foundation
 /// Toggles are applied locally and re-published to the listener, so the store behaves as it would
 /// against a backend that confirms instantly.
 ///
-/// `@MainActor` because the seam is `Sendable` and this class holds mutable state. Its
-/// `favoritesListener` still warns that the callback and handle cross into main-actor code, the
-/// same warnings `FakeFavoriteService` carries; TriQ#9 owns that listener shape.
+/// `@MainActor` because the seam is `Sendable` and this class holds mutable state. The listener
+/// callback is main-actor isolated too, so `publish()` calls it directly.
 @MainActor
 final class UITestFavoriteService: FavoriteServicing {
     private var favoritesByID: [String: Question]
-    private var onChange: ((Result<[Question], Error>) -> Void)?
+    private var onChange: (@MainActor @Sendable (Result<[Question], Error>) -> Void)?
 
     init(favorites: [Question] = []) {
         favoritesByID = Dictionary(uniqueKeysWithValues: favorites.map { ($0.id, $0) })
@@ -21,7 +20,7 @@ final class UITestFavoriteService: FavoriteServicing {
 
     func favoritesListener(
         userId: String,
-        onChange: @escaping (Result<[Question], Error>) -> Void
+        onChange: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
     ) -> FavoriteListenerHandle {
         self.onChange = onChange
         publish()
