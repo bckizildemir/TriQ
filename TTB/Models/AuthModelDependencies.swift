@@ -67,7 +67,11 @@ extension User: AuthModelUser {
 
 typealias AuthStateListenerHandle = AuthStateDidChangeListenerHandle
 
-protocol AuthModelAuthProviding {
+/// Main-actor isolated because every caller is the `@MainActor` `AuthModel` and the requirements
+/// read the provider's current user synchronously. `removeStateDidChangeListener` stays
+/// `nonisolated` because `AuthModel` calls it from its nonisolated `deinit`.
+@MainActor
+protocol AuthModelAuthProviding: Sendable {
     var currentUser: AuthModelUser? { get }
     func createUser(withEmail email: String, password: String) async throws -> AuthModelUser
     func signIn(withEmail email: String, password: String) async throws
@@ -77,10 +81,10 @@ protocol AuthModelAuthProviding {
     func addStateDidChangeListener(
         _ listener: @escaping (AuthModelUser?) -> Void
     ) -> AuthStateListenerHandle?
-    func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?)
+    nonisolated func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?)
 }
 
-protocol UsernameServiceProtocol {
+protocol UsernameServiceProtocol: Sendable {
     func claimUsername(
         _ username: String,
         email: String?,
@@ -98,13 +102,13 @@ protocol UsernameServiceProtocol {
 extension UsernameService: UsernameServiceProtocol {}
 
 @MainActor
-protocol AuthUserDocumentManaging {
+protocol AuthUserDocumentManaging: Sendable {
     func ensureExists(for user: AuthModelUser) async
     func profileSnapshot(userId: String) async throws -> UserProfileSnapshot?
     func deleteUserAndAuth(user: AuthModelUser) async
 }
 
-protocol BadgeProgressBackfilling {
+protocol BadgeProgressBackfilling: Sendable {
     func backfillBadgeProgressIfNeeded() async
 }
 
@@ -130,7 +134,9 @@ struct AuthModelDependencies {
 }
 
 final class LiveAuthModelAuthProvider: AuthModelAuthProviding {
-    private let auth = Auth.auth()
+    // Computed, not stored: the provider keeps no non-Sendable Firebase state, so it
+    // is Sendable. The SDK returns the same cached instance on every call.
+    private nonisolated var auth: Auth { Auth.auth() }
 
     var currentUser: AuthModelUser? {
         auth.currentUser
@@ -175,7 +181,7 @@ final class LiveAuthModelAuthProvider: AuthModelAuthProviding {
         return handle
     }
 
-    func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?) {
+    nonisolated func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?) {
         guard let handle else { return }
         auth.removeStateDidChangeListener(handle)
     }
