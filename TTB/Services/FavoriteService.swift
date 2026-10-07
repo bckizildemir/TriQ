@@ -37,27 +37,42 @@ actor FavoriteService {
         userId: String,
         completion: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
     ) -> sending ListenerRegistration {
-        let questions = Firestore.firestore().collection("questions")
+        let questionsCollection = Firestore.firestore().collection("questions")
         guard !userId.isEmpty else {
             Task { @MainActor in completion(.failure(FavoriteError.invalidUserId)) }
-            return questions.addSnapshotListener { _, _ in }
+            return questionsCollection.addSnapshotListener { _, _ in }
         }
 
-        return questions
+        return questionsCollection
             .whereField("favoriteUserIds", arrayContains: userId)
             .addSnapshotListener { snapshot, error in
-                let result: Result<[Question], Error>
-                if let error = error {
-                    result = .failure(FavoriteError.unknown(error))
-                } else {
-                    let documents = snapshot?.documents ?? []
-                    result = .success(documents.compactMap { document in
-                        Question.fromFirestore(document.data(), id: document.documentID)
-                    })
-                }
-
-                Task { @MainActor in completion(result) }
+                Self.deliverSnapshot(
+                    documents: snapshot?.documents.map { (id: $0.documentID, data: $0.data()) },
+                    error: error,
+                    to: completion
+                )
             }
+    }
+
+    /// Maps one snapshot callback to the store's result and delivers it on the main actor.
+    ///
+    /// Kept out of the Firebase closure so a test can run the exact path a live snapshot takes;
+    /// `FakeFavoriteService` calls the store directly and never exercises it.
+    static func deliverSnapshot(
+        documents: [(id: String, data: [String: Any])]?,
+        error: Error?,
+        to completion: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
+    ) {
+        let result: Result<[Question], Error>
+        if let error = error {
+            result = .failure(FavoriteError.unknown(error))
+        } else {
+            result = .success((documents ?? []).compactMap { document in
+                Question.fromFirestore(document.data, id: document.id)
+            })
+        }
+
+        Task { @MainActor in completion(result) }
     }
     
     func toggleFavorite(
@@ -146,9 +161,9 @@ final class FirestoreFavoriteListenerHandle: FavoriteListenerHandle {
     }
 
     func cancel() {
-        registration.withLock { registration in
-            registration?.remove()
-            registration = nil
-        }
+        // Take the registration out under the lock and remove it after, so Firebase never runs
+        // while the lock is held.
+        let removed = registration.withLock { $0.take() }
+        removed?.remove()
     }
 }
