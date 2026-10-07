@@ -27,6 +27,12 @@ class BadgeModel: ObservableObject {
     /// `AppEnvironment.uiTest` wired the inert store rather than a live Firestore one — FIX-6's
     /// acceptance criterion. Not compiled into a release build.
     var storeForTesting: BadgeStoring { store }
+
+    /// Puts the given handle where the user-document listener lives, so a test can see `deinit`
+    /// remove it without a signed-in user.
+    func installUserListenerForTesting(_ listener: any BadgeUserListening) {
+        userListener = listener
+    }
     #endif
 
     private struct BadgeDefinition: Decodable {
@@ -423,7 +429,9 @@ class BadgeModel: ObservableObject {
         }
     }
     
-    deinit {
+    /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
+    /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
+    isolated deinit {
         userListener?.remove()
     }
     

@@ -81,7 +81,9 @@ class QuestionListStore: ObservableObject {
         lists = localLists.sorted { $0.updatedAt > $1.updatedAt }
     }
 
-    deinit {
+    /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
+    /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
+    isolated deinit {
         listener?.remove()
         if observesAuth, let authListener {
             Auth.auth().removeStateDidChangeListener(authListener)
@@ -238,6 +240,12 @@ class QuestionListStore: ObservableObject {
     #if DEBUG
     func applyListenerSnapshotForTesting(_ lists: [QuestionList]) {
         applyAuthoritativeSnapshot(lists)
+    }
+
+    /// Puts the given registration where the Firestore listener lives, so a test can see `deinit`
+    /// remove it without a signed-in user or a live `QuestionListService`.
+    func installListenerForTesting(_ registration: any ListenerRegistration) {
+        listener = registration
     }
     #endif
 

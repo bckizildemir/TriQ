@@ -55,9 +55,19 @@ final class AdminReleaseManagerModel: ObservableObject {
         self.releaseService = releaseService
     }
 
-    deinit {
+    /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
+    /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
+    isolated deinit {
         listener?.remove()
     }
+
+    #if DEBUG
+    /// Puts the given registration where the releases listener lives, so a test can see `deinit`
+    /// remove it without a live `ContentReleaseService`.
+    func installListenerForTesting(_ registration: any ListenerRegistration) {
+        listener = registration
+    }
+    #endif
 
     func loadIfNeeded() async {
         guard !hasStarted else { return }

@@ -93,7 +93,9 @@ final class SharedQuestionListStore: ObservableObject {
         #endif
     }
 
-    deinit {
+    /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
+    /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
+    isolated deinit {
         listenerResetTask?.cancel()
         ownedSharesListener?.remove()
         acceptedRecipientsListener?.remove()
@@ -297,6 +299,16 @@ final class SharedQuestionListStore: ObservableObject {
 
     func applyAcceptedSharesSnapshotForTesting(_ shares: [AcceptedQuestionListShare]) {
         acceptedShares = shares.sorted { $0.recipient.updatedAt > $1.recipient.updatedAt }
+    }
+
+    /// Puts the given handles where the share listeners live, so a test can see `deinit` remove
+    /// them without a signed-in user or a live `QuestionListShareService`.
+    func installListenersForTesting(
+        ownedShares: any QuestionListShareListenerHandle,
+        acceptedRecipients: any QuestionListShareListenerHandle
+    ) {
+        ownedSharesListener = ownedShares
+        acceptedRecipientsListener = acceptedRecipients
     }
     #endif
 
