@@ -60,6 +60,8 @@ bash Scripts/check_model_usage.sh Question
 ## Testing Guidelines
 Testing rules load from `.claude/rules/testing.md` when you work in `Tests/` or `TTBUITests/`. Read them before you write a test.
 
+Before you add or edit a live Firebase adapter — a type that calls the Firebase SDK — read `.claude/skills/ttb-live-adapter-tests/SKILL.md`.
+
 ## Commit & Pull Request Guidelines
 - Current history follows mostly Conventional Commit prefixes: `feat:`, `fix:`, `fix(scope):`, `chore:`, `refactor:`.
 - Keep commits small and single-purpose; use imperative summaries (example: `fix(badges): persist progress on answer save`).
@@ -70,9 +72,9 @@ Testing rules load from `.claude/rules/testing.md` when you work in `Tests/` or 
 
 ### Project skills
 
-Eight project skills live in `.claude/skills/` and ship with this repository. The Firestore database is fixed: `(default)`, Standard edition, `eur3`. Run `firebase-security-rules-auditor` after each `firestore.rules` change.
+Nine project skills live in `.claude/skills/` and ship with this repository. The Firestore database is fixed: `(default)`, Standard edition, `eur3`. Run `firebase-security-rules-auditor` after each `firestore.rules` change.
 
-`.claude/skills/README.md` records the origin and the refresh policy of each of these 8 skills, names the one upstream snapshot commit behind the six vendored skills, and gives the commands that detect local edits since the import. The policy column is a decision, not a fact any command re-derives. Read that file before you refresh a vendored skill.
+`.claude/skills/README.md` records the origin and the refresh policy of each of these 9 skills, names the one upstream snapshot commit behind the six vendored skills, and gives the commands that detect local edits since the import. The policy column is a decision, not a fact any command re-derives. Read that file before you refresh a vendored skill.
 
 The eight mandatory Swift skills in the table above (`swiftui-pro`, `swiftui-ui-patterns`, `swift-concurrency-pro`, `swift-testing-pro`, `swiftui-liquid-glass`, `ios-navigation-chrome`, `ios-memory-perf`, `swift-style-guide`) are personal skills. `swift-style-guide` was written for iOS 26 / Swift 6.2; this project reports `IPHONEOS_DEPLOYMENT_TARGET = 18.2` and `SWIFT_VERSION = 5.0` (verified 2026-10-02), so treat its version numbers as the target for new code and flag any API the deployment target can't support. Each machine installs them in `~/.claude/skills`, and this repository does not ship them.
 
