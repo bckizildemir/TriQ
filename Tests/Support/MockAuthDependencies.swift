@@ -37,6 +37,7 @@ final class MockAuthProvider: AuthModelAuthProviding {
     private(set) var signOutCalled = false
     var createUserError: Error?
     var signInError: Error?
+    private(set) var removeStateDidChangeListenerCallCount = 0
     private var authStateListener: ((AuthModelUser?) -> Void)?
 
     var currentUser: AuthModelUser? {
@@ -78,8 +79,9 @@ final class MockAuthProvider: AuthModelAuthProviding {
         return nil
     }
 
-    nonisolated func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?) {
+    func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?) {
         _ = handle
+        removeStateDidChangeListenerCallCount += 1
     }
 
     func emitAuthState(_ user: AuthModelUser?) {

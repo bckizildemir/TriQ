@@ -68,8 +68,8 @@ extension User: AuthModelUser {
 typealias AuthStateListenerHandle = AuthStateDidChangeListenerHandle
 
 /// Main-actor isolated because every caller is the `@MainActor` `AuthModel` and the requirements
-/// read the provider's current user synchronously. `removeStateDidChangeListener` stays
-/// `nonisolated` because `AuthModel` calls it from its nonisolated `deinit`.
+/// read the provider's current user synchronously. `AuthModel`'s `deinit` is `isolated`, so
+/// `removeStateDidChangeListener` needs no `nonisolated` exception.
 @MainActor
 protocol AuthModelAuthProviding: Sendable {
     var currentUser: AuthModelUser? { get }
@@ -81,7 +81,7 @@ protocol AuthModelAuthProviding: Sendable {
     func addStateDidChangeListener(
         _ listener: @escaping (AuthModelUser?) -> Void
     ) -> AuthStateListenerHandle?
-    nonisolated func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?)
+    func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?)
 }
 
 protocol UsernameServiceProtocol: Sendable {
@@ -181,7 +181,7 @@ final class LiveAuthModelAuthProvider: AuthModelAuthProviding {
         return handle
     }
 
-    nonisolated func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?) {
+    func removeStateDidChangeListener(_ handle: AuthStateListenerHandle?) {
         guard let handle else { return }
         auth.removeStateDidChangeListener(handle)
     }

@@ -113,7 +113,9 @@ final class FavoriteStore: ObservableObject {
         self.resolveQuestions = resolveQuestions
     }
 
-    deinit {
+    /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
+    /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
+    isolated deinit {
         listener?.cancel()
     }
 

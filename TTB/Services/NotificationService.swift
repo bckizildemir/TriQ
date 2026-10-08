@@ -40,7 +40,9 @@ final class NotificationService: NSObject, ObservableObject {
         }
     }
 
-    deinit {
+    /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
+    /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
+    isolated deinit {
         if let authListener {
             Auth.auth().removeStateDidChangeListener(authListener)
         }

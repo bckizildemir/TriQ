@@ -498,6 +498,12 @@ class AIModel: ObservableObject {
     
     // MARK: - Testing Methods
     #if DEBUG
+    /// Puts the given registration where the Firestore queries listener lives, so a test can see
+    /// `deinit` remove it without a signed-in user.
+    func installQueriesListenerForTesting(_ registration: any ListenerRegistration) {
+        queriesListener = registration
+    }
+
     func clearQueriesForTesting() {
         queries.removeAll()
         recentQueries.removeAll()
@@ -610,7 +616,9 @@ class AIModel: ObservableObject {
             }
     }
     
-    deinit {
+    /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
+    /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
+    isolated deinit {
         queriesListener?.remove()
     }
 
