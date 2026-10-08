@@ -28,8 +28,8 @@ function, and a test calls it without Firebase.
 3. Test that function in `Tests/` with Swift Testing. Cover valid documents, an invalid document
    that is dropped, a missing snapshot, an error, and the isolation the callback runs on. A test
    that waits on a callback carries a `.timeLimit`, so a broken hop fails instead of hanging.
-4. The one line left untested is the SDK call that registers the closure. Name it in the PR under
-   "Not covered", with a manual check a person can run.
+4. The one line left untested is the SDK call that registers the closure. Name it in the PR's
+   validation steps, with a manual check a person can run.
 
 Done when every line of logic inside a Firebase closure in your diff is reached by a test that
 needs no Firebase.
@@ -38,4 +38,5 @@ needs no Firebase.
 
 `FavoriteService.deliverSnapshot` in `TTB/Services/FavoriteService.swift`, tested by
 `Tests/FavoriteSnapshotDeliveryTests.swift` (PR #40). The `addSnapshotListener` closure only
-forwards to it.
+forwards to it. That test file still lacks the `.timeLimit` from step 3 until #41 adds it; give
+yours one.

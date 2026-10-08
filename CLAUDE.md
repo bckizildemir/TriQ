@@ -60,7 +60,7 @@ bash Scripts/check_model_usage.sh Question
 ## Testing Guidelines
 Testing rules load from `.claude/rules/testing.md` when you work in `Tests/` or `TTBUITests/`. Read them before you write a test.
 
-Before you add or edit a live Firebase adapter — a type that calls the Firebase SDK — read `.claude/skills/ttb-live-adapter-tests/SKILL.md`. Tests use fakes, so logic inside an adapter runs in no test unless that skill's rule pulls it out.
+Before you add or edit a live Firebase adapter — a type that calls the Firebase SDK — read `.claude/skills/ttb-live-adapter-tests/SKILL.md`.
 
 ## Commit & Pull Request Guidelines
 - Current history follows mostly Conventional Commit prefixes: `feat:`, `fix:`, `fix(scope):`, `chore:`, `refactor:`.
