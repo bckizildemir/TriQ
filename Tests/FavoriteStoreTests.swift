@@ -21,7 +21,7 @@ final class FavoriteStoreTests: XCTestCase {
         let (store, service, _) = makeStore()
         await store.setIdentity(.account(userId: "user-1"))
 
-        await service.emit([question("q2")])
+        service.emit([question("q2")])
 
         // The seed said q1 was a favorite and q2 was not; the snapshot disagrees and wins.
         XCTAssertFalse(store.state(of: question("q1", isFavorite: true)))
@@ -32,7 +32,7 @@ final class FavoriteStoreTests: XCTestCase {
         let (store, service, _) = makeStore()
         await store.setIdentity(.account(userId: "user-1"))
         let favorited = question("q1")
-        await service.emit([favorited])
+        service.emit([favorited])
 
         let outcome = await store.toggle(favorited)
 
@@ -46,7 +46,7 @@ final class FavoriteStoreTests: XCTestCase {
     func testToggleAddsOptimisticallyAndPublishesTheQuestion() async {
         let (store, service, _) = makeStore()
         await store.setIdentity(.account(userId: "user-1"))
-        await service.emit([])
+        service.emit([])
         let target = question("q1")
 
         let outcome = await store.toggle(target)
@@ -61,11 +61,11 @@ final class FavoriteStoreTests: XCTestCase {
     func testSnapshotConfirmingAPendingWriteClearsIt() async {
         let (store, service, _) = makeStore()
         await store.setIdentity(.account(userId: "user-1"))
-        await service.emit([])
+        service.emit([])
         let target = question("q1")
         await store.toggle(target)
 
-        await service.emit([target])
+        service.emit([target])
 
         // Still a favorite, now because the backend says so rather than because of the override.
         XCTAssertTrue(store.state(of: target))
@@ -77,7 +77,7 @@ final class FavoriteStoreTests: XCTestCase {
     func testBackendSettlingOnTheOppositeStateCorrectsTheOptimisticGuess() async {
         let (store, service, _) = makeStore()
         await store.setIdentity(.account(userId: "user-1"))
-        await service.emit([])
+        service.emit([])
         service.toggleResult = .success(false)
         let target = question("q1")
 
@@ -92,7 +92,7 @@ final class FavoriteStoreTests: XCTestCase {
         let (store, service, _) = makeStore()
         await store.setIdentity(.account(userId: "user-1"))
         let existing = question("q1")
-        await service.emit([existing])
+        service.emit([existing])
         service.toggleResult = .failure(FakeFavoriteServiceError.unavailable)
 
         let outcome = await store.toggle(existing)
@@ -106,9 +106,9 @@ final class FavoriteStoreTests: XCTestCase {
     func testSnapshotFailureIsReportedWithoutDroppingKnownFavorites() async {
         let (store, service, _) = makeStore()
         await store.setIdentity(.account(userId: "user-1"))
-        await service.emit([question("q1")])
+        service.emit([question("q1")])
 
-        await service.emitFailure(FakeFavoriteServiceError.unavailable)
+        service.emitFailure(FakeFavoriteServiceError.unavailable)
 
         XCTAssertEqual(store.error, FakeFavoriteServiceError.unavailable.localizedDescription)
         XCTAssertEqual(store.favorites.map(\.id), ["q1"])
@@ -120,7 +120,7 @@ final class FavoriteStoreTests: XCTestCase {
         let (store, service, _) = makeStore()
         await store.setIdentity(.account(userId: "user-1"))
 
-        await service.emit([
+        service.emit([
             question("older", createdAt: Date(timeIntervalSince1970: 100)),
             question("newest", createdAt: Date(timeIntervalSince1970: 300)),
             question("middle", createdAt: Date(timeIntervalSince1970: 200)),
@@ -219,7 +219,7 @@ final class FavoriteStoreTests: XCTestCase {
     func testChangingIdentityCancelsTheListenerAndDropsPendingState() async {
         let (store, service, _) = makeStore()
         await store.setIdentity(.account(userId: "user-1"))
-        await service.emit([])
+        service.emit([])
         let target = question("q1")
         await store.toggle(target)
         XCTAssertTrue(store.state(of: target))
@@ -242,7 +242,6 @@ final class FavoriteStoreTests: XCTestCase {
         await store.setIdentity(.account(userId: "user-2"))
 
         previousUserListener(.success([question("leaked")]))
-        await service.settle()
 
         XCTAssertTrue(store.favorites.isEmpty)
         XCTAssertFalse(store.state(of: question("leaked", isFavorite: false)))
