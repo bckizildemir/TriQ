@@ -174,9 +174,7 @@ final class FavoriteStore: ObservableObject {
 
     private func startListener(userId: String) async {
         let handle = await service.favoritesListener(userId: userId) { [weak self] result in
-            Task { @MainActor in
-                self?.applySnapshot(result, for: userId)
-            }
+            self?.applySnapshot(result, for: userId)
         }
 
         guard identity == .account(userId: userId) else {
@@ -344,9 +342,9 @@ final class FavoriteStore: ObservableObject {
 private struct UnavailableFavoriteService: FavoriteServicing {
     func favoritesListener(
         userId: String,
-        onChange: @escaping (Result<[Question], Error>) -> Void
+        onChange: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
     ) -> FavoriteListenerHandle {
-        onChange(.success([]))
+        Task { @MainActor in onChange(.success([])) }
         return UnavailableFavoriteListenerHandle()
     }
 

@@ -1,8 +1,8 @@
 # Skill provenance
 
-This directory holds the 8 agent skills that ship with this repository. Six of them were vendored
+This directory holds the 9 agent skills that ship with this repository. Six of them were vendored
 — copied in from an upstream project. Five of those six were then edited locally, in `186b03c`,
-`85747e5` and `dfb0901`, to remove hazards and to pin the Firebase project. The other two are
+`85747e5` and `dfb0901`, to remove hazards and to pin the Firebase project. The other three are
 first-party and were written here. A skill whose policy is `fork` must never be refreshed from
 upstream without first re-reading the local edits: the edits are deliberate, and a blind copy
 would silently revert them.
@@ -29,6 +29,7 @@ the clean history as evidence.
 | xcode-project-setup | upstream | `fork` |
 | ttb-firebase-functions-debugging | first-party | `own` |
 | ttb-share-link-deep-links | first-party | `own` |
+| ttb-live-adapter-tests | first-party | `own` |
 
 ## Why `fork`, not `track`
 
@@ -69,7 +70,7 @@ reference this repo dropped on purpose.
 
 Two checks follow. Neither re-derives the Policy column: `fork` versus `own` is a decision recorded
 here, not a fact any command computes. The second check re-derives Origin for the six upstream
-skills; nothing proves `first-party` for the other two beyond the absence of an upstream copy.
+skills; nothing proves `first-party` for the other three beyond the absence of an upstream copy.
 
 **Has this skill been edited locally since import?** This is the day-to-day check. It compares the
 current tree against the import commit in this repo, so no clone is needed:
