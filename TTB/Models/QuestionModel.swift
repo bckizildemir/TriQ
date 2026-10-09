@@ -32,10 +32,10 @@ class QuestionModel: ObservableObject {
 
     private let questionService: QuestionService?
     private let todaysQuestionSelector: TodaysQuestionSelector
-    private var seededQuestionsListener: ListenerRegistration?
-    private var featuredHomeQuestionsListener: ListenerRegistration?
-    private var trioListener: ListenerRegistration?
-    private var userAnswersListener: ListenerRegistration?
+    private var seededQuestionsListener: FirestoreListenerHandle?
+    private var featuredHomeQuestionsListener: FirestoreListenerHandle?
+    private var trioListener: FirestoreListenerHandle?
+    private var userAnswersListener: FirestoreListenerHandle?
     private var authStateHandle: AuthStateDidChangeListenerHandle?
     private var seededQuestions: [Question] = []
     private var featuredHomeQuestions: [Question] = []
@@ -72,10 +72,10 @@ class QuestionModel: ObservableObject {
     /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
     /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
     isolated deinit {
-        seededQuestionsListener?.remove()
-        featuredHomeQuestionsListener?.remove()
-        trioListener?.remove()
-        userAnswersListener?.remove()
+        seededQuestionsListener?.cancel()
+        featuredHomeQuestionsListener?.cancel()
+        trioListener?.cancel()
+        userAnswersListener?.cancel()
         if let handle = authStateHandle {
             Auth.auth().removeStateDidChangeListener(handle)
         }
@@ -99,13 +99,13 @@ class QuestionModel: ObservableObject {
     }
 
     private func clearRemoteState() {
-        seededQuestionsListener?.remove()
+        seededQuestionsListener?.cancel()
         seededQuestionsListener = nil
-        featuredHomeQuestionsListener?.remove()
+        featuredHomeQuestionsListener?.cancel()
         featuredHomeQuestionsListener = nil
-        trioListener?.remove()
+        trioListener?.cancel()
         trioListener = nil
-        userAnswersListener?.remove()
+        userAnswersListener?.cancel()
         userAnswersListener = nil
         replaceQuestions([])
         seededQuestions = []
@@ -119,11 +119,9 @@ class QuestionModel: ObservableObject {
 
     private func setupUserAnswersListener() async {
         guard let questionService else { return }
-        userAnswersListener?.remove()
+        userAnswersListener?.cancel()
         userAnswersListener = await questionService.setupUserAnswersListener { [weak self] answers in
-            Task { @MainActor in
-                self?.currentUserAnswers = answers
-            }
+            self?.currentUserAnswers = answers
         }
     }
 
@@ -166,39 +164,33 @@ class QuestionModel: ObservableObject {
     private func setupQuestionsListener() async {
         guard let questionService else { return }
         isLoading = true
-        seededQuestionsListener?.remove()
-        featuredHomeQuestionsListener?.remove()
+        seededQuestionsListener?.cancel()
+        featuredHomeQuestionsListener?.cancel()
 
         seededQuestionsListener = await questionService.setupSeededQuestionsListener { [weak self] questions in
-            Task { @MainActor in
-                guard let self = self else { return }
-                self.seededQuestions = questions
-                self.updatePublicQuestions()
-                self.isLoading = false
-            }
+            guard let self else { return }
+            seededQuestions = questions
+            updatePublicQuestions()
+            isLoading = false
         }
 
         featuredHomeQuestionsListener = await questionService.setupFeaturedHomeQuestionsListener { [weak self] questions in
-            Task { @MainActor in
-                guard let self = self else { return }
-                self.featuredHomeQuestions = questions
-                self.updatePublicQuestions()
-            }
+            guard let self else { return }
+            featuredHomeQuestions = questions
+            updatePublicQuestions()
         }
     }
 
     private func setupTrioQuestionsListener() async {
         guard let questionService else { return }
-        trioListener?.remove()
+        trioListener?.cancel()
 
         trioListener = await questionService.setupTrioQuestionsListener { [weak self] questions in
-            Task { @MainActor in
-                guard let self = self else { return }
-                self.trioQuestions = self.filteredTrioQuestions(
-                    questions,
-                    selectedLanguageCode: AppLocalization.currentLanguageCode
-                )
-            }
+            guard let self else { return }
+            trioQuestions = filteredTrioQuestions(
+                questions,
+                selectedLanguageCode: AppLocalization.currentLanguageCode
+            )
         }
     }
 
@@ -260,13 +252,13 @@ class QuestionModel: ObservableObject {
         updatePublicQuestions()
     }
 
-    /// Puts the given registrations where the Firestore listeners live, so a test can see `deinit`
-    /// remove them without a signed-in user or a live `QuestionService`.
+    /// Puts the given handles where the Firestore listeners live, so a test can see `deinit`
+    /// cancel them without a signed-in user or a live `QuestionService`.
     func installListenersForTesting(
-        seeded: any ListenerRegistration,
-        featuredHome: any ListenerRegistration,
-        trio: any ListenerRegistration,
-        userAnswers: any ListenerRegistration
+        seeded: FirestoreListenerHandle,
+        featuredHome: FirestoreListenerHandle,
+        trio: FirestoreListenerHandle,
+        userAnswers: FirestoreListenerHandle
     ) {
         seededQuestionsListener = seeded
         featuredHomeQuestionsListener = featuredHome

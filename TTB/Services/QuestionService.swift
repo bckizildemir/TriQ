@@ -424,124 +424,192 @@ actor QuestionService {
         }
     }
 
-    // MARK: - Per-User Answers Listener
+    // MARK: - Listeners
+    //
+    // Each listener fetches `Firestore` in the method instead of reading `db`. A registration built
+    // from the stored `db` joins this actor's region and cannot be sent into the `Sendable`
+    // `FirestoreListenerHandle`; one built from a fresh `Firestore` can. Each Firebase closure only
+    // forwards raw values to a `deliver…` function, which a test runs without Firebase.
 
-    /// Listens in real-time to all answers the current user has saved across all questions.
-    /// Uses a collection group query on `userAnswers` filtered by `userId` field.
-    /// Returns nil (and calls completion with empty dict) when no user is signed in.
-    func setupUserAnswersListener(completion: @escaping ([String: UserAnswer]) -> Void) -> ListenerRegistration? {
+    /// Listens in real time to all answers the current user has saved across all questions.
+    /// Uses a collection group query on `userAnswers` filtered by the `userId` field.
+    /// Returns nil, and delivers an empty dictionary, when no user is signed in.
+    func setupUserAnswersListener(
+        completion: @escaping @MainActor @Sendable ([String: UserAnswer]) -> Void
+    ) -> FirestoreListenerHandle? {
         guard let userId = Auth.auth().currentUser?.uid else {
-            completion([:])
+            Task { @MainActor in completion([:]) }
             return nil
         }
 
         let logger = logger
-        return db.collectionGroup("userAnswers")
+        let registration = Firestore.firestore().collectionGroup("userAnswers")
             .whereField("userId", isEqualTo: userId)
             .addSnapshotListener { snapshot, error in
-                if let error = error {
-                    logger.error("userAnswers listener error: \(error.localizedDescription)")
-                    return
-                }
-
-                guard let docs = snapshot?.documents else {
-                    completion([:])
-                    return
-                }
-
-                var result: [String: UserAnswer] = [:]
-                for doc in docs {
-                    let questionId = doc.reference.parent.parent?.documentID ?? ""
-                    guard !questionId.isEmpty else { continue }
-                    let answers = doc.data()["answers"] as? [String] ?? []
-                    let answeredAt = (doc.data()["answeredAt"] as? Timestamp)?.dateValue() ?? Date()
-                    let rawURLs = doc.data()["imageURLs"] as? [String] ?? []
-                    let imageURLs: [String?] = rawURLs.map { $0.isEmpty ? nil : $0 }
-                    let imageAttributions = Self.imageAttributions(from: doc.data()["imageAttributions"])
-                    result[questionId] = UserAnswer(
-                        questionId: questionId,
-                        userId: userId,
-                        answers: answers,
-                        answeredAt: answeredAt,
-                        imageURLs: imageURLs,
-                        imageAttributions: imageAttributions
-                    )
-                }
-                completion(result)
+                Self.deliverUserAnswers(
+                    documents: snapshot?.documents.map { (path: $0.reference.path, data: $0.data()) },
+                    error: error,
+                    userId: userId,
+                    logger: logger,
+                    to: completion
+                )
             }
+        return FirestoreListenerHandle(registration: registration)
     }
 
-    // MARK: - Listener
-
-    func setupSeededQuestionsListener(completion: @escaping ([Question]) -> Void) -> ListenerRegistration {
+    func setupSeededQuestionsListener(
+        completion: @escaping @MainActor @Sendable ([Question]) -> Void
+    ) -> FirestoreListenerHandle {
         logger.debug("Setting up seeded questions listener")
         let logger = logger
-        return db.collection("questions")
+        let registration = Firestore.firestore().collection("questions")
             .whereField("source", isEqualTo: QuestionSource.seeded.rawValue)
             .addSnapshotListener { snapshot, error in
-            if let error = error {
-                logger.error("Seeded questions listener error: \(error.localizedDescription)")
-                return
+                Self.deliverQuestions(
+                    documents: snapshot?.documents.map { (id: $0.documentID, data: $0.data()) },
+                    error: error,
+                    feed: "Seeded questions",
+                    logger: logger,
+                    to: completion
+                )
             }
-
-            guard let documents = snapshot?.documents else {
-                logger.error("No seeded question documents received from Firestore")
-                return
-            }
-
-            logger.debug("Seeded questions listener received \(documents.count) documents")
-            let questions = documents.compactMap { document -> Question? in
-                Question.fromFirestore(document.data(), id: document.documentID)
-            }
-
-            logger.debug("Parsed \(questions.count) seeded questions")
-            completion(questions)
-        }
+        return FirestoreListenerHandle(registration: registration)
     }
 
-    func setupFeaturedHomeQuestionsListener(completion: @escaping ([Question]) -> Void) -> ListenerRegistration {
+    func setupFeaturedHomeQuestionsListener(
+        completion: @escaping @MainActor @Sendable ([Question]) -> Void
+    ) -> FirestoreListenerHandle {
         logger.debug("Setting up featured home questions listener")
         let logger = logger
-
-        return db.collection("questions")
+        let registration = Firestore.firestore().collection("questions")
             .whereField("source", isEqualTo: QuestionSource.userCreated.rawValue)
             .whereField("moderationStatus", isEqualTo: QuestionModerationStatus.approved.rawValue)
             .whereField("featuredPlacement", isEqualTo: QuestionFeaturedPlacement.home.rawValue)
             .order(by: "createdAt", descending: true)
             .addSnapshotListener { snapshot, error in
-                if let error = error {
-                    logger.error("Featured home listener error: \(error.localizedDescription)")
-                    return
-                }
-
-                let questions = snapshot?.documents.compactMap { document in
-                    Question.fromFirestore(document.data(), id: document.documentID)
-                } ?? []
-
-                completion(questions)
+                Self.deliverQuestions(
+                    documents: snapshot?.documents.map { (id: $0.documentID, data: $0.data()) },
+                    error: error,
+                    feed: "Featured home",
+                    logger: logger,
+                    to: completion
+                )
             }
+        return FirestoreListenerHandle(registration: registration)
     }
 
-    func setupTrioQuestionsListener(completion: @escaping ([Question]) -> Void) -> ListenerRegistration {
+    func setupTrioQuestionsListener(
+        completion: @escaping @MainActor @Sendable ([Question]) -> Void
+    ) -> FirestoreListenerHandle {
         logger.debug("Setting up Trio questions listener")
         let logger = logger
-
-        return db.collection("questions")
+        let registration = Firestore.firestore().collection("questions")
             .whereField("source", isEqualTo: QuestionSource.userCreated.rawValue)
             .whereField("moderationStatus", isEqualTo: QuestionModerationStatus.approved.rawValue)
             .order(by: "createdAt", descending: true)
             .addSnapshotListener { snapshot, error in
-                if let error = error {
-                    logger.error("Trio listener error: \(error.localizedDescription)")
-                    return
-                }
-
-                let questions = snapshot?.documents.compactMap { document in
-                    Question.fromFirestore(document.data(), id: document.documentID)
-                } ?? []
-
-                completion(questions)
+                Self.deliverQuestions(
+                    documents: snapshot?.documents.map { (id: $0.documentID, data: $0.data()) },
+                    error: error,
+                    feed: "Trio",
+                    logger: logger,
+                    to: completion
+                )
             }
+        return FirestoreListenerHandle(registration: registration)
+    }
+
+    /// Delivers one question-feed snapshot callback on the main actor, when it maps to questions.
+    static func deliverQuestions(
+        documents: [(id: String, data: [String: Any])]?,
+        error: Error?,
+        feed: String,
+        logger: Logger,
+        to completion: @escaping @MainActor @Sendable ([Question]) -> Void
+    ) {
+        guard let questions = questions(fromSnapshot: documents, error: error, feed: feed, logger: logger) else {
+            return
+        }
+        Task { @MainActor in completion(questions) }
+    }
+
+    /// Maps one question-feed snapshot callback to questions. Documents that do not decode are
+    /// dropped. A listener error, or a snapshot with no documents, is logged and maps to nil, so
+    /// the feed keeps what it last showed.
+    static func questions(
+        fromSnapshot documents: [(id: String, data: [String: Any])]?,
+        error: Error?,
+        feed: String,
+        logger: Logger
+    ) -> [Question]? {
+        if let error {
+            logger.error("\(feed, privacy: .public) listener error: \(error.localizedDescription)")
+            return nil
+        }
+
+        guard let documents else {
+            logger.error("No \(feed, privacy: .public) documents received from Firestore")
+            return nil
+        }
+
+        let questions = documents.compactMap { document in
+            Question.fromFirestore(document.data, id: document.id)
+        }
+        logger.debug("\(feed, privacy: .public) listener parsed \(questions.count) of \(documents.count) documents")
+        return questions
+    }
+
+    /// Delivers one `userAnswers` snapshot callback on the main actor, when it maps to answers.
+    static func deliverUserAnswers(
+        documents: [(path: String, data: [String: Any])]?,
+        error: Error?,
+        userId: String,
+        logger: Logger,
+        to completion: @escaping @MainActor @Sendable ([String: UserAnswer]) -> Void
+    ) {
+        guard let answers = userAnswers(fromSnapshot: documents, error: error, userId: userId, logger: logger) else {
+            return
+        }
+        Task { @MainActor in completion(answers) }
+    }
+
+    /// Maps one `userAnswers` snapshot callback to the user's answers keyed by question id. A
+    /// listener error is logged and maps to nil; a snapshot with no documents maps to no answers.
+    /// A document whose path names no question is dropped.
+    static func userAnswers(
+        fromSnapshot documents: [(path: String, data: [String: Any])]?,
+        error: Error?,
+        userId: String,
+        logger: Logger
+    ) -> [String: UserAnswer]? {
+        if let error {
+            logger.error("userAnswers listener error: \(error.localizedDescription)")
+            return nil
+        }
+
+        var answersByQuestionID: [String: UserAnswer] = [:]
+        for document in documents ?? [] {
+            guard let questionId = questionID(fromUserAnswerPath: document.path) else { continue }
+            let data = document.data
+            let rawURLs = data["imageURLs"] as? [String] ?? []
+            answersByQuestionID[questionId] = UserAnswer(
+                questionId: questionId,
+                userId: userId,
+                answers: data["answers"] as? [String] ?? [],
+                answeredAt: (data["answeredAt"] as? Timestamp)?.dateValue() ?? Date(),
+                imageURLs: rawURLs.map { $0.isEmpty ? nil : $0 },
+                imageAttributions: imageAttributions(from: data["imageAttributions"])
+            )
+        }
+        return answersByQuestionID
+    }
+
+    /// The id of the question that owns a `userAnswers` document: the document two levels up, as
+    /// in `questions/{questionId}/userAnswers/{userId}`. Nil for a path with no such document.
+    static func questionID(fromUserAnswerPath path: String) -> String? {
+        let components = path.split(separator: "/")
+        guard components.count >= 4 else { return nil }
+        return String(components[components.count - 3])
     }
 
     // MARK: - Helpers
