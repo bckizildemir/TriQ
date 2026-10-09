@@ -155,7 +155,8 @@ struct GroqRequest: Codable {
 
 // MARK: - AI Service Actor
 actor AIService: AIServiceProtocol {
-    private let functions = Functions.functions(region: "europe-west1")
+    // PROTOTYPE #12 shape A: no `Functions` as actor state; `callDictionary` gets it per call.
+    private static let functionsRegion = "europe-west1"
     
     // Rate limiting
     private var requestCount = 0
@@ -340,7 +341,10 @@ actor AIService: AIServiceProtocol {
             // The AI callables accept each App Check token once (functions/appCheckReplay.js), so
             // every call must ask for a fresh limited-use token instead of the cached one.
             let options = HTTPSCallableOptions(requireLimitedUseAppCheckTokens: true)
-            let result = try await functions.httpsCallable(functionName, options: options).call(payload)
+            // PROTOTYPE #12 shape A: a local callable starts in a disconnected region.
+            let callable = Functions.functions(region: Self.functionsRegion)
+                .httpsCallable(functionName, options: options)
+            let result = try await callable.call(payload)
             guard let data = result.data as? [String: Any] else {
                 throw AIServiceError.invalidResponse
             }
