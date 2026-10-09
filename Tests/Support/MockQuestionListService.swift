@@ -1,12 +1,17 @@
 import FirebaseFirestore
 import Foundation
+import Synchronization
 @testable import TTB
 
-final class MockQuestionListListenerRegistration: NSObject, ListenerRegistration {
-    private(set) var isRemoved = false
+/// `Sendable` so a test can send it into a `FirestoreListenerHandle` and still read it after.
+final class MockQuestionListListenerRegistration: NSObject, ListenerRegistration, Sendable {
+    private let removals = Mutex(0)
+
+    var removeCount: Int { removals.withLock { $0 } }
+    var isRemoved: Bool { removeCount > 0 }
 
     func remove() {
-        isRemoved = true
+        removals.withLock { $0 += 1 }
     }
 }
 
@@ -29,7 +34,7 @@ actor MockQuestionListService: QuestionListServicing {
     private var deleteStartedListIDs: Set<String> = []
     private var deleteStartedContinuations: [String: CheckedContinuation<Void, Never>] = [:]
     private var listenerCompletions: [
-        String: (Result<[QuestionList], Error>) -> Void
+        String: @MainActor @Sendable (Result<[QuestionList], Error>) -> Void
     ] = [:]
     private var startedListenerUserIDs: Set<String> = []
     private var listenerStartedContinuations: [
@@ -53,12 +58,12 @@ actor MockQuestionListService: QuestionListServicing {
 
     func setupQuestionListsListener(
         userId: String,
-        completion: @escaping (Result<[QuestionList], Error>) -> Void
-    ) async -> ListenerRegistration {
+        completion: @escaping @MainActor @Sendable (Result<[QuestionList], Error>) -> Void
+    ) async -> FirestoreListenerHandle {
         listenerCompletions[userId] = completion
         startedListenerUserIDs.insert(userId)
         listenerStartedContinuations.removeValue(forKey: userId)?.resume()
-        return MockQuestionListListenerRegistration()
+        return FirestoreListenerHandle(registration: MockQuestionListListenerRegistration())
     }
 
     func createList(named name: String, ownerId: String) async throws -> String {
@@ -174,8 +179,9 @@ actor MockQuestionListService: QuestionListServicing {
         }
     }
 
-    func sendSnapshot(_ lists: [QuestionList], for userId: String) {
-        listenerCompletions[userId]?(.success(lists))
+    /// Returns after the store has applied the snapshot on the main actor.
+    func sendSnapshot(_ lists: [QuestionList], for userId: String) async {
+        await listenerCompletions[userId]?(.success(lists))
     }
 
     func blockCreate(for ownerID: String, returning listID: String) {

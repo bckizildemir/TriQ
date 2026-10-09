@@ -38,7 +38,7 @@ struct ModelListenerCleanupTests {
     @Test func releasingQuestionListStoreRemovesTheListsListener() {
         let listener = MockQuestionListListenerRegistration()
         var store: QuestionListStore? = QuestionListStore(localLists: [])
-        store?.installListenerForTesting(listener)
+        store?.installListenerForTesting(FirestoreListenerHandle(registration: listener))
         weak let releasedStore = store
 
         store = nil
