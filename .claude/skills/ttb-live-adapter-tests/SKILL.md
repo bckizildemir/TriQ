@@ -38,5 +38,5 @@ needs no Firebase.
 
 `FavoriteService.deliverSnapshot` in `TTB/Services/FavoriteService.swift`, tested by
 `Tests/FavoriteSnapshotDeliveryTests.swift` (PR #40). The `addSnapshotListener` closure only
-forwards to it. That test file still lacks the `.timeLimit` from step 3 until #41 adds it; give
-yours one.
+forwards to it. The same file tests `FavoriteService.acceptsListener`, the guard that keeps an
+empty `userId` from attaching a listener (#41), and carries the suite-level `.timeLimit`.

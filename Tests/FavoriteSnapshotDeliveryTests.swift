@@ -5,6 +5,7 @@ import Testing
 /// The path a live Firestore snapshot takes from the listener closure to `FavoriteStore`: map the
 /// documents, then hop to the main actor. `FakeFavoriteService` skips this path, so it is tested
 /// here on its own, without Firebase.
+@Suite(.timeLimit(.minutes(1)))
 struct FavoriteSnapshotDeliveryTests {
     @Test func documentsReachTheCallbackAsQuestions() async throws {
         let result = await deliver(
@@ -34,6 +35,31 @@ struct FavoriteSnapshotDeliveryTests {
             Issue.record("expected FavoriteError.unknown, got \(result)")
             return
         }
+    }
+
+    @Test func anEmptyUserIdAttachesNoListenerAndReportsInvalidUserId() async {
+        let result: Result<[Question], Error> = await withCheckedContinuation { continuation in
+            let accepted = FavoriteService.acceptsListener(for: "") { result in
+                MainActor.assertIsolated()
+                continuation.resume(returning: result)
+            }
+            #expect(!accepted)
+        }
+
+        guard case .failure(let error) = result,
+              case .invalidUserId? = error as? FavoriteService.FavoriteError
+        else {
+            Issue.record("expected FavoriteError.invalidUserId, got \(result)")
+            return
+        }
+    }
+
+    @Test func aSignedInUserIdAttachesTheListener() {
+        let accepted = FavoriteService.acceptsListener(for: "user-1") { result in
+            Issue.record("a valid userId must not report a result, got \(result)")
+        }
+
+        #expect(accepted)
     }
 
     private func deliver(

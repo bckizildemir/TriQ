@@ -33,17 +33,16 @@ actor FavoriteService {
     /// Returns a `sending` registration so the caller can hand it to a `Sendable` handle. That only
     /// holds because `Firestore` is fetched here: a registration built from a stored `Firestore`
     /// would join the actor's region and could not leave it.
+    ///
+    /// Returns `nil` for an empty `userId`: no listener is attached, because a listener on the
+    /// whole `questions` collection would read, and bill, every document in it.
     func setupFavoritesListener(
         userId: String,
         completion: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
-    ) -> sending ListenerRegistration {
-        let questionsCollection = Firestore.firestore().collection("questions")
-        guard !userId.isEmpty else {
-            Task { @MainActor in completion(.failure(FavoriteError.invalidUserId)) }
-            return questionsCollection.addSnapshotListener { _, _ in }
-        }
+    ) -> sending ListenerRegistration? {
+        guard Self.acceptsListener(for: userId, reportingTo: completion) else { return nil }
 
-        return questionsCollection
+        return Firestore.firestore().collection("questions")
             .whereField("favoriteUserIds", arrayContains: userId)
             .addSnapshotListener { snapshot, error in
                 Self.deliverSnapshot(
@@ -52,6 +51,21 @@ actor FavoriteService {
                     to: completion
                 )
             }
+    }
+
+    /// Decides whether `userId` may attach a favorites listener. For an empty `userId` it reports
+    /// `FavoriteError.invalidUserId` on the main actor and returns `false`; the caller then
+    /// attaches nothing.
+    ///
+    /// Kept out of the Firebase path so a test can check the rejection without Firebase.
+    static func acceptsListener(
+        for userId: String,
+        reportingTo completion: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
+    ) -> Bool {
+        guard userId.isEmpty else { return true }
+
+        Task { @MainActor in completion(.failure(FavoriteError.invalidUserId)) }
+        return false
     }
 
     /// Maps one snapshot callback to the store's result and delivers it on the main actor.
@@ -152,11 +166,12 @@ extension FavoriteService: FavoriteServicing {
 
 /// Owns the Firebase registration, which is not `Sendable`, behind a lock, so the handle can
 /// cross from this actor to the main-actor store. The first `cancel()` removes the registration;
-/// later calls do nothing.
+/// later calls do nothing. With a `nil` registration (the empty-`userId` case) every `cancel()`
+/// does nothing.
 final class FirestoreFavoriteListenerHandle: FavoriteListenerHandle {
     private let registration: Mutex<ListenerRegistration?>
 
-    init(registration: sending ListenerRegistration) {
+    init(registration: sending ListenerRegistration?) {
         self.registration = Mutex(registration)
     }
 
