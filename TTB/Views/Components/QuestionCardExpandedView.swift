@@ -46,6 +46,7 @@ struct QuestionCardExpandedView: View {
     @State private var quickAnswerSuggestions: [String] = []
     @State private var isLoadingQuickSuggestions = false
     @FocusState private var focusedField: AnswerField?
+    @GestureState private var isImageMenuPressed = false
 
     @State private var imageSuggestions: [[AnswerImageSuggestion]] = [[], [], []]
     @State private var imageSuggestionLoadingIndex: Int? = nil
@@ -597,10 +598,17 @@ struct QuestionCardExpandedView: View {
             // keyboard leaving scrolls this button out from under the finger, and a touch-down
             // dismissal moves it before the menu sees the tap, so the menu never opens.
             // `TapGesture` never fires here: the menu claims the tap. A zero-distance drag still
-            // sees the touch.
+            // sees the touch. When the menu wins the touch, it cancels the drag and `onEnded` never
+            // runs; `@GestureState` resets on end and on cancel, so the touch-up hook is its reset.
             .simultaneousGesture(
-                DragGesture(minimumDistance: 0).onEnded { _ in setFocusedField(nil) }
+                DragGesture(minimumDistance: 0)
+                    .updating($isImageMenuPressed) { _, isPressed, _ in isPressed = true }
             )
+            .onChange(of: isImageMenuPressed) { _, isPressed in
+                if !isPressed {
+                    setFocusedField(nil)
+                }
+            }
             .disabled(imageSuggestionLoadingIndex == index)
             .accessibilityLabel(
                 hasActiveImage(at: index)
