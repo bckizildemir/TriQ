@@ -68,6 +68,10 @@ _Avoid_: Unsaved answer, pending answer, answer form
 One of exactly three positions in an answer. Every question has three, in a fixed order, and any of them may be empty. A slot holds its own text and at most one image.
 _Avoid_: Answer field, answer row, answer index
 
+**Complete Answer**:
+An answer in which all three answer slots are filled. A slot is filled when it holds text or an image. An answer does not need to be complete to be saved.
+_Avoid_: Full answer, filled answer, finished answer
+
 **Revocation**:
 The owner action that removes access to a shared question list without deleting either person's normal saved answers.
 _Avoid_: Delete answers, unlink
