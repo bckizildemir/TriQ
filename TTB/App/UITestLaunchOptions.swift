@@ -39,6 +39,7 @@ enum UITestLaunchOptions {
     static let aiAtDailyLimitHarnessArgument = "-ui-test-ai-at-daily-limit"
     static let aiSeedDraftHarnessArgument = "-ui-test-ai-seed-draft"
     static let guestFavoritesOneBelowCapArgument = "-ui-test-guest-favorites-one-below-cap"
+    static let homeSavedAnswerArgument = "-ui-test-home-saved-answer"
 
     static var isCategoryQuestionsHarnessEnabled: Bool { Harness.categoryQuestions.isEnabled }
     static var isGuestFavoriteMilestoneHarnessEnabled: Bool { Harness.guestFavoriteMilestone.isEnabled }
@@ -77,6 +78,12 @@ enum UITestLaunchOptions {
     /// cannot tap its way to the cap. This asks the harness to start one favorite below it.
     static var shouldSeedGuestFavoritesOneBelowCap: Bool {
         ProcessInfo.processInfo.arguments.contains(guestFavoritesOneBelowCapArgument)
+    }
+
+    /// Starts the home harness with a saved answer on its first question, so a test can tell a
+    /// dropped draft from a saved one.
+    static var shouldSeedHomeSavedAnswer: Bool {
+        ProcessInfo.processInfo.arguments.contains(homeSavedAnswerArgument)
     }
 
     /// Every argument that means "this launch is a harness".
