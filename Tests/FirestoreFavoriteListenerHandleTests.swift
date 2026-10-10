@@ -16,6 +16,15 @@ struct FirestoreFavoriteListenerHandleTests {
 
         #expect(removals.count == 1)
     }
+
+    /// The handle `FavoriteService` returns for an empty `userId`: it holds no registration, so
+    /// the store can cancel it like any other handle.
+    @Test func cancelWithoutARegistrationDoesNothing() {
+        let handle = FirestoreFavoriteListenerHandle(registration: nil)
+
+        handle.cancel()
+        handle.cancel()
+    }
 }
 
 /// The registration is sent into the handle, so the test reads its removals through this
