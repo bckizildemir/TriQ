@@ -214,7 +214,42 @@ private struct CardToolbarIconButtonModifier: ViewModifier {
     }
 }
 
+/// Wraps the editor's save tick in its button.
+///
+/// iOS 26 shows the tick as a prominent glass button with no replay animation: the toolbar
+/// draws its label through UIKit, so neither a draw-on transition nor a bounce reaches the
+/// screen, and the glyph keeps the system colour of `.glassProminent` (#56). Earlier releases
+/// keep the plain accent glyph and bounce it each time `replayCount` changes. Reduce Motion
+/// turns the bounce off.
+private struct SaveTickButtonModifier: ViewModifier {
+    let replayCount: Int
+    let action: () -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            Button(role: .confirm, action: action) {
+                content
+            }
+            .buttonStyle(.glassProminent)
+        } else {
+            Button(action: action) {
+                content
+                    .symbolEffect(.bounce, value: replayCount)
+                    // Removes the effect instead of freezing its value, so turning Reduce Motion
+                    // on while the editor is open does not bounce the tick once.
+                    .symbolEffectsRemoved(reduceMotion)
+            }
+        }
+    }
+}
+
 extension View {
+    func saveTickButton(replayCount: Int, action: @escaping () -> Void) -> some View {
+        modifier(SaveTickButtonModifier(replayCount: replayCount, action: action))
+    }
+
     func compactQuestionActionCapsuleStyle() -> some View {
         modifier(CompactQuestionActionCapsuleModifier())
     }

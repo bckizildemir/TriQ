@@ -84,6 +84,12 @@ struct AnswerSlot {
         self.text = text
         self.image = image
     }
+
+    /// Whether this slot counts toward a Complete Answer: it holds text that is not blank after
+    /// trimming, or an image in any state.
+    var isFilled: Bool {
+        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || image.isPresent
+    }
 }
 
 /// An answer being edited — three slots, always.
@@ -137,6 +143,12 @@ struct AnswerDraft {
 
     var indices: Range<Int> { 0 ..< Self.slotCount }
 
+    /// A Complete Answer: every slot is filled. Saving does not require it; the editor uses it to
+    /// tell the user the answer is ready.
+    var isComplete: Bool {
+        indices.allSatisfy { slots[$0].isFilled }
+    }
+
     /// The draft reduced to what gets persisted: trimmed text, resolved URLs, three of each.
     ///
     /// Slots still owing an upload contribute no URL and no attribution, which makes this value the
@@ -168,6 +180,12 @@ struct AnswerDraft {
     /// an answered question does not match, so it saves.
     func hasChanges(against baseline: NormalizedAnswer) -> Bool {
         hasPendingUploads || normalized() != baseline
+    }
+
+    /// A Complete Answer that saving would change. The editor's save tick replays its haptic on
+    /// this value's false-to-true edge.
+    func isReadyToSave(against baseline: NormalizedAnswer) -> Bool {
+        isComplete && hasChanges(against: baseline)
     }
 
     /// The draft as it stands once pending uploads have been handed off.
