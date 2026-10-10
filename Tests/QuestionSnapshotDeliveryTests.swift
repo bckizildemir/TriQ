@@ -143,4 +143,16 @@ struct QuestionSnapshotDeliveryTests {
 
         #expect(answers["q1"]?.answers == ["a"])
     }
+
+    @Test(.timeLimit(.minutes(1)))
+    func signedOutDeliversNoAnswersOnTheMainActor() async {
+        let answers: [String: UserAnswer] = await withCheckedContinuation { continuation in
+            QuestionService.deliverSignedOutUserAnswers { answers in
+                MainActor.assertIsolated()
+                continuation.resume(returning: answers)
+            }
+        }
+
+        #expect(answers.isEmpty)
+    }
 }

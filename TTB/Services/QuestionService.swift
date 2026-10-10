@@ -438,7 +438,7 @@ actor QuestionService {
         completion: @escaping @MainActor @Sendable ([String: UserAnswer]) -> Void
     ) -> FirestoreListenerHandle? {
         guard let userId = Auth.auth().currentUser?.uid else {
-            Task { @MainActor in completion([:]) }
+            Self.deliverSignedOutUserAnswers(to: completion)
             return nil
         }
 
@@ -571,6 +571,13 @@ actor QuestionService {
             return
         }
         Task { @MainActor in completion(answers) }
+    }
+
+    /// Delivers no answers on the main actor, so a signed-out model clears what it showed.
+    static func deliverSignedOutUserAnswers(
+        to completion: @escaping @MainActor @Sendable ([String: UserAnswer]) -> Void
+    ) {
+        Task { @MainActor in completion([:]) }
     }
 
     /// Maps one `userAnswers` snapshot callback to the user's answers keyed by question id. A
