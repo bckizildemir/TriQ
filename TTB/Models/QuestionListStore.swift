@@ -34,7 +34,7 @@ class QuestionListStore: ObservableObject {
             }
         }
     }
-    private var listener: ListenerRegistration?
+    private var listener: FirestoreListenerHandle?
     private var listenerGeneration: UInt = 0
     private var authListener: AuthStateDidChangeListenerHandle?
     private var mutationVersions: [String: UInt] = [:]
@@ -84,7 +84,7 @@ class QuestionListStore: ObservableObject {
     /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
     /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
     isolated deinit {
-        listener?.remove()
+        listener?.cancel()
         if observesAuth, let authListener {
             Auth.auth().removeStateDidChangeListener(authListener)
         }
@@ -242,10 +242,10 @@ class QuestionListStore: ObservableObject {
         applyAuthoritativeSnapshot(lists)
     }
 
-    /// Puts the given registration where the Firestore listener lives, so a test can see `deinit`
-    /// remove it without a signed-in user or a live `QuestionListService`.
-    func installListenerForTesting(_ registration: any ListenerRegistration) {
-        listener = registration
+    /// Puts the given handle where the Firestore listener lives, so a test can see `deinit`
+    /// cancel it without a signed-in user or a live `QuestionListService`.
+    func installListenerForTesting(_ handle: FirestoreListenerHandle) {
+        listener = handle
     }
     #endif
 
@@ -274,7 +274,7 @@ class QuestionListStore: ObservableObject {
     private func resetListenerForCurrentUser() async {
         listenerGeneration &+= 1
         let generation = listenerGeneration
-        listener?.remove()
+        listener?.cancel()
         listener = nil
 
         guard !userId.isEmpty, let questionListService else {
@@ -289,31 +289,29 @@ class QuestionListStore: ObservableObject {
         let newListener = await questionListService.setupQuestionListsListener(
             userId: listenerUserId
         ) { [weak self] result in
-            Task { @MainActor in
-                guard
-                    let self,
-                    self.listenerGeneration == generation,
-                    self.userId == listenerUserId
-                else {
-                    return
-                }
-                switch result {
-                case .success(let lists):
-                    self.applyAuthoritativeSnapshot(lists)
-                    self.error = nil
-                case .failure(let error):
-                    self.error = error.localizedDescription
-                    self.logger.error("Question list snapshot failed: \(error.localizedDescription)")
-                }
-                self.isLoading = false
+            guard
+                let self,
+                listenerGeneration == generation,
+                userId == listenerUserId
+            else {
+                return
             }
+            switch result {
+            case .success(let lists):
+                applyAuthoritativeSnapshot(lists)
+                error = nil
+            case .failure(let error):
+                self.error = error.localizedDescription
+                logger.error("Question list snapshot failed: \(error.localizedDescription)")
+            }
+            isLoading = false
         }
 
         guard
             listenerGeneration == generation,
             userId == listenerUserId
         else {
-            newListener.remove()
+            newListener.cancel()
             return
         }
         listener = newListener

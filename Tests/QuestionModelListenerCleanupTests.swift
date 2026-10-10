@@ -10,10 +10,10 @@ struct QuestionModelListenerCleanupTests {
         let userAnswers = MockQuestionListListenerRegistration()
         var model: QuestionModel? = QuestionModel(localQuestions: [])
         model?.installListenersForTesting(
-            seeded: seeded,
-            featuredHome: featuredHome,
-            trio: trio,
-            userAnswers: userAnswers
+            seeded: FirestoreListenerHandle(registration: seeded),
+            featuredHome: FirestoreListenerHandle(registration: featuredHome),
+            trio: FirestoreListenerHandle(registration: trio),
+            userAnswers: FirestoreListenerHandle(registration: userAnswers)
         )
         weak let releasedModel = model
 

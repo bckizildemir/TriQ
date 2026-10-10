@@ -6,10 +6,12 @@ import os
 /// `Sendable` because the `@MainActor` `QuestionListStore` hands this existential to `nonisolated async`
 /// requirements. `QuestionListService` and the test mock are both `actor`s.
 protocol QuestionListServicing: Sendable {
+    /// `completion` runs on the main actor: its one consumer is `QuestionListStore`, so the
+    /// adapter makes the hop once and the store applies each snapshot synchronously.
     func setupQuestionListsListener(
         userId: String,
-        completion: @escaping (Result<[QuestionList], Error>) -> Void
-    ) async -> ListenerRegistration
+        completion: @escaping @MainActor @Sendable (Result<[QuestionList], Error>) -> Void
+    ) async -> FirestoreListenerHandle
     func createList(named name: String, ownerId: String) async throws -> String
     func updateList(listId: String, name: String) async throws
     func deleteList(listId: String) async throws
@@ -21,7 +23,6 @@ protocol QuestionListServicing: Sendable {
 }
 
 actor QuestionListService: QuestionListServicing {
-    private let db = Firestore.firestore()
     private let functions = Functions.functions(region: "europe-west1")
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
@@ -38,25 +39,48 @@ actor QuestionListService: QuestionListServicing {
         }
     }
 
+    /// Fetches `Firestore` here instead of storing it: a registration built from a stored
+    /// `Firestore` joins this actor's region and cannot be sent into the `Sendable` handle.
     func setupQuestionListsListener(
         userId: String,
-        completion: @escaping (Result<[QuestionList], Error>) -> Void
-    ) async -> ListenerRegistration {
-        db.collection("questionLists")
+        completion: @escaping @MainActor @Sendable (Result<[QuestionList], Error>) -> Void
+    ) async -> FirestoreListenerHandle {
+        let registration = Firestore.firestore().collection("questionLists")
             .whereField("ownerId", isEqualTo: userId)
             .order(by: "updatedAt", descending: true)
             .addSnapshotListener { [logger] snapshot, error in
-                if let error {
-                    logger.error("Question lists listener error: \(error.localizedDescription)")
-                    completion(.failure(error))
-                    return
-                }
-
-                let lists = snapshot?.documents.compactMap { document in
-                    QuestionList.fromFirestore(document.data(), id: document.documentID)
-                } ?? []
-                completion(.success(lists))
+                Self.deliverSnapshot(
+                    documents: snapshot?.documents.map { (id: $0.documentID, data: $0.data()) },
+                    error: error,
+                    logger: logger,
+                    to: completion
+                )
             }
+        return FirestoreListenerHandle(registration: registration)
+    }
+
+    /// Maps one snapshot callback to the store's result and delivers it on the main actor.
+    /// Documents that do not decode are dropped; a missing snapshot is no lists.
+    ///
+    /// Kept out of the Firebase closure so a test can run the exact path a live snapshot takes;
+    /// `MockQuestionListService` calls the store directly and never exercises it.
+    static func deliverSnapshot(
+        documents: [(id: String, data: [String: Any])]?,
+        error: Error?,
+        logger: Logger,
+        to completion: @escaping @MainActor @Sendable (Result<[QuestionList], Error>) -> Void
+    ) {
+        let result: Result<[QuestionList], Error>
+        if let error {
+            logger.error("Question lists listener error: \(error.localizedDescription)")
+            result = .failure(error)
+        } else {
+            result = .success((documents ?? []).compactMap { document in
+                QuestionList.fromFirestore(document.data, id: document.id)
+            })
+        }
+
+        Task { @MainActor in completion(result) }
     }
 
     func createList(named name: String, ownerId: String) async throws -> String {
