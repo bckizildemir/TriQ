@@ -54,12 +54,20 @@ struct FavoriteSnapshotDeliveryTests {
         }
     }
 
-    @Test func aSignedInUserIdAttachesTheListener() {
-        let accepted = FavoriteService.acceptsListener(for: "user-1") { result in
-            Issue.record("a valid userId must not report a result, got \(result)")
-        }
+    /// A rejection is reported from a `Task { @MainActor }`, so the test cannot simply return: a
+    /// stray report would run after it. It waits on a barrier instead — a rejected call made after
+    /// the accepted one. `Task` enqueues an isolated closure on its actor when it is created
+    /// (SE-0431), and the main actor runs jobs of one priority in order, so by the time the
+    /// barrier's report arrives, any report from the accepted call has already run.
+    @Test func aSignedInUserIdIsAcceptedWithoutAReport() async {
+        await confirmation("a valid userId reports a result", expectedCount: 0) { reported in
+            let accepted = FavoriteService.acceptsListener(for: "user-1") { _ in reported() }
+            #expect(accepted)
 
-        #expect(accepted)
+            await withCheckedContinuation { barrier in
+                _ = FavoriteService.acceptsListener(for: "") { _ in barrier.resume() }
+            }
+        }
     }
 
     private func deliver(
