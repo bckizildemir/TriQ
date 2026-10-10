@@ -280,7 +280,6 @@ struct QuestionCardExpandedView: View {
         .overlay { savingOverlay }
         .draftDismissalGuard(
             hasUnsavedChanges: hasUnsavedChanges,
-            isUploading: isUploading,
             onSave: commitDraft
         )
         .task(id: question.id) {
@@ -315,7 +314,7 @@ struct QuestionCardExpandedView: View {
                     isPresented: $isConfirmingClose,
                     titleVisibility: .hidden
                 ) {
-                    Button(String(localized: "question.expanded.saveAndClose"), action: saveAnswers)
+                    Button(String(localized: "question.expanded.saveAndClose"), action: saveAndClose)
                     Button(
                         String(localized: "question.expanded.closeWithoutSaving"),
                         role: .destructive,
@@ -336,7 +335,7 @@ struct QuestionCardExpandedView: View {
                         .labelStyle(.iconOnly)
                     }
                 }
-                .saveTickButton(replayCount: saveTickReplayCount, action: saveAnswers)
+                .saveTickButton(replayCount: saveTickReplayCount, action: saveAndClose)
                 .disabled(isUploading)
                 .accessibilityIdentifier("question-card-fullscreen-save")
                 .accessibilityLabel(String(localized: "question.expanded.saveAccessibility"))
@@ -1069,7 +1068,7 @@ struct QuestionCardExpandedView: View {
     }
 
     /// Saves the draft, then closes once.
-    private func saveAnswers() {
+    private func saveAndClose() {
         guard !isUploading else { return }
 
         commitDraft()

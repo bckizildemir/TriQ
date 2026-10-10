@@ -9,28 +9,19 @@ extension View {
     /// `onSave` must not dismiss: the dialog's actions let the system finish the dismissal.
     func draftDismissalGuard(
         hasUnsavedChanges: Bool,
-        isUploading: Bool,
         onSave: @escaping () -> Void
     ) -> some View {
-        modifier(
-            DraftDismissalGuard(
-                hasUnsavedChanges: hasUnsavedChanges,
-                isUploading: isUploading,
-                onSave: onSave
-            )
-        )
+        modifier(DraftDismissalGuard(hasUnsavedChanges: hasUnsavedChanges, onSave: onSave))
     }
 }
 
 private struct DraftDismissalGuard: ViewModifier {
     let hasUnsavedChanges: Bool
-    let isUploading: Bool
     let onSave: () -> Void
 
     func body(content: Content) -> some View {
         if #available(iOS 27, *) {
             content
-                .interactiveDismissDisabled(isUploading)
                 .dismissalConfirmationDialog(
                     "question.expanded.unsavedChangesTitle",
                     shouldPresent: hasUnsavedChanges
@@ -41,7 +32,7 @@ private struct DraftDismissalGuard: ViewModifier {
                 }
         } else {
             content
-                .interactiveDismissDisabled(isUploading || hasUnsavedChanges)
+                .interactiveDismissDisabled(hasUnsavedChanges)
         }
     }
 }
