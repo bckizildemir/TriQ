@@ -221,6 +221,13 @@ struct QuestionCardExpandedView: View {
                             minHeight: geometry.size.height,
                             alignment: .topLeading
                         )
+                        // A tap outside the answer fields closes the keyboard; the scroll view only
+                        // closes it on a drag. The fields, buttons, and menus inside keep their own
+                        // taps. Not a `Button`: the whole content cannot be one control.
+                        .contentShape(.rect)
+                        .onTapGesture {
+                            setFocusedField(nil)
+                        }
                     }
                     .scrollIndicators(.hidden)
                     .scrollDismissesKeyboard(.interactively)
