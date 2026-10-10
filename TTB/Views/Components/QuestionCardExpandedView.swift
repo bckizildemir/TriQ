@@ -53,7 +53,7 @@ struct QuestionCardExpandedView: View {
     @State private var showingImagePicker = false
     @State private var activeImageSlot = 0
     @State private var isUploading = false
-    /// Bumped each time the answer becomes ready to save; replays the save tick's animation and haptic.
+    /// Bumped each time the answer becomes ready to save; replays the haptic and, before iOS 26, the tick's bounce.
     @State private var saveTickReplayCount = 0
     @State private var uploadError: String?
 
@@ -277,9 +277,7 @@ struct QuestionCardExpandedView: View {
         }
         .onChange(of: isReadyToSave) { wasReady, isReady in
             if !wasReady && isReady {
-                withAnimation {
-                    saveTickReplayCount += 1
-                }
+                saveTickReplayCount += 1
             }
         }
         // Light impact, not `.success`: nothing is saved yet.

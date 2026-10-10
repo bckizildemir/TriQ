@@ -214,13 +214,13 @@ private struct CardToolbarIconButtonModifier: ViewModifier {
     }
 }
 
-/// Wraps the editor's save tick in its button and replays the tick's animation each time
-/// `replayCount` changes.
+/// Wraps the editor's save tick in its button.
 ///
-/// iOS 26 draws the checkmark on again: a new `id` re-inserts the label, and the insertion
-/// transition is a draw-on symbol effect. `.symbolEffect(.drawOn, value:)` does not compile,
-/// because draw-on is not a discrete effect. Earlier releases keep the plain accent glyph and
-/// bounce it. Reduce Motion turns both off.
+/// iOS 26 shows the tick as a prominent glass button with no replay animation: the toolbar
+/// draws its label through UIKit, so neither a draw-on transition nor a bounce reaches the
+/// screen, and the glyph keeps the system colour of `.glassProminent` (#56). Earlier releases
+/// keep the plain accent glyph and bounce it each time `replayCount` changes. Reduce Motion
+/// turns the bounce off.
 private struct SaveTickButtonModifier: ViewModifier {
     let replayCount: Int
     let action: () -> Void
@@ -235,13 +235,6 @@ private struct SaveTickButtonModifier: ViewModifier {
         if #available(iOS 26.0, *) {
             Button(role: .confirm, action: action) {
                 content
-                    .id(animatedReplayCount)
-                    .transition(
-                        AsymmetricTransition(
-                            insertion: SymbolEffectTransition.symbolEffect(.drawOn),
-                            removal: IdentityTransition()
-                        )
-                    )
             }
             .buttonStyle(.glassProminent)
         } else {
