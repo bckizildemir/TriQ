@@ -20,7 +20,10 @@ struct UITestHomeRootView: View {
                 questionModel: QuestionModel(
                     localQuestions: isProfileHarness
                         ? UITestHomeFixture.questions + [Self.profileQuestionFixture]
-                        : UITestHomeFixture.questions
+                        : UITestHomeFixture.questions,
+                    localUserAnswers: UITestLaunchOptions.shouldSeedHomeSavedAnswer
+                        ? UITestHomeFixture.savedAnswers(userId: Self.profileUserId)
+                        : [:]
                 ),
                 profileModel: isProfileHarness
                     ? ProfileModel(

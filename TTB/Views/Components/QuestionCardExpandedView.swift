@@ -56,6 +56,8 @@ struct QuestionCardExpandedView: View {
     /// Bumped each time the answer becomes ready to save; replays the haptic and, before iOS 26, the tick's bounce.
     @State private var saveTickReplayCount = 0
     @State private var uploadError: String?
+    /// Raised when X is tapped with unsaved changes; drives the save-or-drop dialog on X.
+    @State private var isConfirmingClose = false
 
     @State private var presentedAnswerImage: PresentedAnswerImage?
     @State private var showingGuestUpgradeSheet = false
@@ -140,6 +142,11 @@ struct QuestionCardExpandedView: View {
 
     private var currentAnswers: [String] {
         draft.normalized().texts
+    }
+
+    /// Whether closing now would drop an edit. The same rule the store uses to skip a no-op save.
+    private var hasUnsavedChanges: Bool {
+        draft.hasChanges(against: baseline)
     }
 
     /// A Complete Answer that saving would change. Its false-to-true edge replays the save tick.
@@ -271,7 +278,11 @@ struct QuestionCardExpandedView: View {
             AnswerImageFullscreenView(presentedImage: presentedImage)
         }
         .overlay { savingOverlay }
-        .interactiveDismissDisabled(isUploading)
+        .draftDismissalGuard(
+            hasUnsavedChanges: hasUnsavedChanges,
+            isUploading: isUploading,
+            onSave: commitDraft
+        )
         .task(id: question.id) {
             await loadQuickAnswerSuggestions()
         }
@@ -292,12 +303,25 @@ struct QuestionCardExpandedView: View {
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button(action: dismissFullscreen) {
+                Button(action: requestClose) {
                     Label(String(localized: "common.close"), systemImage: "xmark")
                         .labelStyle(.iconOnly)
                 }
                 .accessibilityIdentifier("question-card-fullscreen-close")
                 .accessibilityLabel(String(localized: "common.close"))
+                // On the X itself, so iOS 26 anchors the dialog to it like Mail's draft menu.
+                .confirmationDialog(
+                    String(localized: "question.expanded.unsavedChangesTitle"),
+                    isPresented: $isConfirmingClose,
+                    titleVisibility: .hidden
+                ) {
+                    Button(String(localized: "question.expanded.saveAndClose"), action: saveAnswers)
+                    Button(
+                        String(localized: "question.expanded.closeWithoutSaving"),
+                        role: .destructive,
+                        action: dismissFullscreen
+                    )
+                }
             }
 
             ToolbarItem(placement: .topBarTrailing) {
@@ -1035,14 +1059,30 @@ struct QuestionCardExpandedView: View {
         }
     }
 
-    /// Hands the draft to `AnswerDraftStore` and closes.
-    ///
-    /// Everything this used to do — the optimistic write, the upload fan-out, the compare-and-swap
-    /// re-persist, the rollback and the orphan cleanup — lives in the store now, tested. What is left
-    /// here is the editor's own business: reflect the handoff in local state, then dismiss.
+    /// Closes at once when nothing changed; otherwise asks whether to save or drop the draft.
+    private func requestClose() {
+        if hasUnsavedChanges {
+            isConfirmingClose = true
+        } else {
+            dismissFullscreen()
+        }
+    }
+
+    /// Saves the draft, then closes once.
     private func saveAnswers() {
         guard !isUploading else { return }
 
+        commitDraft()
+        dismissFullscreen()
+    }
+
+    /// Hands the draft to `AnswerDraftStore` without closing.
+    ///
+    /// Everything this used to do — the optimistic write, the upload fan-out, the compare-and-swap
+    /// re-persist, the rollback and the orphan cleanup — lives in the store now, tested. What is left
+    /// here is the editor's own business: reflect the handoff in local state. The iOS 27 sheet
+    /// dismissal dialog calls this alone, because the system finishes that dismissal itself.
+    private func commitDraft() {
         uploadError = nil
 
         let started = answerDraftStore.save(draft, baseline: baseline, for: question.id, in: model)
@@ -1051,8 +1091,6 @@ struct QuestionCardExpandedView: View {
         if started, draft.hasPendingUploads {
             draft = draft.clearingPendingImages()
         }
-
-        dismissFullscreen()
     }
 
     private func dismissFullscreen() {

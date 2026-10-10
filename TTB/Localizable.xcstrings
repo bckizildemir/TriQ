@@ -12181,6 +12181,23 @@
         }
       }
     },
+    "question.expanded.closeWithoutSaving" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Without Saving"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaydetmeden Çık"
+          }
+        }
+      }
+    },
     "question.expanded.save" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12215,6 +12232,23 @@
         }
       }
     },
+    "question.expanded.saveAndClose" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save and Close"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaydet ve Çık"
+          }
+        }
+      }
+    },
     "question.expanded.saveHint" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12228,6 +12262,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cevaplarini kaydedip bu karti kapatir."
+          }
+        }
+      }
+    },
+    "question.expanded.unsavedChangesTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsaved changes"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaydedilmemiş değişiklikler"
           }
         }
       }
