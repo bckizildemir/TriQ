@@ -20,6 +20,9 @@ private struct DraftDismissalGuard: ViewModifier {
     let onSave: () -> Void
 
     func body(content: Content) -> some View {
+        // The iOS 26 SDK marks this API unavailable on iOS, so `#available` alone cannot hide it
+        // from an Xcode 26 build (CI). Swift 6.4 ships with Xcode 27, the first SDK that has it.
+        #if compiler(>=6.4)
         if #available(iOS 27, *) {
             content
                 .dismissalConfirmationDialog(
@@ -34,5 +37,9 @@ private struct DraftDismissalGuard: ViewModifier {
             content
                 .interactiveDismissDisabled(hasUnsavedChanges)
         }
+        #else
+        content
+            .interactiveDismissDisabled(hasUnsavedChanges)
+        #endif
     }
 }
