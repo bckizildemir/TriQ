@@ -84,6 +84,12 @@ struct AnswerSlot {
         self.text = text
         self.image = image
     }
+
+    /// Whether this slot counts toward a Complete Answer: it holds text that is not blank after
+    /// trimming, or an image in any state.
+    var isFilled: Bool {
+        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || image.isPresent
+    }
 }
 
 /// An answer being edited — three slots, always.
@@ -136,6 +142,12 @@ struct AnswerDraft {
     }
 
     var indices: Range<Int> { 0 ..< Self.slotCount }
+
+    /// A Complete Answer: every slot is filled. Saving does not require it; the editor uses it to
+    /// tell the user the answer is ready.
+    var isComplete: Bool {
+        indices.allSatisfy { slots[$0].isFilled }
+    }
 
     /// The draft reduced to what gets persisted: trimmed text, resolved URLs, three of each.
     ///
