@@ -214,7 +214,50 @@ private struct CardToolbarIconButtonModifier: ViewModifier {
     }
 }
 
+/// Wraps the editor's save tick in its button and replays the tick's animation each time
+/// `replayCount` changes.
+///
+/// iOS 26 draws the checkmark on again: a new `id` re-inserts the label, and the insertion
+/// transition is a draw-on symbol effect. `.symbolEffect(.drawOn, value:)` does not compile,
+/// because draw-on is not a discrete effect. Earlier releases keep the plain accent glyph and
+/// bounce it. Reduce Motion turns both off.
+private struct SaveTickButtonModifier: ViewModifier {
+    let replayCount: Int
+    let action: () -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var animatedReplayCount: Int {
+        reduceMotion ? 0 : replayCount
+    }
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            Button(role: .confirm, action: action) {
+                content
+                    .id(animatedReplayCount)
+                    .transition(
+                        AsymmetricTransition(
+                            insertion: SymbolEffectTransition.symbolEffect(.drawOn),
+                            removal: IdentityTransition()
+                        )
+                    )
+            }
+            .buttonStyle(.glassProminent)
+        } else {
+            Button(action: action) {
+                content
+                    .symbolEffect(.bounce, value: animatedReplayCount)
+            }
+        }
+    }
+}
+
 extension View {
+    func saveTickButton(replayCount: Int, action: @escaping () -> Void) -> some View {
+        modifier(SaveTickButtonModifier(replayCount: replayCount, action: action))
+    }
+
     func compactQuestionActionCapsuleStyle() -> some View {
         modifier(CompactQuestionActionCapsuleModifier())
     }

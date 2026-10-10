@@ -53,6 +53,8 @@ struct QuestionCardExpandedView: View {
     @State private var showingImagePicker = false
     @State private var activeImageSlot = 0
     @State private var isUploading = false
+    /// Bumped each time the answer becomes ready to save; replays the save tick's animation and haptic.
+    @State private var saveTickReplayCount = 0
     @State private var uploadError: String?
 
     @State private var presentedAnswerImage: PresentedAnswerImage?
@@ -138,6 +140,11 @@ struct QuestionCardExpandedView: View {
 
     private var currentAnswers: [String] {
         draft.normalized().texts
+    }
+
+    /// A Complete Answer that saving would change. Its false-to-true edge replays the save tick.
+    private var isReadyToSave: Bool {
+        draft.isComplete && draft.hasChanges(against: baseline)
     }
 
     private var visibleQuickAnswerSuggestions: [String] {
@@ -268,6 +275,15 @@ struct QuestionCardExpandedView: View {
         .task(id: question.id) {
             await loadQuickAnswerSuggestions()
         }
+        .onChange(of: isReadyToSave) { wasReady, isReady in
+            if !wasReady && isReady {
+                withAnimation {
+                    saveTickReplayCount += 1
+                }
+            }
+        }
+        // Light impact, not `.success`: nothing is saved yet.
+        .sensoryFeedback(.impact(weight: .light), trigger: saveTickReplayCount)
         .onChange(of: authModel.isAnonymous) { _, isAnonymous in
             if !isAnonymous {
                 showingGuestUpgradeSheet = false
@@ -287,7 +303,7 @@ struct QuestionCardExpandedView: View {
             }
 
             ToolbarItem(placement: .topBarTrailing) {
-                Button(action: saveAnswers) {
+                Group {
                     if isUploading {
                         ProgressView()
                     } else {
@@ -298,6 +314,7 @@ struct QuestionCardExpandedView: View {
                         .labelStyle(.iconOnly)
                     }
                 }
+                .saveTickButton(replayCount: saveTickReplayCount, action: saveAnswers)
                 .disabled(isUploading)
                 .accessibilityIdentifier("question-card-fullscreen-save")
                 .accessibilityLabel(String(localized: "question.expanded.saveAccessibility"))
