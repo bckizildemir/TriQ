@@ -182,6 +182,12 @@ struct AnswerDraft {
         hasPendingUploads || normalized() != baseline
     }
 
+    /// A Complete Answer that saving would change. The editor's save tick replays its haptic on
+    /// this value's false-to-true edge.
+    func isReadyToSave(against baseline: NormalizedAnswer) -> Bool {
+        isComplete && hasChanges(against: baseline)
+    }
+
     /// The draft as it stands once pending uploads have been handed off.
     ///
     /// Matches what the editor did by hand after starting a background save: forget the local image

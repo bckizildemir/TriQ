@@ -2,8 +2,8 @@ import Testing
 import UIKit
 @testable import TTB
 
-/// `AnswerDraft.isComplete` — the Complete Answer rule from `CONTEXT.md` — and the save tick's
-/// ready-to-save predicate that combines it with `hasChanges(against:)`.
+/// `AnswerDraft.isComplete` — the Complete Answer rule from `CONTEXT.md` — and
+/// `isReadyToSave(against:)`, which combines it with `hasChanges(against:)` for the save tick.
 struct AnswerDraftTests {
     /// One slot's content, Sendable so it can parametrize a test. `SlotImage` holds a `UIImage`
     /// and is not Sendable, so the draft is built inside the test from these.
@@ -72,7 +72,7 @@ struct AnswerDraftTests {
         let baseline = saved.normalized()
 
         #expect(saved.isComplete)
-        #expect(!(saved.isComplete && saved.hasChanges(against: baseline)))
+        #expect(!saved.isReadyToSave(against: baseline))
     }
 
     @Test func editedSavedCompleteAnswerIsReadyToSave() {
@@ -81,6 +81,6 @@ struct AnswerDraftTests {
         var edited = saved
         edited[2].text = "Rainy"
 
-        #expect(edited.isComplete && edited.hasChanges(against: baseline))
+        #expect(edited.isReadyToSave(against: baseline))
     }
 }

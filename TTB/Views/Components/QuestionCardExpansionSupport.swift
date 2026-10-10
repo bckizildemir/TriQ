@@ -227,10 +227,6 @@ private struct SaveTickButtonModifier: ViewModifier {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var animatedReplayCount: Int {
-        reduceMotion ? 0 : replayCount
-    }
-
     func body(content: Content) -> some View {
         if #available(iOS 26.0, *) {
             Button(role: .confirm, action: action) {
@@ -240,7 +236,10 @@ private struct SaveTickButtonModifier: ViewModifier {
         } else {
             Button(action: action) {
                 content
-                    .symbolEffect(.bounce, value: animatedReplayCount)
+                    .symbolEffect(.bounce, value: replayCount)
+                    // Removes the effect instead of freezing its value, so turning Reduce Motion
+                    // on while the editor is open does not bounce the tick once.
+                    .symbolEffectsRemoved(reduceMotion)
             }
         }
     }

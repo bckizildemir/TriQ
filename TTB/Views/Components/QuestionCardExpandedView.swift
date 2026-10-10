@@ -144,7 +144,7 @@ struct QuestionCardExpandedView: View {
 
     /// A Complete Answer that saving would change. Its false-to-true edge replays the save tick.
     private var isReadyToSave: Bool {
-        draft.isComplete && draft.hasChanges(against: baseline)
+        draft.isReadyToSave(against: baseline)
     }
 
     private var visibleQuickAnswerSuggestions: [String] {
