@@ -23,6 +23,7 @@
   "overrides": {
     "@firebase/firestore": {
       "@grpc/grpc-js": "^1.13.6"
-    }
+    },
+    "uuid": "^11.1.1"
   }
 }
