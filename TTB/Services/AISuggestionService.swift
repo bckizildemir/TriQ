@@ -6,7 +6,7 @@ struct TrioQuestionSuggestionResult: Equatable {
     let suggestedCategoryID: String
 }
 
-protocol AISuggestionServiceProtocol {
+protocol AISuggestionServiceProtocol: Sendable {
     func generateVariations(for topic: String, count: Int) async throws -> [String]
     func generateSuggestions(
         for topic: String,
