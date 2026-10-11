@@ -33,6 +33,7 @@ struct AdminBadgeSeedDefinition: Decodable {
     }
 }
 
+@MainActor
 final class AdminBadgeService {
     private let db: Firestore
     private let decoder: JSONDecoder
@@ -101,7 +102,7 @@ final class AdminBadgeService {
         return try Data(contentsOf: url)
     }
 
-    static func restorableBadges(
+    nonisolated static func restorableBadges(
         from data: Data,
         excluding existingIDs: Set<String>,
         decoder: JSONDecoder = JSONDecoder()
