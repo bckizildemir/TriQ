@@ -6,18 +6,18 @@ final class GuestFavoriteModelTests: XCTestCase {
     private var suiteName: String!
     private var storage: UserDefaults!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         suiteName = "GuestFavoriteModelTests.\(UUID().uuidString)"
         storage = UserDefaults(suiteName: suiteName)
         storage.removePersistentDomain(forName: suiteName)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         storage.removePersistentDomain(forName: suiteName)
         storage = nil
         suiteName = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     func testAddRemoveAndFavoriteLookup() {

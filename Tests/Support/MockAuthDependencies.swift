@@ -15,7 +15,7 @@ final class MockAuthUser: AuthModelUser {
         self.email = email
     }
 
-    func delete() async throws {
+    nonisolated(nonsending) func delete() async throws {
         deleteCalled = true
     }
 
