@@ -10,7 +10,7 @@ import FirebaseFirestore
 import FirebaseAuth
 
 // MARK: - AI Usage Service Protocol
-protocol AIUsageServiceProtocol {
+protocol AIUsageServiceProtocol: Sendable {
     func getUsageStats() async throws -> AIUsageStats
     func updateUsageStats(_ stats: AIUsageStats) async throws
     func canMakeQuery() async throws -> Bool

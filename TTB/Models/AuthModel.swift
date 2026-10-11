@@ -350,7 +350,7 @@ class AuthModel: ObservableObject {
       )
 
       do {
-        let linkedUser = try await currentUser.link(with: credential)
+        let linkedUser = try await currentUser.linkAccount(with: credential)
         try await linkedUser.forceRefreshIDToken()
         _ = try await dependencies.usernameService.claimUsername(
           username,

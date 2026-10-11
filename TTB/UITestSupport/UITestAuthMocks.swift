@@ -20,9 +20,9 @@ final class UITestAuthUser: AuthModelUser {
         self.email = email
     }
 
-    func delete() async throws {}
+    func deleteAsync() async throws {}
 
-    func link(with credential: AuthCredential) async throws -> AuthModelUser {
+    func linkAccount(with credential: AuthCredential) async throws -> AuthModelUser {
         _ = credential
         // The uid survives the link, exactly as Firebase keeps it, so favorites and answers written
         // as a guest still belong to the same account afterwards.

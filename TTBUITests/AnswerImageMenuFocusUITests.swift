@@ -4,7 +4,8 @@ import XCTest
 /// first responder under the menu. The menu then installed its type-select key input as the
 /// keyboard's delegate on every keyboard-toolbar reload, a loop that pegged the CPU and flooded
 /// the log until the menu closed. The loop needs the keyboard up, so the menu must dismiss it.
-final class AnswerImageMenuFocusUITests: XCTestCase {
+// nonisolated keeps the inherited XCTestCase initializers nonisolated; the tests run in the @MainActor extension below.
+nonisolated final class AnswerImageMenuFocusUITests: XCTestCase {
     private let harnessArgument = "-ui-test-home-harness"
     private let firstQuestionCardID = "question-card-home.today-home-question-1"
     private let secondSlotInputID = "question-card-input-1"
@@ -12,7 +13,10 @@ final class AnswerImageMenuFocusUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
+}
 
+@MainActor
+extension AnswerImageMenuFocusUITests {
     func testReopeningImageMenuFromFocusedFieldDismissesKeyboard() {
         let app = XCUIApplication()
         app.launchArguments += [

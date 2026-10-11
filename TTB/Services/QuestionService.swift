@@ -28,7 +28,6 @@ enum QuestionServiceError: LocalizedError {
 
 actor QuestionService {
     private let db = Firestore.firestore()
-    private let functions = Functions.functions(region: "europe-west1")
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
         category: "QuestionService")
@@ -194,7 +193,7 @@ actor QuestionService {
             attribution?.firestoreValue ?? [:]
         }
 
-        _ = try await functions.httpsCallable("saveQuestionAnswers").call([
+        _ = try await Functions.europeWest1.httpsCallable("saveQuestionAnswers").call([
             "questionId": questionId,
             "answers": answers,
             "imageURLs": urlsForFunctions,
@@ -264,7 +263,7 @@ actor QuestionService {
             excludingUserId: userId
         )
 
-        _ = try await db.runTransaction { transaction, errorPointer in
+        _ = try await Firestore.firestore().runTransaction { transaction, errorPointer in
             let questionSnapshot: DocumentSnapshot
             let userAnswerSnapshot: DocumentSnapshot
 

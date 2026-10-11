@@ -15,11 +15,11 @@ final class MockAuthUser: AuthModelUser {
         self.email = email
     }
 
-    func delete() async throws {
+    nonisolated(nonsending) func deleteAsync() async throws {
         deleteCalled = true
     }
 
-    func link(with credential: AuthCredential) async throws -> AuthModelUser {
+    func linkAccount(with credential: AuthCredential) async throws -> AuthModelUser {
         _ = credential
         if linkShouldFail {
             throw NSError(domain: "MockAuthUser", code: 1, userInfo: nil)
@@ -158,7 +158,7 @@ final class MockUserDocumentManager: AuthUserDocumentManaging {
         deletedUserIDs.append(user.uid)
         deleteUserCalled = true
         if let mockUser = user as? MockAuthUser {
-            try? await mockUser.delete()
+            try? await mockUser.deleteAsync()
         }
     }
 

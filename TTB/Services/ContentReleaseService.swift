@@ -79,7 +79,7 @@ final class ContentReleaseService: ContentReleaseServicing {
     // Computed, not stored: the service keeps no non-Sendable Firebase state, so it
     // is Sendable. The SDK returns the same cached instance on every call.
     private var db: Firestore { Firestore.firestore() }
-    private var functions: Functions { Functions.functions(region: "europe-west1") }
+    private var functions: Functions { Functions.europeWest1 }
 
     func listenToReleases(
         completion: @escaping (Result<[ContentRelease], Error>) -> Void
