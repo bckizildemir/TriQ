@@ -46,7 +46,6 @@ protocol AccountDeletionOperations: Sendable {
 
 actor LiveAccountDeletionOperations: AccountDeletionOperations {
     private var db: Firestore { Firestore.firestore() }
-    private var functions: Functions { Functions.functions(region: "europe-west1") }
     private let fileManager: LocalFileManager
     private let batchWriteLimit = 400
 
