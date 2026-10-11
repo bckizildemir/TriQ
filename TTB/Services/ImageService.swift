@@ -43,7 +43,6 @@ enum ImageServiceError: LocalizedError {
 actor ImageService {
     static let shared = ImageService()
 
-    private let storage = Storage.storage()
     // In-memory cache keyed by storage path
     private let cache = NSCache<NSString, UIImage>()
     // Deduplicate concurrent uploads targeting the same storage path.
@@ -79,7 +78,7 @@ actor ImageService {
             throw ImageServiceError.notAuthenticated
         }
         let path = storagePath(userId: userId, questionId: questionId, slotIndex: slotIndex)
-        let ref = storage.reference().child(path)
+        let ref = Storage.storage().reference().child(path)
         cache.removeObject(forKey: path as NSString)
         do {
             try await ref.delete()
@@ -116,7 +115,7 @@ actor ImageService {
             throw ImageServiceError.notAuthenticated
         }
         let path = profileImagePath(userId: userId)
-        let ref = storage.reference().child(path)
+        let ref = Storage.storage().reference().child(path)
         cache.removeObject(forKey: path as NSString)
         do {
             try await ref.delete()
@@ -193,7 +192,7 @@ actor ImageService {
         let uploadTask = Task<String, Error> {
             do {
                 let compressed = try Self.compressImage(image)
-                let ref = self.storage.reference().child(path)
+                let ref = Storage.storage().reference().child(path)
                 let metadata = StorageMetadata()
                 metadata.contentType = "image/jpeg"
 
@@ -236,28 +235,6 @@ actor ImageService {
         let renderer = UIGraphicsImageRenderer(size: newSize)
         return renderer.image { _ in
             image.draw(in: CGRect(origin: .zero, size: newSize))
-        }
-    }
-}
-
-// MARK: - StorageReference async helpers (backfill for SDK versions without native async)
-
-extension StorageReference {
-    func putDataAsync(_ data: Data, metadata: StorageMetadata?) async throws -> StorageMetadata {
-        try await withCheckedThrowingContinuation { continuation in
-            var resumed = false
-            let task = putData(data, metadata: metadata) { meta, error in
-                guard !resumed else { return }
-                resumed = true
-
-                if let error = error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: meta ?? StorageMetadata())
-                }
-            }
-
-            _ = task
         }
     }
 }

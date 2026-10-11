@@ -23,7 +23,6 @@ protocol QuestionListServicing: Sendable {
 }
 
 actor QuestionListService: QuestionListServicing {
-    private let functions = Functions.functions(region: "europe-west1")
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
         category: "QuestionListService")
@@ -84,7 +83,7 @@ actor QuestionListService: QuestionListServicing {
     }
 
     func createList(named name: String, ownerId: String) async throws -> String {
-        let result = try await functions.httpsCallable("createQuestionList").call([
+        let result = try await Functions.functions(region: "europe-west1").httpsCallable("createQuestionList").call([
             "name": name,
         ])
 
@@ -99,20 +98,20 @@ actor QuestionListService: QuestionListServicing {
     }
 
     func updateList(listId: String, name: String) async throws {
-        _ = try await functions.httpsCallable("updateQuestionList").call([
+        _ = try await Functions.functions(region: "europe-west1").httpsCallable("updateQuestionList").call([
             "listId": listId,
             "name": name,
         ])
     }
 
     func deleteList(listId: String) async throws {
-        _ = try await functions.httpsCallable("deleteQuestionList").call([
+        _ = try await Functions.functions(region: "europe-west1").httpsCallable("deleteQuestionList").call([
             "listId": listId,
         ])
     }
 
     func setQuestion(_ questionId: String, in listId: String, isIncluded: Bool) async throws {
-        _ = try await functions.httpsCallable("setQuestionInList").call([
+        _ = try await Functions.functions(region: "europe-west1").httpsCallable("setQuestionInList").call([
             "listId": listId,
             "questionId": questionId,
             "isIncluded": isIncluded,
