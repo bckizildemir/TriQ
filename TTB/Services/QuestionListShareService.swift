@@ -7,6 +7,9 @@ import os
 actor QuestionListShareService {
     private lazy var db = Firestore.firestore()
     private lazy var functions = Functions.functions(region: "europe-west1")
+    private static let listenerLogger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
+        category: "QuestionListShareService")
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
         category: "QuestionListShareService")
@@ -90,52 +93,80 @@ actor QuestionListShareService {
         return error.localizedDescription
     }
 
+    /// Builds the registration from a `Firestore` fetched here, not the stored `db`, so it can leave
+    /// the actor as `sending` (see `FirestoreListenerHandle`).
     func setupOwnedSharesListener(
         userId: String,
-        completion: @escaping (Result<[QuestionListShare], Error>) -> Void
-    ) -> ListenerRegistration {
-        db.collection("questionListShares")
+        completion: @escaping @MainActor @Sendable (Result<[QuestionListShare], Error>) -> Void
+    ) -> sending ListenerRegistration {
+        Firestore.firestore().collection("questionListShares")
             .whereField("ownerId", isEqualTo: userId)
             .order(by: "updatedAt", descending: true)
-            .addSnapshotListener { [logger] snapshot, error in
-                if let error {
-                    logger.error("Owned question list shares listener failed: \(error.localizedDescription)")
-                    completion(.failure(error))
-                    return
-                }
-
-                let shares = snapshot?.documents.compactMap { document in
-                    QuestionListShare.fromFirestore(document.data(), id: document.documentID)
-                } ?? []
-                completion(.success(shares))
+            .addSnapshotListener { snapshot, error in
+                Self.deliverOwnedShares(
+                    documents: snapshot?.documents.map { (id: $0.documentID, data: $0.data()) },
+                    error: error,
+                    to: completion
+                )
             }
     }
 
     func setupAcceptedRecipientsListener(
         userId: String,
-        completion: @escaping (Result<[QuestionListShareRecipient], Error>) -> Void
-    ) -> ListenerRegistration {
-        db.collectionGroup("recipients")
+        completion: @escaping @MainActor @Sendable (Result<[QuestionListShareRecipient], Error>) -> Void
+    ) -> sending ListenerRegistration {
+        Firestore.firestore().collectionGroup("recipients")
             .whereField("recipientId", isEqualTo: userId)
             .whereField("status", isEqualTo: QuestionListShareStatus.accepted.rawValue)
             .order(by: "updatedAt", descending: true)
-            .addSnapshotListener { [logger] snapshot, error in
-                if let error {
-                    logger.error("Accepted question list shares listener failed: \(error.localizedDescription)")
-                    completion(.failure(error))
-                    return
-                }
-
-                let recipients = snapshot?.documents.compactMap { document -> QuestionListShareRecipient? in
-                    guard let shareId = document.reference.parent.parent?.documentID else { return nil }
-                    return QuestionListShareRecipient.fromFirestore(
-                        document.data(),
-                        id: document.documentID,
-                        shareId: shareId
-                    )
-                } ?? []
-                completion(.success(recipients))
+            .addSnapshotListener { snapshot, error in
+                Self.deliverAcceptedRecipients(
+                    documents: snapshot?.documents.map {
+                        (id: $0.documentID, shareId: $0.reference.parent.parent?.documentID, data: $0.data())
+                    },
+                    error: error,
+                    to: completion
+                )
             }
+    }
+
+    /// Maps one owned-shares snapshot callback to the store's result and delivers it on the main
+    /// actor. Kept out of the Firebase closure so a test can run the path a live snapshot takes.
+    static func deliverOwnedShares(
+        documents: [(id: String, data: [String: Any])]?,
+        error: Error?,
+        to completion: @escaping @MainActor @Sendable (Result<[QuestionListShare], Error>) -> Void
+    ) {
+        let result: Result<[QuestionListShare], Error>
+        if let error {
+            listenerLogger.error("Owned question list shares listener failed: \(error.localizedDescription)")
+            result = .failure(error)
+        } else {
+            result = .success((documents ?? []).compactMap { document in
+                QuestionListShare.fromFirestore(document.data, id: document.id)
+            })
+        }
+        Task { @MainActor in completion(result) }
+    }
+
+    /// Same as `deliverOwnedShares` for the accepted-recipient snapshot. `shareId` is the id of
+    /// the recipient document's parent share; a document without one is dropped.
+    static func deliverAcceptedRecipients(
+        documents: [(id: String, shareId: String?, data: [String: Any])]?,
+        error: Error?,
+        to completion: @escaping @MainActor @Sendable (Result<[QuestionListShareRecipient], Error>) -> Void
+    ) {
+        let result: Result<[QuestionListShareRecipient], Error>
+        if let error {
+            listenerLogger.error("Accepted question list shares listener failed: \(error.localizedDescription)")
+            result = .failure(error)
+        } else {
+            result = .success((documents ?? []).compactMap { document in
+                guard let shareId = document.shareId else { return nil }
+                return QuestionListShareRecipient.fromFirestore(document.data, id: document.id, shareId: shareId)
+            })
+        }
+        Task { @MainActor in completion(result) }
     }
 
     func fetchShare(shareId: String) async throws -> QuestionListShare {
@@ -304,27 +335,27 @@ actor QuestionListShareService {
 extension QuestionListShareService: QuestionListShareServicing {
     func ownedSharesListener(
         userId: String,
-        completion: @escaping (Result<[QuestionListShare], Error>) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[QuestionListShare], Error>) -> Void
     ) -> QuestionListShareListenerHandle {
         FirestoreQuestionListShareListenerHandle(
-            registration: setupOwnedSharesListener(userId: userId, completion: completion)
+            handle: FirestoreListenerHandle(registration: setupOwnedSharesListener(userId: userId, completion: completion))
         )
     }
 
     func acceptedRecipientsListener(
         userId: String,
-        completion: @escaping (Result<[QuestionListShareRecipient], Error>) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[QuestionListShareRecipient], Error>) -> Void
     ) -> QuestionListShareListenerHandle {
         FirestoreQuestionListShareListenerHandle(
-            registration: setupAcceptedRecipientsListener(userId: userId, completion: completion)
+            handle: FirestoreListenerHandle(registration: setupAcceptedRecipientsListener(userId: userId, completion: completion))
         )
     }
 }
 
 private struct FirestoreQuestionListShareListenerHandle: QuestionListShareListenerHandle {
-    let registration: ListenerRegistration
+    let handle: FirestoreListenerHandle
 
     func remove() {
-        registration.remove()
+        handle.cancel()
     }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 import Testing
 @testable import TTB
 
@@ -121,10 +122,12 @@ struct ModelListenerCleanupTests {
 }
 
 /// One fake for the two TTB handle protocols whose only requirement is `remove()`.
-private final class RecordingListenerHandle: QuestionListShareListenerHandle, BadgeUserListening {
-    private(set) var isRemoved = false
+private final class RecordingListenerHandle: Sendable, QuestionListShareListenerHandle, BadgeUserListening {
+    private let removed = Mutex(false)
+
+    var isRemoved: Bool { removed.withLock { $0 } }
 
     func remove() {
-        isRemoved = true
+        removed.withLock { $0 = true }
     }
 }
