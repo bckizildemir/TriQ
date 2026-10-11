@@ -13,7 +13,7 @@ struct NoOpBadgeStore: BadgeStoring {
         (false, [:])
     }
 
-    func setUserDocument(userId: String, data: [String: Any], merge: Bool) async throws {}
+    func setUserDocument(userId: String, data: sending [String: Any], merge: Bool) async throws {}
 
     func getBadgeDefinitionDocuments() async throws -> [(id: String, data: [String: Any])] {
         []

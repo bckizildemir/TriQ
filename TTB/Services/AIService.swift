@@ -311,7 +311,7 @@ actor AIService: AIServiceProtocol {
 
     private func callResponseList(
         _ functionName: String,
-        payload: [String: Any],
+        payload: sending [String: Any],
         exactCount: Int?
     ) async throws -> [String] {
         let responses = try await callStringList(functionName, payload: payload, key: "responses")
@@ -323,7 +323,7 @@ actor AIService: AIServiceProtocol {
 
     private func callStringList(
         _ functionName: String,
-        payload: [String: Any],
+        payload: sending [String: Any],
         key: String
     ) async throws -> [String] {
         let result = try await callDictionary(functionName, payload: payload)
@@ -333,7 +333,7 @@ actor AIService: AIServiceProtocol {
         return values.compactMap { $0 as? String }
     }
 
-    private func callDictionary(_ functionName: String, payload: [String: Any]) async throws -> [String: Any] {
+    private func callDictionary(_ functionName: String, payload: sending [String: Any]) async throws -> [String: Any] {
         do {
             // The AI callables accept each App Check token once (functions/appCheckReplay.js), so
             // every call must ask for a fresh limited-use token instead of the cached one.

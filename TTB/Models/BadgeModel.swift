@@ -53,7 +53,7 @@ class BadgeModel: ObservableObject {
         }
     }
 
-    private func defaultBadgeUserFields() -> [String: Any] {
+    private nonisolated func defaultBadgeUserFields() -> [String: Any] {
         [
             "dailyAnswers": 0,
             "weeklyAnswers": 0,

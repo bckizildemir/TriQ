@@ -24,7 +24,7 @@ protocol BadgeUserTransaction {
 /// stand in for Firestore.
 protocol BadgeStoring: Sendable {
     func getUserDocument(userId: String) async throws -> (exists: Bool, data: [String: Any])
-    func setUserDocument(userId: String, data: [String: Any], merge: Bool) async throws
+    func setUserDocument(userId: String, data: sending [String: Any], merge: Bool) async throws
     func getBadgeDefinitionDocuments() async throws -> [(id: String, data: [String: Any])]
     func runUserTransaction(
         userId: String,
@@ -49,7 +49,7 @@ struct LiveBadgeStore: BadgeStoring {
         return (snapshot.exists, snapshot.data() ?? [:])
     }
 
-    func setUserDocument(userId: String, data: [String: Any], merge: Bool) async throws {
+    func setUserDocument(userId: String, data: sending [String: Any], merge: Bool) async throws {
         try await db.collection("users").document(userId).setData(data, merge: merge)
     }
 
