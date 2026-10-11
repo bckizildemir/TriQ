@@ -438,14 +438,14 @@ final class QuestionListShareTests: XCTestCase {
 private final class FakeLiveQuestionListShareService: QuestionListShareServicing {
     func ownedSharesListener(
         userId: String,
-        completion: @escaping (Result<[QuestionListShare], Error>) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[QuestionListShare], Error>) -> Void
     ) async -> QuestionListShareListenerHandle {
         FakeQuestionListShareListenerHandle()
     }
 
     func acceptedRecipientsListener(
         userId: String,
-        completion: @escaping (Result<[QuestionListShareRecipient], Error>) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[QuestionListShareRecipient], Error>) -> Void
     ) async -> QuestionListShareListenerHandle {
         FakeQuestionListShareListenerHandle()
     }

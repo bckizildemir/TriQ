@@ -16,8 +16,8 @@ final class InMemoryQuestionListShareService: QuestionListShareServicing {
     /// this adapter is.
     private let currentUserId: String
 
-    private var ownedSharesOnChange: ((Result<[QuestionListShare], Error>) -> Void)?
-    private var acceptedRecipientsOnChange: ((Result<[QuestionListShareRecipient], Error>) -> Void)?
+    private var ownedSharesOnChange: (@MainActor @Sendable (Result<[QuestionListShare], Error>) -> Void)?
+    private var acceptedRecipientsOnChange: (@MainActor @Sendable (Result<[QuestionListShareRecipient], Error>) -> Void)?
 
     init(
         ownedShares: [QuestionListShare] = [],
@@ -42,7 +42,7 @@ final class InMemoryQuestionListShareService: QuestionListShareServicing {
 
     func ownedSharesListener(
         userId: String,
-        completion: @escaping (Result<[QuestionListShare], Error>) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[QuestionListShare], Error>) -> Void
     ) async -> QuestionListShareListenerHandle {
         ownedSharesOnChange = completion
         publishOwnedShares(for: userId)
@@ -51,7 +51,7 @@ final class InMemoryQuestionListShareService: QuestionListShareServicing {
 
     func acceptedRecipientsListener(
         userId: String,
-        completion: @escaping (Result<[QuestionListShareRecipient], Error>) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[QuestionListShareRecipient], Error>) -> Void
     ) async -> QuestionListShareListenerHandle {
         acceptedRecipientsOnChange = completion
         publishAcceptedRecipients(for: userId)

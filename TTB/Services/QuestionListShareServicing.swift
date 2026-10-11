@@ -4,7 +4,10 @@ import Foundation
 ///
 /// Exists so the seam never names a Firebase type: the live adapter wraps a
 /// `ListenerRegistration`, and the in-memory adapter returns something that does nothing.
-protocol QuestionListShareListenerHandle {
+///
+/// `Sendable` because the live adapter is an actor and hands the handle back to the main-actor
+/// store. `remove()` is synchronous and safe to call more than once.
+protocol QuestionListShareListenerHandle: Sendable {
     func remove()
 }
 
@@ -17,14 +20,16 @@ protocol QuestionListShareListenerHandle {
 /// requirements without sending a non-`Sendable` value off the main actor. Conformers must be
 /// `Sendable`, in practice an `actor` or a `@MainActor` type.
 protocol QuestionListShareServicing: Sendable {
+    /// `completion` runs on the main actor: its one consumer is `SharedQuestionListStore`, so the
+    /// adapter makes the hop once.
     func ownedSharesListener(
         userId: String,
-        completion: @escaping (Result<[QuestionListShare], Error>) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[QuestionListShare], Error>) -> Void
     ) async -> QuestionListShareListenerHandle
 
     func acceptedRecipientsListener(
         userId: String,
-        completion: @escaping (Result<[QuestionListShareRecipient], Error>) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[QuestionListShareRecipient], Error>) -> Void
     ) async -> QuestionListShareListenerHandle
 
     func fetchShare(shareId: String) async throws -> QuestionListShare
