@@ -1,7 +1,7 @@
 # Coding standards
 
 This file exists for review tools that look for `CODING_STANDARDS.md` (for example the
-`mattpocock-skills:code-review` standards agent). The standards themselves live in `CLAUDE.md`;
+`code-review` standards agent). The standards themselves live in `CLAUDE.md`;
 do not copy them here.
 
 Review a change against:

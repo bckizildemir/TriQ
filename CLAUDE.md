@@ -80,7 +80,11 @@ The eight mandatory Swift skills in the table above (`swiftui-pro`, `swiftui-ui-
 
 A user-level `PostToolUse` hook (`~/.claude/hooks/swift-skill-reminder.sh`, registered in `~/.claude/settings.json`) names the skills an agent has not loaded yet after an `Edit`/`MultiEdit`/`Write` on a `.swift` path. CatCareCalendar uses the same script. It fires in every project on this machine, in Herdr worktrees, and inside subagents. It never names `ios-memory-perf` — the table above is that skill's only route — and it names `swiftdata-pro` only for files that use SwiftData, so it stays silent on that skill here. It needs `jq`. It is not in the repo, so a fresh clone on another machine does not have it. The table above is the routing wherever the hook cannot fire — edits made through Bash or by the user in Xcode. See `docs/agents/swift-skill-triggers.md`.
 
-`CODING_STANDARDS.md` points review agents (for example `mattpocock-skills:code-review`, whose standards agent reads that file) at this file's conventions and the Swift skills.
+`CODING_STANDARDS.md` points review agents (for example `code-review`, whose standards agent reads that file) at this file's conventions and the Swift skills.
+
+### Matt Pocock skills
+
+Matt Pocock's 27 skills (`implement`, `code-review`, `tdd`, `grilling`, …) are project skills in `.claude/skills/`, copied there by `npx skills` and pinned in `skills-lock.json` (2026-10-11, v1.3.1). Call them by bare name: `/implement`, not `/mattpocock-skills:implement`. The old `mattpocock-skills` plugin is turned off for this repo in `.claude/settings.json`, so each skill loads once. Matt's `code-review` replaces the built-in `/code-review` in this repo, and `implement` calls it by that name. Update with `npx skills@latest update -p`, then review the diff. Add one with `npx skills@latest add mattpocock/skills -a claude-code --copy -y -s <name> <name>`: names are space-separated; a comma-separated list installs nothing and prints no error. `.claude/skills/README.md` records their provenance.
 
 ### Issue tracker
 
