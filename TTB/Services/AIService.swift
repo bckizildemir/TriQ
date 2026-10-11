@@ -155,8 +155,6 @@ struct GroqRequest: Codable {
 
 // MARK: - AI Service Actor
 actor AIService: AIServiceProtocol {
-    private let functions = Functions.functions(region: "europe-west1")
-    
     // Rate limiting
     private var requestCount = 0
     private var lastRequestTime = Date()
@@ -340,7 +338,7 @@ actor AIService: AIServiceProtocol {
             // The AI callables accept each App Check token once (functions/appCheckReplay.js), so
             // every call must ask for a fresh limited-use token instead of the cached one.
             let options = HTTPSCallableOptions(requireLimitedUseAppCheckTokens: true)
-            let result = try await functions.httpsCallable(functionName, options: options).call(payload)
+            let result = try await Functions.functions(region: "europe-west1").httpsCallable(functionName, options: options).call(payload)
             guard let data = result.data as? [String: Any] else {
                 throw AIServiceError.invalidResponse
             }
