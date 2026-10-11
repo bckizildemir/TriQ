@@ -1,11 +1,11 @@
 import FirebaseAuth
 import Foundation
 
-/// The completion-handler bridges for Firebase `User`. The SDK's own `async` overloads are not
-/// `nonisolated(nonsending)`, so calling them from an actor that holds the `User` is a region
-/// error. These run on the caller's executor instead.
+/// The `nonisolated(nonsending)` completion-handler bridges for Firebase `User`. The SDK's own
+/// `async` overloads are not `nonisolated(nonsending)`, so calling them from an actor that holds
+/// the `User` is a region error. These run on the caller's executor instead.
 extension User {
-    /// Account deletion and `AuthModelUser` both call this.
+    /// Satisfies `AuthModelUser.deleteAsync()`.
     nonisolated(nonsending) func deleteAsync() async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             delete { error in

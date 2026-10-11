@@ -34,8 +34,6 @@ extension User: AuthModelUser {
             }
         }
     }
-
-    // `deleteAsync()` lives with the other `User` bridges in `User+AsyncBridges.swift`.
 }
 
 typealias AuthStateListenerHandle = AuthStateDidChangeListenerHandle
