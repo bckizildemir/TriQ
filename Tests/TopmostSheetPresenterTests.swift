@@ -34,13 +34,13 @@ struct TopmostSheetPresenterTests {
 
     @Test
     func sheetThatGoesAwayOnItsOwnLowersTheFlagAndCanPresentAgain() throws {
-        var isPresented = true
-        let lowerFlag = { isPresented = false }
-        sheet.update(isPresented: isPresented, makeController: UIViewController.init, onDismissedBySystem: lowerFlag)
+        let flag = Counter(raised: true)
+        let lowerFlag: @MainActor @Sendable () -> Void = { flag.raised = false }
+        sheet.update(isPresented: flag.raised, makeController: UIViewController.init, onDismissedBySystem: lowerFlag)
         let first = try #require(topmost.presentedControllers.first)
 
         topmost.dismissBySystem(first)
-        #expect(isPresented == false, "A swiped-away sheet must lower the flag that raised it")
+        #expect(flag.raised == false, "A swiped-away sheet must lower the flag that raised it")
 
         sheet.update(isPresented: false, makeController: UIViewController.init, onDismissedBySystem: lowerFlag)
         sheet.update(isPresented: true, makeController: UIViewController.init, onDismissedBySystem: lowerFlag)
@@ -53,12 +53,12 @@ struct TopmostSheetPresenterTests {
     /// sheet gone before `present` returns. The flag must still fall, or it stays raised for good.
     @Test
     func refusedPresentationLowersTheFlagAndCanPresentAgain() {
-        var isPresented = true
-        let lowerFlag = { isPresented = false }
+        let flag = Counter(raised: true)
+        let lowerFlag: @MainActor @Sendable () -> Void = { flag.raised = false }
         topmost.refusesPresentation = true
 
-        sheet.update(isPresented: isPresented, makeController: UIViewController.init, onDismissedBySystem: lowerFlag)
-        #expect(isPresented == false, "A refused sheet must lower the flag that raised it")
+        sheet.update(isPresented: flag.raised, makeController: UIViewController.init, onDismissedBySystem: lowerFlag)
+        #expect(flag.raised == false, "A refused sheet must lower the flag that raised it")
 
         topmost.refusesPresentation = false
         sheet.update(isPresented: true, makeController: UIViewController.init, onDismissedBySystem: lowerFlag)
@@ -71,36 +71,48 @@ struct TopmostSheetPresenterTests {
     /// as a system dismissal would lower a flag the owner may already have raised again.
     @Test
     func dismissalTheOwnerAskedForIsNotReportedAsASystemDismissal() {
-        var systemDismissals = 0
-        let countSystemDismissal = { systemDismissals += 1 }
+        let counter = Counter(raised: true)
+        let countSystemDismissal: @MainActor @Sendable () -> Void = { counter.count += 1 }
         sheet.update(isPresented: true, makeController: UIViewController.init, onDismissedBySystem: countSystemDismissal)
         sheet.update(isPresented: false, makeController: UIViewController.init, onDismissedBySystem: countSystemDismissal)
 
         topmost.finishDismissals()
 
-        #expect(systemDismissals == 0)
+        #expect(counter.count == 0)
     }
 
     /// "Create Free Account" closes the Upgrade Prompt and opens the upgrade sheet. UIKit refuses to
     /// present from a controller that is still being dismissed, so the second sheet must wait.
     @Test
     func followUpRunsOnlyOnceTheDismissalFinishes() {
-        var followUpRan = false
+        let followUp = Counter(raised: false)
         sheet.update(isPresented: true, makeController: UIViewController.init, onDismissedBySystem: {})
 
-        sheet.dismiss { followUpRan = true }
-        #expect(followUpRan == false, "The follow-up must wait for the dismissal animation")
+        sheet.dismiss { followUp.raised = true }
+        #expect(followUp.raised == false, "The follow-up must wait for the dismissal animation")
 
         topmost.finishDismissals()
-        #expect(followUpRan)
+        #expect(followUp.raised)
     }
 
     @Test
     func followUpRunsAtOnceWhenNoSheetIsPresented() {
-        var followUpRan = false
+        let followUp = Counter(raised: false)
 
-        sheet.dismiss { followUpRan = true }
+        sheet.dismiss { followUp.raised = true }
 
-        #expect(followUpRan)
+        #expect(followUp.raised)
+    }
+}
+
+/// Reference-typed state the `@Sendable` closures of the presenter can capture. A captured local
+/// `var` is a data-race error in the Swift 6 language mode.
+@MainActor
+private final class Counter {
+    var raised: Bool
+    var count = 0
+
+    init(raised: Bool) {
+        self.raised = raised
     }
 }

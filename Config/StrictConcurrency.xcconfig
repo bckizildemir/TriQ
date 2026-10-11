@@ -148,6 +148,10 @@
 //
 //   SWIFT_VERSION = 6.0
 //
+// APPLIED 2026-10-11 (issue #20): SWIFT_VERSION = 6.0 is set directly on all 6
+// configurations in project.pbxproj, and SWIFT_STRICT_CONCURRENCY is removed.
+// IPHONEOS_DEPLOYMENT_TARGET stays 18.2. This file stays unwired.
+//
 // Keep Task.immediate, InlineArray and withTaskPriorityEscalationHandler out of
 // the app target: each carries an iOS 26.0 floor (CatCareCalendar probe).
 // Synchronization.Mutex (iOS 18.0) fits. isolated deinit was probed on 18.4
