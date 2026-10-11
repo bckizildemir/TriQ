@@ -84,7 +84,7 @@ A user-level `PostToolUse` hook (`~/.claude/hooks/swift-skill-reminder.sh`, regi
 
 ### Matt Pocock skills
 
-Matt Pocock's 27 skills (`implement`, `code-review`, `tdd`, `grilling`, …) are project skills in `.claude/skills/`, copied there by `npx skills` and pinned in `skills-lock.json` (2026-10-11, v1.3.1). Call them by bare name: `/implement`, not `/mattpocock-skills:implement`. The old `mattpocock-skills` plugin is turned off for this repo in `.claude/settings.json`, so each skill loads once. Matt's `code-review` replaces the built-in `/code-review` in this repo, and `implement` calls it by that name. Update with `npx skills@latest update -p`, then review the diff. `.claude/skills/README.md` records their provenance.
+Matt Pocock's 27 skills (`implement`, `code-review`, `tdd`, `grilling`, …) are project skills in `.claude/skills/`, copied there by `npx skills` and pinned in `skills-lock.json` (2026-10-11, v1.3.1). Call them by bare name: `/implement`, not `/mattpocock-skills:implement`. The old `mattpocock-skills` plugin is turned off for this repo in `.claude/settings.json`, so each skill loads once. Matt's `code-review` replaces the built-in `/code-review` in this repo, and `implement` calls it by that name. Update with `npx skills@latest update -p`, then review the diff. Add one with `npx skills@latest add mattpocock/skills -a claude-code --copy -y -s <name> <name>`: names are space-separated; a comma-separated list installs nothing and prints no error. `.claude/skills/README.md` records their provenance.
 
 ### Issue tracker
 
