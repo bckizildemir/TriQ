@@ -12,14 +12,14 @@ protocol AuthModelUser: AnyObject {
     var uid: String { get }
     var isAnonymous: Bool { get }
     var email: String? { get }
-    nonisolated(nonsending) func delete() async throws
-    func link(with credential: AuthCredential) async throws -> AuthModelUser
+    nonisolated(nonsending) func deleteAsync() async throws
+    func linkAccount(with credential: AuthCredential) async throws -> AuthModelUser
     func forceRefreshIDToken() async throws
 }
 
 extension User: AuthModelUser {
-    func link(with credential: AuthCredential) async throws -> AuthModelUser {
-        let result: AuthDataResult = try await link(with: credential)
+    func linkAccount(with credential: AuthCredential) async throws -> AuthModelUser {
+        let result = try await link(with: credential)
         return result.user
     }
 
@@ -35,7 +35,10 @@ extension User: AuthModelUser {
         }
     }
 
-    nonisolated(nonsending) func delete() async throws {
+    /// The one completion-handler bridge for `delete`. The SDK's own `async` overload is not
+    /// `nonisolated(nonsending)`, so calling it from an actor that holds the `User` is a region
+    /// error. Account deletion and `AuthModelUser` both call this.
+    nonisolated(nonsending) func deleteAsync() async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             delete { error in
                 if let error {
@@ -221,7 +224,7 @@ final class LiveAuthUserDocumentManager: AuthUserDocumentManaging {
     func deleteUserAndAuth(user: AuthModelUser) async {
         do {
             try await db.collection("users").document(user.uid).delete()
-            try await user.delete()
+            try await user.deleteAsync()
         } catch {
             // AuthModel logs failures at call site when needed.
         }

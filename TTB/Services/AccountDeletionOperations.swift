@@ -175,18 +175,6 @@ extension User {
             }
         }
     }
-
-    nonisolated(nonsending) func deleteAsync() async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            delete { error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: ())
-                }
-            }
-        }
-    }
 }
 
 protocol AccountDeletionPerforming: Sendable {
