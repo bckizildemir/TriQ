@@ -62,7 +62,7 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     }
 
     func purgeAnswers() async throws {
-        let functions = Functions.functions(region: "europe-west1")
+        let functions = Functions.europeWest1
         _ = try await functions.httpsCallable("purgeOwnAnswersForAccountDeletion").call()
     }
 

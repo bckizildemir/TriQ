@@ -42,7 +42,7 @@ actor AnswerImageSuggestionService {
         do {
             // suggestAnswerImages accepts each App Check token once (functions/appCheckReplay.js).
             let options = HTTPSCallableOptions(requireLimitedUseAppCheckTokens: true)
-            let result = try await Functions.functions(region: "europe-west1").httpsCallable("suggestAnswerImages", options: options).call(payload)
+            let result = try await Functions.europeWest1.httpsCallable("suggestAnswerImages", options: options).call(payload)
             guard let data = result.data as? [String: Any],
                   let rawSuggestions = data["suggestions"] as? [Any]
             else {
@@ -76,7 +76,7 @@ actor AnswerImageSuggestionService {
         ]
 
         do {
-            let result = try await Functions.functions(region: "europe-west1").httpsCallable("saveSuggestedAnswerImage").call(payload)
+            let result = try await Functions.europeWest1.httpsCallable("saveSuggestedAnswerImage").call(payload)
             guard let data = result.data as? [String: Any],
                   let downloadURL = data["downloadURL"] as? String
             else {

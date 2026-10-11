@@ -193,7 +193,7 @@ actor QuestionService {
             attribution?.firestoreValue ?? [:]
         }
 
-        _ = try await Functions.functions(region: "europe-west1").httpsCallable("saveQuestionAnswers").call([
+        _ = try await Functions.europeWest1.httpsCallable("saveQuestionAnswers").call([
             "questionId": questionId,
             "answers": answers,
             "imageURLs": urlsForFunctions,

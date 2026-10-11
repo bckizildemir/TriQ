@@ -97,7 +97,7 @@ actor FavoriteService {
             throw FavoriteError.invalidUserId
         }
 
-        let result = try await Functions.functions(region: "europe-west1").httpsCallable("toggleQuestionFavorite").call([
+        let result = try await Functions.europeWest1.httpsCallable("toggleQuestionFavorite").call([
             "questionId": questionId
         ])
         guard let data = result.data as? [String: Any] else {
@@ -122,7 +122,7 @@ actor FavoriteService {
 
         // A client write to `favoriteUserIds` is rejected by firestore.rules, which lets a
         // non-admin update only `creatorUsername` on a question. The callable is the only path.
-        let result = try await Functions.functions(region: "europe-west1").httpsCallable("addQuestionFavorites").call([
+        let result = try await Functions.europeWest1.httpsCallable("addQuestionFavorites").call([
             "questionIds": questionIds
         ])
         guard let data = result.data as? [String: Any] else {
