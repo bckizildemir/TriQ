@@ -5,7 +5,6 @@ import os
 import Synchronization
 
 actor FavoriteService {
-    private let functions = Functions.functions(region: "europe-west1")
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
         category: "FavoriteService")
@@ -98,7 +97,7 @@ actor FavoriteService {
             throw FavoriteError.invalidUserId
         }
 
-        let result = try await functions.httpsCallable("toggleQuestionFavorite").call([
+        let result = try await Functions.functions(region: "europe-west1").httpsCallable("toggleQuestionFavorite").call([
             "questionId": questionId
         ])
         guard let data = result.data as? [String: Any] else {
@@ -123,7 +122,7 @@ actor FavoriteService {
 
         // A client write to `favoriteUserIds` is rejected by firestore.rules, which lets a
         // non-admin update only `creatorUsername` on a question. The callable is the only path.
-        let result = try await functions.httpsCallable("addQuestionFavorites").call([
+        let result = try await Functions.functions(region: "europe-west1").httpsCallable("addQuestionFavorites").call([
             "questionIds": questionIds
         ])
         guard let data = result.data as? [String: Any] else {
