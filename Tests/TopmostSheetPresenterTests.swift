@@ -34,7 +34,7 @@ struct TopmostSheetPresenterTests {
 
     @Test
     func sheetThatGoesAwayOnItsOwnLowersTheFlagAndCanPresentAgain() throws {
-        let flag = Counter(raised: true)
+        let flag = FlagBox(raised: true)
         let lowerFlag: @MainActor @Sendable () -> Void = { flag.raised = false }
         sheet.update(isPresented: flag.raised, makeController: UIViewController.init, onDismissedBySystem: lowerFlag)
         let first = try #require(topmost.presentedControllers.first)
@@ -53,7 +53,7 @@ struct TopmostSheetPresenterTests {
     /// sheet gone before `present` returns. The flag must still fall, or it stays raised for good.
     @Test
     func refusedPresentationLowersTheFlagAndCanPresentAgain() {
-        let flag = Counter(raised: true)
+        let flag = FlagBox(raised: true)
         let lowerFlag: @MainActor @Sendable () -> Void = { flag.raised = false }
         topmost.refusesPresentation = true
 
@@ -71,7 +71,7 @@ struct TopmostSheetPresenterTests {
     /// as a system dismissal would lower a flag the owner may already have raised again.
     @Test
     func dismissalTheOwnerAskedForIsNotReportedAsASystemDismissal() {
-        let counter = Counter(raised: true)
+        let counter = CallCounter()
         let countSystemDismissal: @MainActor @Sendable () -> Void = { counter.count += 1 }
         sheet.update(isPresented: true, makeController: UIViewController.init, onDismissedBySystem: countSystemDismissal)
         sheet.update(isPresented: false, makeController: UIViewController.init, onDismissedBySystem: countSystemDismissal)
@@ -85,7 +85,7 @@ struct TopmostSheetPresenterTests {
     /// present from a controller that is still being dismissed, so the second sheet must wait.
     @Test
     func followUpRunsOnlyOnceTheDismissalFinishes() {
-        let followUp = Counter(raised: false)
+        let followUp = FlagBox(raised: false)
         sheet.update(isPresented: true, makeController: UIViewController.init, onDismissedBySystem: {})
 
         sheet.dismiss { followUp.raised = true }
@@ -97,7 +97,7 @@ struct TopmostSheetPresenterTests {
 
     @Test
     func followUpRunsAtOnceWhenNoSheetIsPresented() {
-        let followUp = Counter(raised: false)
+        let followUp = FlagBox(raised: false)
 
         sheet.dismiss { followUp.raised = true }
 
@@ -105,14 +105,19 @@ struct TopmostSheetPresenterTests {
     }
 }
 
-/// Reference-typed state the `@Sendable` closures of the presenter can capture. A captured local
+/// Reference-typed flag the `@Sendable` closures of the presenter can capture. A captured local
 /// `var` is a data-race error in the Swift 6 language mode.
 @MainActor
-private final class Counter {
+private final class FlagBox {
     var raised: Bool
-    var count = 0
 
     init(raised: Bool) {
         self.raised = raised
     }
+}
+
+/// Counts how often a `@Sendable` presenter callback ran, for the same capture reason as `FlagBox`.
+@MainActor
+private final class CallCounter {
+    var count = 0
 }
