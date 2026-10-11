@@ -35,20 +35,7 @@ extension User: AuthModelUser {
         }
     }
 
-    /// The one completion-handler bridge for `delete`. The SDK's own `async` overload is not
-    /// `nonisolated(nonsending)`, so calling it from an actor that holds the `User` is a region
-    /// error. Account deletion and `AuthModelUser` both call this.
-    nonisolated(nonsending) func deleteAsync() async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            delete { error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: ())
-                }
-            }
-        }
-    }
+    // `deleteAsync()` lives with the other `User` bridges in `User+AsyncBridges.swift`.
 }
 
 typealias AuthStateListenerHandle = AuthStateDidChangeListenerHandle

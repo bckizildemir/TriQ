@@ -18,6 +18,12 @@ struct AccountDeletionUserSnapshot: AccountDeletionAuthUser, Equatable {
     let email: String?
 }
 
+extension AccountDeletionUserSnapshot {
+    init(_ user: User) {
+        self.init(uid: user.uid, isAnonymous: user.isAnonymous, email: user.email)
+    }
+}
+
 protocol AccountDeletionAuthProviding: Sendable {
     func currentUser() -> (any AccountDeletionAuthUser)?
 }
@@ -25,11 +31,7 @@ protocol AccountDeletionAuthProviding: Sendable {
 struct LiveAccountDeletionAuth: AccountDeletionAuthProviding {
     func currentUser() -> (any AccountDeletionAuthUser)? {
         guard let user = Auth.auth().currentUser else { return nil }
-        return AccountDeletionUserSnapshot(
-            uid: user.uid,
-            isAnonymous: user.isAnonymous,
-            email: user.email
-        )
+        return AccountDeletionUserSnapshot(user)
     }
 }
 
@@ -168,20 +170,6 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
             }
         } catch {
             throw error
-        }
-    }
-}
-
-extension User {
-    nonisolated(nonsending) func reauthenticateAsync(with credential: AuthCredential) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            reauthenticate(with: credential) { _, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: ())
-                }
-            }
         }
     }
 }
