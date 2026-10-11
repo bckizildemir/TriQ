@@ -84,7 +84,6 @@ firestore-debug.log
 
 # Local agent skill installs
 .agents/skills/
-skills-lock.json
 
 # Other agent tools and editors: the repo ships Claude Code config only (CLAUDE.md, AGENTS.md, .claude/)
 .windsurf/

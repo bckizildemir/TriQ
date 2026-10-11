@@ -1,6 +1,7 @@
 # Skill provenance
 
-This directory holds the 9 agent skills that ship with this repository. Six of them were vendored
+This directory holds 36 agent skills. The table below covers the 9 that came from Firebase or were
+written here; "Matt Pocock skills" covers the other 27. Six of the 9 were vendored
 — copied in from an upstream project. Five of those six were then edited locally, in `186b03c`,
 `85747e5` and `dfb0901`, to remove hazards and to pin the Firebase project. The other three are
 first-party and were written here. A skill whose policy is `fork` must never be refreshed from
@@ -30,6 +31,16 @@ the clean history as evidence.
 | ttb-firebase-functions-debugging | first-party | `own` |
 | ttb-share-link-deep-links | first-party | `own` |
 | ttb-live-adapter-tests | first-party | `own` |
+
+## Matt Pocock skills (`track`)
+
+The other 27 directories here are Matt Pocock's skills, installed on 2026-10-11 with
+`npx skills@latest add mattpocock/skills -a claude-code --copy` from upstream
+<https://github.com/mattpocock/skills> (plugin version 1.3.1). The set is exactly the `skills` list
+of upstream `.claude-plugin/plugin.json`. Their policy is `track`: carry no local edits, and refresh
+them from upstream with `npx skills@latest update -p`. `skills-lock.json` at the repo root names each
+one with its upstream path and hash, so the lock file, not this table, is their record. A skill that
+needs a local edit moves to the table above as `fork`.
 
 ## Why `fork`, not `track`
 
