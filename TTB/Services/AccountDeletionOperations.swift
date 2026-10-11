@@ -10,7 +10,13 @@ protocol AccountDeletionAuthUser: Sendable {
     var email: String? { get }
 }
 
-extension User: AccountDeletionAuthUser {}
+/// Sendable copy of the fields account deletion reads from the live Firebase `User`.
+/// The live `User` stays inside `LiveAccountDeletionOperations`, which looks it up again.
+struct AccountDeletionUserSnapshot: AccountDeletionAuthUser, Equatable {
+    let uid: String
+    let isAnonymous: Bool
+    let email: String?
+}
 
 protocol AccountDeletionAuthProviding: Sendable {
     func currentUser() -> (any AccountDeletionAuthUser)?
@@ -18,7 +24,12 @@ protocol AccountDeletionAuthProviding: Sendable {
 
 struct LiveAccountDeletionAuth: AccountDeletionAuthProviding {
     func currentUser() -> (any AccountDeletionAuthUser)? {
-        Auth.auth().currentUser
+        guard let user = Auth.auth().currentUser else { return nil }
+        return AccountDeletionUserSnapshot(
+            uid: user.uid,
+            isAnonymous: user.isAnonymous,
+            email: user.email
+        )
     }
 }
 
@@ -33,9 +44,9 @@ protocol AccountDeletionOperations: Sendable {
     func deleteAuthUser(_ user: any AccountDeletionAuthUser) async throws
 }
 
-struct LiveAccountDeletionOperations: AccountDeletionOperations {
-    private let db = Firestore.firestore()
-    private let functions = Functions.functions(region: "europe-west1")
+actor LiveAccountDeletionOperations: AccountDeletionOperations {
+    private var db: Firestore { Firestore.firestore() }
+    private var functions: Functions { Functions.functions(region: "europe-west1") }
     private let fileManager: LocalFileManager
     private let batchWriteLimit = 400
 
@@ -44,9 +55,7 @@ struct LiveAccountDeletionOperations: AccountDeletionOperations {
     }
 
     func reauthenticate(user: any AccountDeletionAuthUser, password: String?) async throws {
-        guard let firebaseUser = user as? User else {
-            throw AccountDeletionError.unauthenticated
-        }
+        let firebaseUser = try currentFirebaseUser(matching: user)
         try await AccountDeletionService.reauthenticatePermanentUser(
             user: firebaseUser,
             password: password
@@ -54,6 +63,7 @@ struct LiveAccountDeletionOperations: AccountDeletionOperations {
     }
 
     func purgeAnswers() async throws {
+        let functions = Functions.functions(region: "europe-west1")
         _ = try await functions.httpsCallable("purgeOwnAnswersForAccountDeletion").call()
     }
 
@@ -96,10 +106,15 @@ struct LiveAccountDeletionOperations: AccountDeletionOperations {
     }
 
     func deleteAuthUser(_ user: any AccountDeletionAuthUser) async throws {
-        guard let firebaseUser = user as? User else {
+        let firebaseUser = try currentFirebaseUser(matching: user)
+        try await firebaseUser.deleteAsync()
+    }
+
+    private func currentFirebaseUser(matching snapshot: any AccountDeletionAuthUser) throws -> User {
+        guard let firebaseUser = Auth.auth().currentUser, firebaseUser.uid == snapshot.uid else {
             throw AccountDeletionError.unauthenticated
         }
-        try await firebaseUser.deleteAsync()
+        return firebaseUser
     }
 
     private func updateDocumentBatches(
@@ -150,7 +165,7 @@ struct LiveAccountDeletionOperations: AccountDeletionOperations {
 }
 
 extension User {
-    func reauthenticateAsync(with credential: AuthCredential) async throws {
+    nonisolated(nonsending) func reauthenticateAsync(with credential: AuthCredential) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             reauthenticate(with: credential) { _, error in
                 if let error {
@@ -162,7 +177,7 @@ extension User {
         }
     }
 
-    func deleteAsync() async throws {
+    nonisolated(nonsending) func deleteAsync() async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             delete { error in
                 if let error {

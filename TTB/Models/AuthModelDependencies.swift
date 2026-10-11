@@ -12,31 +12,14 @@ protocol AuthModelUser: AnyObject {
     var uid: String { get }
     var isAnonymous: Bool { get }
     var email: String? { get }
-    func delete() async throws
+    nonisolated(nonsending) func delete() async throws
     func link(with credential: AuthCredential) async throws -> AuthModelUser
     func forceRefreshIDToken() async throws
 }
 
 extension User: AuthModelUser {
     func link(with credential: AuthCredential) async throws -> AuthModelUser {
-        let result = try await withCheckedThrowingContinuation {
-            (continuation: CheckedContinuation<AuthDataResult, Error>) in
-            link(with: credential) { authResult, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else if let authResult {
-                    continuation.resume(returning: authResult)
-                } else {
-                    continuation.resume(
-                        throwing: NSError(
-                            domain: "AuthModel",
-                            code: -1,
-                            userInfo: [NSLocalizedDescriptionKey: "Link failed without a result."]
-                        )
-                    )
-                }
-            }
-        }
+        let result: AuthDataResult = try await link(with: credential)
         return result.user
     }
 
@@ -52,7 +35,7 @@ extension User: AuthModelUser {
         }
     }
 
-    func delete() async throws {
+    nonisolated(nonsending) func delete() async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             delete { error in
                 if let error {
