@@ -42,19 +42,18 @@ protocol BadgeStoring: Sendable {
 /// this struct being `Sendable`. `Firestore.firestore()` returns the same cached default instance
 /// on every call.
 struct LiveBadgeStore: BadgeStoring {
-    private var db: Firestore { Firestore.firestore() }
 
     func getUserDocument(userId: String) async throws -> (exists: Bool, data: [String: Any]) {
-        let snapshot = try await db.collection("users").document(userId).getDocument()
+        let snapshot = try await Firestore.firestore().collection("users").document(userId).getDocument()
         return (snapshot.exists, snapshot.data() ?? [:])
     }
 
     func setUserDocument(userId: String, data: sending [String: Any], merge: Bool) async throws {
-        try await db.collection("users").document(userId).setData(data, merge: merge)
+        try await Firestore.firestore().collection("users").document(userId).setData(data, merge: merge)
     }
 
     func getBadgeDefinitionDocuments() async throws -> [(id: String, data: [String: Any])] {
-        let snapshot = try await db.collection("badges").getDocuments()
+        let snapshot = try await Firestore.firestore().collection("badges").getDocuments()
         return snapshot.documents.map { ($0.documentID, $0.data()) }
     }
 
@@ -62,6 +61,7 @@ struct LiveBadgeStore: BadgeStoring {
         userId: String,
         _ updates: @escaping @Sendable (BadgeUserTransaction) throws -> Any?
     ) async throws -> Any? {
+        let db = Firestore.firestore()
         let userRef = db.collection("users").document(userId)
         return try await db.runTransaction { transaction, errorPointer -> Any? in
             let context = FirestoreBadgeUserTransaction(transaction: transaction, userRef: userRef)
@@ -78,7 +78,7 @@ struct LiveBadgeStore: BadgeStoring {
         userId: String,
         onChange: @escaping (Result<[String: Any]?, Error>) -> Void
     ) -> BadgeUserListening {
-        let registration = db.collection("users").document(userId)
+        let registration = Firestore.firestore().collection("users").document(userId)
             .addSnapshotListener { snapshot, error in
                 if let error {
                     onChange(.failure(error))

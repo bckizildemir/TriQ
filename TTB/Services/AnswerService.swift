@@ -2,10 +2,9 @@ import Foundation
 import FirebaseFirestore
 
 actor AnswerService {
-    private let db = Firestore.firestore()
 
     func getAnswerStatistics() async throws -> AnswerStatistics {
-        let snapshot = try await db.collection("questions").getDocuments()
+        let snapshot = try await Firestore.firestore().collection("questions").getDocuments()
         let questions = snapshot.documents.compactMap { Question.fromFirestore($0.data(), id: $0.documentID) }
         
         let calendar = Calendar.current

@@ -27,7 +27,6 @@ enum QuestionServiceError: LocalizedError {
 }
 
 actor QuestionService {
-    private let db = Firestore.firestore()
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
         category: "QuestionService")
@@ -44,13 +43,13 @@ actor QuestionService {
     }
 
     init() {
-        let appName = db.app.name
+        let appName = Firestore.firestore().app.name
         logger.debug("QuestionService initialized with Firestore app \(appName)")
     }
 
     func getAllQuestions() async throws -> [Question] {
         logger.debug("Fetching all questions for user \(Auth.auth().currentUser?.uid ?? "nil")")
-        let snapshot = try await db.collection("questions").getDocuments()
+        let snapshot = try await Firestore.firestore().collection("questions").getDocuments()
         logger.debug("Fetched \(snapshot.documents.count) questions")
         return snapshot.documents.compactMap { document in
             Question.fromFirestore(document.data(), id: document.documentID)
@@ -58,7 +57,7 @@ actor QuestionService {
     }
 
     func getShareableQuestion(id questionId: String) async throws -> Question {
-        let document = try await db.collection("questions").document(questionId).getDocument()
+        let document = try await Firestore.firestore().collection("questions").document(questionId).getDocument()
         guard let data = document.data(),
               let question = Question.fromFirestore(data, id: document.documentID),
               question.isShareable
@@ -74,7 +73,7 @@ actor QuestionService {
     }
 
     func addQuestion(_ question: Question) async throws {
-        let docRef = db.collection("questions").document(question.id)
+        let docRef = Firestore.firestore().collection("questions").document(question.id)
         try await docRef.setData(question.toFirestore())
     }
 
@@ -149,25 +148,25 @@ actor QuestionService {
             data["featuredPlacement"] = QuestionFeaturedPlacement.none.rawValue
         }
 
-        try await db.collection("questions").document(questionId).updateData(data)
+        try await Firestore.firestore().collection("questions").document(questionId).updateData(data)
     }
 
     func updateQuestionFeaturedPlacement(
         questionId: String,
         placement: QuestionFeaturedPlacement
     ) async throws {
-        try await db.collection("questions").document(questionId).updateData([
+        try await Firestore.firestore().collection("questions").document(questionId).updateData([
             "featuredPlacement": placement.rawValue,
         ])
     }
 
     func updateQuestion(_ question: Question) async throws {
-        let docRef = db.collection("questions").document(question.id)
+        let docRef = Firestore.firestore().collection("questions").document(question.id)
         try await docRef.setData(question.toFirestore(), merge: true)
     }
 
     func deleteQuestion(_ questionId: String) async throws {
-        let docRef = db.collection("questions").document(questionId)
+        let docRef = Firestore.firestore().collection("questions").document(questionId)
         try await docRef.delete()
     }
 
@@ -209,6 +208,7 @@ actor QuestionService {
     func fetchMostAnsweredQuestions(filter: MostAnsweredFilter, limit: Int = 20) async throws -> [Question] {
         let seededSnapshot: QuerySnapshot
         let userCreatedSnapshot: QuerySnapshot
+        let db = Firestore.firestore()
 
         switch filter {
         case .allTime:
@@ -255,6 +255,7 @@ actor QuestionService {
     }
 
     func deleteAnswerForAccountDeletion(questionId: String, userId: String) async throws {
+        let db = Firestore.firestore()
         let questionRef = db.collection("questions").document(questionId)
         let userAnswerRef = questionRef.collection("userAnswers").document(userId)
 
@@ -263,7 +264,7 @@ actor QuestionService {
             excludingUserId: userId
         )
 
-        _ = try await Firestore.firestore().runTransaction { transaction, errorPointer in
+        _ = try await db.runTransaction { transaction, errorPointer in
             let questionSnapshot: DocumentSnapshot
             let userAnswerSnapshot: DocumentSnapshot
 
@@ -327,6 +328,7 @@ actor QuestionService {
         guard let currentUser = Auth.auth().currentUser, !currentUser.isAnonymous else { return }
         let userId = currentUser.uid
 
+        let db = Firestore.firestore()
         let userRef = db.collection("users").document(userId)
 
         do {
@@ -425,10 +427,10 @@ actor QuestionService {
 
     // MARK: - Listeners
     //
-    // Each listener fetches `Firestore` in the method instead of reading `db`. A registration built
-    // from the stored `db` joins this actor's region and cannot be sent into the `Sendable`
-    // `FirestoreListenerHandle`; one built from a fresh `Firestore` can. Each Firebase closure only
-    // forwards raw values to a `deliver…` function, which a test runs without Firebase.
+    // Each listener fetches `Firestore` in the method (see `Functions.europeWest1`). A registration
+    // built from a fresh `Firestore` can be sent into the `Sendable` `FirestoreListenerHandle`; one
+    // built from actor state could not. Each Firebase closure only forwards raw values to a
+    // `deliver…` function, which a test runs without Firebase.
 
     /// Listens in real time to all answers the current user has saved across all questions.
     /// Uses a collection group query on `userAnswers` filtered by the `userId` field.
@@ -644,7 +646,7 @@ actor QuestionService {
     }
 
     private func fetchBadgeDefinitions() async -> [BadgeDefinition] {
-        if let snapshot = try? await db.collection("badges").getDocuments() {
+        if let snapshot = try? await Firestore.firestore().collection("badges").getDocuments() {
             let remoteDefinitions = snapshot.documents.compactMap { document -> BadgeDefinition? in
                 let data = document.data()
                 return BadgeDefinition(
@@ -669,7 +671,7 @@ actor QuestionService {
     }
 
     private func currentUsername(for userId: String) async throws -> String? {
-        let snapshot = try await db.collection("users").document(userId).getDocument()
+        let snapshot = try await Firestore.firestore().collection("users").document(userId).getDocument()
         let username = (snapshot.data()?["username"] as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return username?.isEmpty == false ? username : nil

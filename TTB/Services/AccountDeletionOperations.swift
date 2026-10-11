@@ -47,7 +47,6 @@ protocol AccountDeletionOperations: Sendable {
 }
 
 actor LiveAccountDeletionOperations: AccountDeletionOperations {
-    private var db: Firestore { Firestore.firestore() }
     private let fileManager: LocalFileManager
     private let batchWriteLimit = 400
 
@@ -64,12 +63,11 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     }
 
     func purgeAnswers() async throws {
-        let functions = Functions.europeWest1
-        _ = try await functions.httpsCallable("purgeOwnAnswersForAccountDeletion").call()
+        _ = try await Functions.europeWest1.httpsCallable("purgeOwnAnswersForAccountDeletion").call()
     }
 
     func favoriteQuestionReferences(for userId: String) async throws -> [String] {
-        let snapshot = try await db.collection("questions")
+        let snapshot = try await Firestore.firestore().collection("questions")
             .whereField("favoriteUserIds", arrayContains: userId)
             .getDocuments()
         return snapshot.documents.map(\.documentID)
@@ -78,7 +76,7 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     func removeFavorites(userId: String, questionIds: [String]) async throws {
         guard !questionIds.isEmpty else { return }
 
-        let references = questionIds.map { db.collection("questions").document($0) }
+        let references = questionIds.map { Firestore.firestore().collection("questions").document($0) }
         try await updateDocumentBatches(references) { batch, reference in
             batch.updateData([
                 "favoriteUserIds": FieldValue.arrayRemove([userId])
@@ -87,7 +85,7 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     }
 
     func deleteAIDocuments(userId: String) async throws {
-        let userRef = db.collection("users").document(userId)
+        let userRef = Firestore.firestore().collection("users").document(userId)
 
         let aiQueries = try await userRef.collection("aiQueries").getDocuments()
         try await deleteDocumentBatches(aiQueries.documents.map(\.reference))
@@ -103,7 +101,7 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     }
 
     func deleteUserDocument(userId: String) async throws {
-        try await db.collection("users").document(userId).delete()
+        try await Firestore.firestore().collection("users").document(userId).delete()
     }
 
     func deleteAuthUser(_ user: any AccountDeletionAuthUser) async throws {
@@ -137,7 +135,7 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
             itemCount: references.count,
             limit: batchWriteLimit
         ) {
-            let batch = db.batch()
+            let batch = Firestore.firestore().batch()
 
             for reference in references[range] {
                 operation(batch, reference)

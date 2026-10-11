@@ -78,13 +78,11 @@ protocol ContentReleaseServicing: ContentReleaseReading {
 final class ContentReleaseService: ContentReleaseServicing {
     // Computed, not stored: the service keeps no non-Sendable Firebase state, so it
     // is Sendable. The SDK returns the same cached instance on every call.
-    private var db: Firestore { Firestore.firestore() }
-    private var functions: Functions { Functions.europeWest1 }
 
     func listenToReleases(
         completion: @escaping (Result<[ContentRelease], Error>) -> Void
     ) -> any ListenerRegistration {
-        db.collection("contentReleases")
+        Firestore.firestore().collection("contentReleases")
             .order(by: "createdAt", descending: true)
             .addSnapshotListener { snapshot, error in
                 if let error {
@@ -101,7 +99,7 @@ final class ContentReleaseService: ContentReleaseServicing {
     }
 
     func fetchRelease(id: String) async throws -> ContentRelease? {
-        let snapshot = try await db.collection("contentReleases")
+        let snapshot = try await Firestore.firestore().collection("contentReleases")
             .document(id)
             .getDocument()
 
@@ -123,7 +121,7 @@ final class ContentReleaseService: ContentReleaseServicing {
 
         let result: HTTPSCallableResult
         do {
-            result = try await functions.httpsCallable("publishPendingContentRelease")
+            result = try await Functions.europeWest1.httpsCallable("publishPendingContentRelease")
                 .call(payload)
         } catch {
             throw mapPublishError(error)
@@ -142,7 +140,7 @@ final class ContentReleaseService: ContentReleaseServicing {
     ) async throws -> ContentReleaseNotificationSendResult {
         let result: HTTPSCallableResult
         do {
-            result = try await functions.httpsCallable("sendTestContentReleaseNotification")
+            result = try await Functions.europeWest1.httpsCallable("sendTestContentReleaseNotification")
                 .call([
                     "localizedTitle": localizedTitle,
                     "localizedBody": localizedBody,
@@ -164,7 +162,7 @@ final class ContentReleaseService: ContentReleaseServicing {
     }
 
     func fetchPendingCategories() async throws -> [Category] {
-        let snapshot = try await db.collection("categories")
+        let snapshot = try await Firestore.firestore().collection("categories")
             .whereField("isAnnounced", isEqualTo: false)
             .getDocuments()
 
@@ -182,7 +180,7 @@ final class ContentReleaseService: ContentReleaseServicing {
     }
 
     func fetchEligibleQuestions() async throws -> [Question] {
-        let snapshot = try await db.collection("questions")
+        let snapshot = try await Firestore.firestore().collection("questions")
             .whereField("source", isEqualTo: QuestionSource.seeded.rawValue)
             .whereField("isAnnounced", isEqualTo: false)
             .order(by: "createdAt", descending: true)
@@ -199,7 +197,7 @@ final class ContentReleaseService: ContentReleaseServicing {
 
         var questions: [Question] = []
         for chunk in uniqueIDs.chunked(into: 10) {
-            let snapshot = try await db.collection("questions")
+            let snapshot = try await Firestore.firestore().collection("questions")
                 .whereField(FieldPath.documentID(), in: chunk)
                 .getDocuments()
 

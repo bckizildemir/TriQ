@@ -37,7 +37,6 @@ enum UsernameServiceError: LocalizedError {
 final class UsernameService: Sendable {
   // Computed, not stored: the service keeps no non-Sendable Firebase state, so it
   // is Sendable. The SDK returns the same cached instance on every call.
-  private var functions: Functions { Functions.europeWest1 }
 
   func claimUsername(
     _ username: String,
@@ -53,7 +52,7 @@ final class UsernameService: Sendable {
     }
 
     do {
-      let result = try await functions.httpsCallable("claimUsername").call(payload)
+      let result = try await Functions.europeWest1.httpsCallable("claimUsername").call(payload)
       guard let data = result.data as? [String: Any],
         let claimedUsername = data["username"] as? String,
         let normalizedUsername = data["usernameNormalized"] as? String
@@ -72,7 +71,7 @@ final class UsernameService: Sendable {
 
   func resolveEmail(for username: String) async throws -> String {
     do {
-      let result = try await functions.httpsCallable("resolveUsername")
+      let result = try await Functions.europeWest1.httpsCallable("resolveUsername")
         .call(["username": username])
       guard let data = result.data as? [String: Any],
         let email = data["email"] as? String,
@@ -105,7 +104,7 @@ final class UsernameService: Sendable {
     }
 
     do {
-      _ = try await functions.httpsCallable("releaseUsername").call(payload)
+      _ = try await Functions.europeWest1.httpsCallable("releaseUsername").call(payload)
     } catch {
       // Best-effort cleanup for failed guest upgrade attempts.
     }

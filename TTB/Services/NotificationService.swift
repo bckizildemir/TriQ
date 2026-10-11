@@ -16,7 +16,6 @@ final class NotificationService: NSObject, ObservableObject {
     @Published private(set) var isSyncing = false
     @Published var presentedReleaseID: String?
 
-    private let db = Firestore.firestore()
     private let notificationCenter = UNUserNotificationCenter.current()
     private var authListener: AuthStateDidChangeListenerHandle?
     private var deviceListener: ListenerRegistration?
@@ -203,7 +202,7 @@ final class NotificationService: NSObject, ObservableObject {
     }
 
     private func deviceDocumentReference(userId: String) -> DocumentReference {
-        db.collection("users")
+        Firestore.firestore().collection("users")
             .document(userId)
             .collection("notificationDevices")
             .document(installationID)

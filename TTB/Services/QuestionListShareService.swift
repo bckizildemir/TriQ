@@ -5,7 +5,6 @@ import Foundation
 import os
 
 actor QuestionListShareService {
-    private lazy var db = Firestore.firestore()
     private static let listenerLogger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
         category: "QuestionListShareService")
@@ -89,7 +88,7 @@ actor QuestionListShareService {
         return error.localizedDescription
     }
 
-    /// Builds the registration from a `Firestore` fetched here, not the stored `db`, so it can leave
+    /// Builds the registration from a `Firestore` fetched here, not from actor state, so it can leave
     /// the actor as `sending` (see `FirestoreListenerHandle`).
     func setupOwnedSharesListener(
         userId: String,
@@ -166,7 +165,7 @@ actor QuestionListShareService {
     }
 
     func fetchShare(shareId: String) async throws -> QuestionListShare {
-        let snapshot = try await db.collection("questionListShares").document(shareId).getDocument()
+        let snapshot = try await Firestore.firestore().collection("questionListShares").document(shareId).getDocument()
         guard let data = snapshot.data(),
               let share = QuestionListShare.fromFirestore(data, id: snapshot.documentID)
         else {
@@ -176,7 +175,7 @@ actor QuestionListShareService {
     }
 
     func fetchRecipients(shareId: String) async throws -> [QuestionListShareRecipient] {
-        let snapshot = try await db.collection("questionListShares")
+        let snapshot = try await Firestore.firestore().collection("questionListShares")
             .document(shareId)
             .collection("recipients")
             .getDocuments()
@@ -197,7 +196,7 @@ actor QuestionListShareService {
     }
 
     func fetchRecipient(shareId: String, recipientId: String) async throws -> QuestionListShareRecipient {
-        let snapshot = try await db.collection("questionListShares")
+        let snapshot = try await Firestore.firestore().collection("questionListShares")
             .document(shareId)
             .collection("recipients")
             .document(recipientId)

@@ -3,7 +3,6 @@ import FirebaseFirestore
 import FirebaseAuth
 
 actor AnswerProgressService {
-    private let db = Firestore.firestore()
 
     /// In-memory set of questionIds the current user has fully completed this session.
     private var answeredQuestions: Set<String> = []
@@ -21,7 +20,7 @@ actor AnswerProgressService {
         }
 
         // Verify the current user's answer doc has 3 filled answers
-        let userAnswerDoc = try await db.collection("questions").document(questionId)
+        let userAnswerDoc = try await Firestore.firestore().collection("questions").document(questionId)
             .collection("userAnswers").document(userId).getDocument()
         guard let answers = userAnswerDoc.data()?["answers"] as? [String],
               answers.filter({ !$0.isEmpty }).count == 3 else {
@@ -36,7 +35,7 @@ actor AnswerProgressService {
     func wasQuestionAnswered(questionId: String) async throws -> Bool {
         guard let userId = Auth.auth().currentUser?.uid else { return false }
 
-        let userAnswerDoc = try await db.collection("questions").document(questionId)
+        let userAnswerDoc = try await Firestore.firestore().collection("questions").document(questionId)
             .collection("userAnswers").document(userId).getDocument()
         guard let answers = userAnswerDoc.data()?["answers"] as? [String] else {
             return false
@@ -48,7 +47,7 @@ actor AnswerProgressService {
     func loadAnsweredQuestions() async throws {
         guard let userId = Auth.auth().currentUser?.uid else { return }
 
-        let snapshot = try await db.collectionGroup("userAnswers")
+        let snapshot = try await Firestore.firestore().collectionGroup("userAnswers")
             .whereField("userId", isEqualTo: userId)
             .getDocuments()
 
