@@ -9,9 +9,6 @@ actor QuestionListShareService {
     private static let listenerLogger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
         category: "QuestionListShareService")
-    private let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
-        category: "QuestionListShareService")
 
     enum ShareError: LocalizedError {
         case invalidResponse
