@@ -257,6 +257,7 @@ final class InMemoryQuestionListShareServiceTests: XCTestCase {
 func XCTAssertThrowsErrorAsync<T>(
     _ expression: @autoclosure () async throws -> T,
     _ errorHandler: (Error) -> Void = { _ in },
+    isolation: isolated (any Actor)? = #isolation,
     file: StaticString = #filePath,
     line: UInt = #line
 ) async {
