@@ -2,7 +2,6 @@ import FirebaseFirestore
 import Foundation
 
 actor OnboardingStateStore {
-
   func hasCompletedCurrentOnboarding(for userId: String) async throws -> Bool {
     let snapshot = try await Firestore.firestore().collection("users").document(userId).getDocument()
     let data = snapshot.data() ?? [:]

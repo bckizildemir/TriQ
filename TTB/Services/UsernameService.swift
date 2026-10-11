@@ -35,9 +35,6 @@ enum UsernameServiceError: LocalizedError {
 }
 
 final class UsernameService: Sendable {
-  // Computed, not stored: the service keeps no non-Sendable Firebase state, so it
-  // is Sendable. The SDK returns the same cached instance on every call.
-
   func claimUsername(
     _ username: String,
     email: String? = nil,

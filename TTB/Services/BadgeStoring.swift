@@ -42,7 +42,6 @@ protocol BadgeStoring: Sendable {
 /// this struct being `Sendable`. `Firestore.firestore()` returns the same cached default instance
 /// on every call.
 struct LiveBadgeStore: BadgeStoring {
-
     func getUserDocument(userId: String) async throws -> (exists: Bool, data: [String: Any]) {
         let snapshot = try await Firestore.firestore().collection("users").document(userId).getDocument()
         return (snapshot.exists, snapshot.data() ?? [:])

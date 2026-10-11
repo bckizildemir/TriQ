@@ -3,7 +3,6 @@ import FirebaseFirestore
 import FirebaseAuth
 
 actor AnswerProgressService {
-
     /// In-memory set of questionIds the current user has fully completed this session.
     private var answeredQuestions: Set<String> = []
 

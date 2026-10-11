@@ -7,9 +7,6 @@ protocol CategoryReading: Sendable {
 }
 
 final class CategoryService {
-    // Computed, not stored: the service keeps no non-Sendable Firebase state, so it
-    // is Sendable. The SDK returns the same cached instance on every call.
-
     func listenToCategories(
         completion: @escaping (Result<[Category], Error>) -> Void
     ) -> ListenerRegistration {

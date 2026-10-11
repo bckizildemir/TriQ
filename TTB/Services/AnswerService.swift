@@ -2,7 +2,6 @@ import Foundation
 import FirebaseFirestore
 
 actor AnswerService {
-
     func getAnswerStatistics() async throws -> AnswerStatistics {
         let snapshot = try await Firestore.firestore().collection("questions").getDocuments()
         let questions = snapshot.documents.compactMap { Question.fromFirestore($0.data(), id: $0.documentID) }

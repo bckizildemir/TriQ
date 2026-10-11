@@ -76,7 +76,8 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     func removeFavorites(userId: String, questionIds: [String]) async throws {
         guard !questionIds.isEmpty else { return }
 
-        let references = questionIds.map { Firestore.firestore().collection("questions").document($0) }
+        let questions = Firestore.firestore().collection("questions")
+        let references = questionIds.map { questions.document($0) }
         try await updateDocumentBatches(references) { batch, reference in
             batch.updateData([
                 "favoriteUserIds": FieldValue.arrayRemove([userId])
