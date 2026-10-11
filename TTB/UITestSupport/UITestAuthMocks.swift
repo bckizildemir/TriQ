@@ -20,7 +20,7 @@ final class UITestAuthUser: AuthModelUser {
         self.email = email
     }
 
-    func deleteAsync() async throws {}
+    nonisolated(nonsending) func deleteAsync() async throws {}
 
     func linkAccount(with credential: AuthCredential) async throws -> AuthModelUser {
         _ = credential
