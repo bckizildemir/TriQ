@@ -39,7 +39,7 @@ Scripts/xcb.sh test                                                     # full s
 - Use the first command for day-to-day development in Xcode.
 - Agents build and test through `Scripts/xcb.sh`, never a bare `xcodebuild`. The script holds a machine-wide lock, so builds from every worktree and from CatCareCalendar queue one at a time on this 16GB Mac; it shares one DerivedData and package checkout across worktrees, so Firebase compiles once. A run can wait minutes for the lock: give it a long Bash timeout or run it in the background. `Scripts/xcb.sh --help` lists the options.
 - Two schemes. `TTBTests` is the inner loop: it builds the app and the unit test bundle only and skips the UI test target. `TTB` is the full run with unit and UI tests. Test the changed area with `--scheme TTBTests --only`; run the full `TTB` scheme once, before the PR. Neither scheme collects code coverage.
-- A new worktree has no `TTB/Secrets.xcconfig` (gitignored), and the build fails at once without it. Copy `TTB/Secrets.xcconfig.template` to it before the first `Scripts/xcb.sh` run; never commit it.
+- A new worktree has no `TTB/Secrets.xcconfig` (gitignored), and the build fails at once without it. Copy `TTB/Secrets.xcconfig.template` to `TTB/Secrets.xcconfig` before the first `Scripts/xcb.sh` run. Do not commit `TTB/Secrets.xcconfig`.
 - The baseline simulator is iPhone 12 on iOS 26.5; the script shuts down any other booted simulator before a test.
 - To see a change in the app, build with the script, then install and launch the `.app` path it prints with xcodebuildmcp (`install_app_sim`, `launch_app_sim`). xcodebuildmcp's own `build_*`/`test_*` tools bypass the lock.
 - `Scripts/xcb.sh` is shared with CatCareCalendar; keep the two copies identical.
@@ -100,6 +100,6 @@ The five canonical triage roles, each label string equal to its name (`needs-tri
 Single-context — root `CONTEXT.md` plus `docs/adr/`. See `docs/agents/domain.md`.
 
 ## Security & Configuration Tips
-- Copy `TTB/Secrets.xcconfig.template` to `TTB/Secrets.xcconfig` and fill real keys locally.
+- `TTB/Secrets.xcconfig` holds non-secret client configuration (see the template); the copy step is in the build section above.
 - Never commit secrets or service account files (for example `Scripts/seed_questions/serviceAccountKey.json`).
 - Confirm active Firebase project before running deploy/seed commands.
