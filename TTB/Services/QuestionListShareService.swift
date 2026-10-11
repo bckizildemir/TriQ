@@ -6,7 +6,6 @@ import os
 
 actor QuestionListShareService {
     private lazy var db = Firestore.firestore()
-    private lazy var functions = Functions.functions(region: "europe-west1")
     private static let listenerLogger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
         category: "QuestionListShareService")
@@ -219,7 +218,7 @@ actor QuestionListShareService {
     }
 
     func createShare(listId: String, includeOwnerAnswers: Bool) async throws -> QuestionListShareCreationResult {
-        let result = try await functions.httpsCallable("createQuestionListShare").call([
+        let result = try await Functions.functions(region: "europe-west1").httpsCallable("createQuestionListShare").call([
             "listId": listId,
             "includeOwnerAnswers": includeOwnerAnswers,
         ])
@@ -227,7 +226,7 @@ actor QuestionListShareService {
     }
 
     func previewShare(shareCode: String) async throws -> QuestionListSharePreview {
-        let result = try await functions.httpsCallable("previewQuestionListShare").call([
+        let result = try await Functions.functions(region: "europe-west1").httpsCallable("previewQuestionListShare").call([
             "shareCode": shareCode,
         ])
         guard let data = result.data as? [String: Any],
@@ -260,7 +259,7 @@ actor QuestionListShareService {
     // Ignores `actingAs`: Firebase Auth alone determines who's accepting server-side.
     @discardableResult
     func acceptShare(shareCode: String, actingAs _: String) async throws -> String {
-        let result = try await functions.httpsCallable("acceptQuestionListShare").call([
+        let result = try await Functions.functions(region: "europe-west1").httpsCallable("acceptQuestionListShare").call([
             "shareCode": shareCode,
         ])
         guard let data = result.data as? [String: Any],
@@ -272,38 +271,38 @@ actor QuestionListShareService {
     }
 
     func disableShare(shareId: String) async throws {
-        _ = try await functions.httpsCallable("disableQuestionListShare").call([
+        _ = try await Functions.functions(region: "europe-west1").httpsCallable("disableQuestionListShare").call([
             "shareId": shareId,
         ])
     }
 
     func regenerateLink(shareId: String) async throws -> QuestionListShareCreationResult {
-        let result = try await functions.httpsCallable("regenerateQuestionListShareLink").call([
+        let result = try await Functions.functions(region: "europe-west1").httpsCallable("regenerateQuestionListShareLink").call([
             "shareId": shareId,
         ])
         return try Self.creationResult(from: result.data)
     }
 
     func revokeShare(shareId: String) async throws {
-        _ = try await functions.httpsCallable("revokeQuestionListShare").call([
+        _ = try await Functions.functions(region: "europe-west1").httpsCallable("revokeQuestionListShare").call([
             "shareId": shareId,
         ])
     }
 
     func leaveShare(shareId: String) async throws {
-        _ = try await functions.httpsCallable("leaveQuestionListShare").call([
+        _ = try await Functions.functions(region: "europe-west1").httpsCallable("leaveQuestionListShare").call([
             "shareId": shareId,
         ])
     }
 
     func sendReply(shareId: String) async throws {
-        _ = try await functions.httpsCallable("sendQuestionListShareReply").call([
+        _ = try await Functions.functions(region: "europe-west1").httpsCallable("sendQuestionListShareReply").call([
             "shareId": shareId,
         ])
     }
 
     func markReplySeen(shareId: String, recipientId: String) async throws {
-        _ = try await functions.httpsCallable("markQuestionListShareReplySeen").call([
+        _ = try await Functions.functions(region: "europe-west1").httpsCallable("markQuestionListShareReplySeen").call([
             "shareId": shareId,
             "recipientId": recipientId,
         ])
