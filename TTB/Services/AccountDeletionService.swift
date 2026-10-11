@@ -71,8 +71,15 @@ actor AccountDeletionService {
         }
     }
 
-    static func reauthenticatePermanentUser(user: User, password: String?) async throws {
-        try validatePermanentUserReauthentication(user: user, password: password)
+    nonisolated(nonsending) static func reauthenticatePermanentUser(user: User, password: String?) async throws {
+        try validatePermanentUserReauthentication(
+            user: AccountDeletionUserSnapshot(
+                uid: user.uid,
+                isAnonymous: user.isAnonymous,
+                email: user.email
+            ),
+            password: password
+        )
 
         let email = user.email ?? ""
         let trimmedPassword = password?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
