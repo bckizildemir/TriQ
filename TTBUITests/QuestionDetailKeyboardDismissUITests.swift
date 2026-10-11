@@ -2,14 +2,18 @@ import XCTest
 
 /// A tap outside the answer fields on the question detail screen must close the keyboard. The
 /// screen only closed it on a scroll drag, so a tap on the question title left it open.
-final class QuestionDetailKeyboardDismissUITests: XCTestCase {
+// nonisolated keeps the inherited XCTestCase initializers nonisolated; the tests run in the @MainActor extension below.
+nonisolated final class QuestionDetailKeyboardDismissUITests: XCTestCase {
     private let harnessArgument = "-ui-test-home-harness"
     private let firstQuestionCardID = "question-card-home.today-home-question-1"
 
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
+}
 
+@MainActor
+extension QuestionDetailKeyboardDismissUITests {
     func testTapOutsideAnswerFieldDismissesKeyboard() {
         let app = XCUIApplication()
         app.launchArguments += [
