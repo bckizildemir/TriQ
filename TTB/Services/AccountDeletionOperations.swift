@@ -110,10 +110,19 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     }
 
     private func currentFirebaseUser(matching snapshot: any AccountDeletionAuthUser) throws -> User {
-        guard let firebaseUser = Auth.auth().currentUser, firebaseUser.uid == snapshot.uid else {
+        let firebaseUser = Auth.auth().currentUser
+        try Self.requireSameUser(currentUserID: firebaseUser?.uid, expectedUserID: snapshot.uid)
+        guard let firebaseUser else { throw AccountDeletionError.unauthenticated }
+        return firebaseUser
+    }
+
+    /// Fails unless the signed-in user is the one the caller read earlier (TriQ#17): the live `User`
+    /// is looked up again here, and the account may have changed in between. Pure, so a test needs
+    /// no Firebase.
+    static func requireSameUser(currentUserID: String?, expectedUserID: String) throws {
+        guard let currentUserID, currentUserID == expectedUserID else {
             throw AccountDeletionError.unauthenticated
         }
-        return firebaseUser
     }
 
     private func updateDocumentBatches(
