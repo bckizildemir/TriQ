@@ -13252,6 +13252,23 @@
         }
       }
     },
+    "toast.listShared" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "List shared"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liste paylaşıldı"
+          }
+        }
+      }
+    },
     "TTB" : {
 
     },

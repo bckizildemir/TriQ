@@ -170,6 +170,7 @@ struct QuestionListShareSheet: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var authModel: AuthModel
     @EnvironmentObject private var sharedQuestionListStore: SharedQuestionListStore
+    @Environment(\.toastCenter) private var toastCenter
 
     let list: QuestionList
 
@@ -226,7 +227,12 @@ struct QuestionListShareSheet: View {
                     .disabled(isCreating)
                     .accessibilityLabel("Share List")
                     .accessibilityIdentifier("question-list-share-toolbar-share-button")
-                    .background(QuestionListShareActivityAnchor(payload: $activityPayload))
+                    .background(
+                        QuestionListShareActivityAnchor(
+                            payload: $activityPayload,
+                            onFinish: activityDidFinish
+                        )
+                    )
                 }
             }
         }
@@ -258,15 +264,30 @@ struct QuestionListShareSheet: View {
                     url: creationResult.shareURL
                 )
             } catch {
-                errorMessage = QuestionListShareService.userFacingMessage(for: error)
+                let message = QuestionListShareService.userFacingMessage(for: error)
+                errorMessage = message
+                toastCenter.showError(
+                    message,
+                    accessibilityIdentifier: "question-list-share-error-toast"
+                )
             }
             isCreating = false
         }
+    }
+
+    /// A cancelled activity sheet raises no toast: nothing was shared.
+    private func activityDidFinish(completed: Bool) {
+        guard completed else { return }
+        toastCenter.showSuccess(
+            title: String(localized: "toast.listShared"),
+            accessibilityIdentifier: "question-list-share-toast"
+        )
     }
 }
 
 private struct QuestionListShareActivityAnchor: UIViewRepresentable {
     @Binding var payload: QuestionListShareActivityPayload?
+    let onFinish: (Bool) -> Void
 
     func makeUIView(context: Context) -> UIView {
         let view = UIView(frame: .zero)
@@ -277,20 +298,23 @@ private struct QuestionListShareActivityAnchor: UIViewRepresentable {
 
     func updateUIView(_ uiView: UIView, context: Context) {
         context.coordinator.payload = $payload
+        context.coordinator.onFinish = onFinish
         context.coordinator.presentIfNeeded(from: uiView)
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(payload: $payload)
+        Coordinator(payload: $payload, onFinish: onFinish)
     }
 
     @MainActor
     final class Coordinator {
         var payload: Binding<QuestionListShareActivityPayload?>
+        var onFinish: (Bool) -> Void
         private var presentedPayloadID: String?
 
-        init(payload: Binding<QuestionListShareActivityPayload?>) {
+        init(payload: Binding<QuestionListShareActivityPayload?>, onFinish: @escaping (Bool) -> Void) {
             self.payload = payload
+            self.onFinish = onFinish
         }
 
         func presentIfNeeded(from sourceView: UIView) {
@@ -309,13 +333,14 @@ private struct QuestionListShareActivityAnchor: UIViewRepresentable {
             controller.popoverPresentationController?.sourceView = sourceView
             controller.popoverPresentationController?.sourceRect = sourceView.bounds
             let payloadID = payload.id
-            controller.completionWithItemsHandler = { [weak self] _, _, _, _ in
+            controller.completionWithItemsHandler = { [weak self] _, completed, _, _ in
                 Task { @MainActor in
                     guard let self else { return }
                     if self.payload.wrappedValue?.id == payloadID {
                         self.payload.wrappedValue = nil
                     }
                     self.presentedPayloadID = nil
+                    self.onFinish(completed)
                 }
             }
 
