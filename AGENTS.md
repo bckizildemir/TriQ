@@ -61,6 +61,8 @@ bash Scripts/check_model_usage.sh Question
 ## Testing Guidelines
 Testing rules load from `.claude/rules/testing.md` when you work in `Tests/` or `TTBUITests/`. Read them before you write a test.
 
+CI (`.github/workflows/ci.yml`) builds once with `build-for-testing` on scheme `TTB`, then runs the `TTBTests` unit tests with `test-without-building` and uploads `TestResults.xcresult` after the build step runs, pass or fail. It skips the iOS job for docs-only changes (`Documentation/`, `docs/`, `.claude/`, and Markdown in the repo root or `Scripts/`) and runs the `functions` job only for `functions/`, the Firestore and Storage rules, `firestore.indexes.json`, or `firebase.json`. The Release device build runs on push to `main` only. CI does not run UI tests.
+
 Before you add or edit a live Firebase adapter — a type that calls the Firebase SDK — read `.claude/skills/ttb-live-adapter-tests/SKILL.md`.
 
 ## Commit & Pull Request Guidelines
