@@ -427,7 +427,7 @@ actor QuestionService {
 
     // MARK: - Listeners
     //
-    // Each listener fetches `Firestore` in the method (see `Functions.europeWest1`). A registration
+    // Each listener fetches `Firestore` in the method (see `docs/agents/firebase-objects.md`). A registration
     // built from a fresh `Firestore` can be sent into the `Sendable` `FirestoreListenerHandle`; one
     // built from actor state could not. Each Firebase closure only forwards raw values to a
     // `deliver…` function, which a test runs without Firebase.
