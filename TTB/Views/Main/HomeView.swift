@@ -8,7 +8,6 @@ struct HomeView: View {
     @EnvironmentObject private var model: QuestionModel
     @EnvironmentObject private var badgeModel: BadgeModel
     private let isPreviewFixture: Bool
-    private let profileViewBuilder: (() -> ProfileView)?
     @State private var presentedQuestion: ExpandedQuestionState?
     @State private var showingProfileSheet = false
     @State private var navigationPath: [HomeRoute] = []
@@ -17,13 +16,8 @@ struct HomeView: View {
         case acceptedQuestionListShareDetail(String)
     }
 
-    @MainActor
-    init(
-        isPreviewFixture: Bool = false,
-        profileViewBuilder: (() -> ProfileView)? = nil
-    ) {
+    init(isPreviewFixture: Bool = false) {
         self.isPreviewFixture = isPreviewFixture
-        self.profileViewBuilder = profileViewBuilder
     }
 
     private var homeCategories: [Category] {
@@ -127,11 +121,8 @@ struct HomeView: View {
                     Color.clear.frame(height: 0)
                 }
                 .fullScreenCover(isPresented: $showingProfileSheet) {
-                    if let profileViewBuilder {
-                        profileViewBuilder()
-                    } else {
-                        ProfileView()
-                    }
+                    // The shared model, not a new one: the toolbar avatar reads it (#70).
+                    ProfileView(model: profileModel)
                 }
                 .navigationDestination(for: HomeRoute.self) { route in
                     switch route {

@@ -43,12 +43,13 @@ enum ImageServiceError: LocalizedError {
 actor ImageService {
     static let shared = ImageService()
 
-    // In-memory cache keyed by storage path
+    // In-memory cache keyed by download URL
     private let cache = NSCache<NSString, UIImage>()
     // Deduplicate concurrent uploads targeting the same storage path.
     private var inFlightUploads: [String: Task<String, Error>] = [:]
 
-    private init() {
+    /// Internal, not private, so a test can build a fresh instance with an empty cache.
+    init() {
         cache.countLimit = 60
         cache.totalCostLimit = 60 * 1024 * 1024 // 60MB
     }
@@ -208,9 +209,17 @@ actor ImageService {
         defer { inFlightUploads.removeValue(forKey: path) }
 
         let url = try await uploadTask.value
-        // Cache what was actually uploaded, not the larger original the caller handed in.
-        cacheImage(Self.resizeIfNeeded(image, maxDimension: Self.uploadMaxDimension), for: path)
+        storeUploadedImage(image, downloadURL: url)
         return url
+    }
+
+    /// Caches what was actually uploaded, not the larger original the caller handed in.
+    ///
+    /// The key is the download URL, the key `loadProfileImage(from:)` reads. A fixed path such as
+    /// `profiles/<uid>/profile.jpg` keeps its URL across uploads, so an entry keyed by path left
+    /// the old photo under the URL key, and the next load by URL returned it (#70).
+    func storeUploadedImage(_ image: UIImage, downloadURL: String) {
+        cacheImage(Self.resizeIfNeeded(image, maxDimension: Self.uploadMaxDimension), for: downloadURL)
     }
 
     /// Longest-edge cap applied to every upload.

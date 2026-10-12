@@ -73,6 +73,27 @@ extension HomeProfileQuestionListSheetUITests {
         XCTAssertTrue(app.buttons["Done"].exists)
     }
 
+    /// Home and the profile screen it opens must share one `ProfileModel`; a second instance kept
+    /// the Home avatar on the old photo after an edit (#70). The harness model's username is the proof.
+    func testProfileOpenedFromHomeShowsTheSharedProfileModel() {
+        let app = XCUIApplication()
+        app.launchArguments += [
+            "-ui-test-home-profile-question-list-harness",
+            "-AppleLanguages",
+            "(en)",
+            "-AppleLocale",
+            "en_US",
+        ]
+        app.launch()
+
+        let profileButton = app.buttons["Profile"]
+        XCTAssertTrue(profileButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitUntil(timeout: 5) { profileButton.isHittable })
+        profileButton.tap()
+
+        XCTAssertTrue(app.staticTexts["Home Profile Harness"].waitForExistence(timeout: 5))
+    }
+
     private func waitUntil(timeout: TimeInterval, condition: @escaping () -> Bool) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
