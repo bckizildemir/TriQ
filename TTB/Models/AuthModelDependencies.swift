@@ -14,25 +14,13 @@ protocol AuthModelUser: AnyObject {
     var email: String? { get }
     nonisolated(nonsending) func deleteAsync() async throws
     func linkAccount(with credential: AuthCredential) async throws -> AuthModelUser
-    func forceRefreshIDToken() async throws
+    nonisolated(nonsending) func forceRefreshIDToken() async throws
 }
 
 extension User: AuthModelUser {
     func linkAccount(with credential: AuthCredential) async throws -> AuthModelUser {
         let result = try await link(with: credential)
         return result.user
-    }
-
-    func forceRefreshIDToken() async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            getIDTokenForcingRefresh(true) { _, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: ())
-                }
-            }
-        }
     }
 }
 

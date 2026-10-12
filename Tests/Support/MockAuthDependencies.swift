@@ -27,7 +27,7 @@ final class MockAuthUser: AuthModelUser {
         return MockAuthUser(uid: uid, isAnonymous: false, email: email)
     }
 
-    func forceRefreshIDToken() async throws {}
+    nonisolated(nonsending) func forceRefreshIDToken() async throws {}
 }
 
 final class MockAuthProvider: AuthModelAuthProviding {
