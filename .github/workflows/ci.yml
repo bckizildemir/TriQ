@@ -11,7 +11,7 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   changes:
@@ -28,6 +28,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # A skipped job reports as skipped, which a required check accepts as passing.
+      # Markdown under TTB/, Tests/ and TTBUITests/ can join the app as a bundle resource, so only root and Scripts/ Markdown is excluded.
       # "every" makes the "!" patterns exclude files: a file counts only if it matches all of them.
       - uses: dorny/paths-filter@v3
         id: ios
@@ -38,7 +39,8 @@ jobs:
               - '**'
               - '!Documentation/**'
               - '!docs/**'
-              - '!**/*.md'
+              - '!*.md'
+              - '!Scripts/**/*.md'
               - '!.claude/**'
 
       - uses: dorny/paths-filter@v3
@@ -109,7 +111,7 @@ jobs:
             -skipMacroValidation \
             CODE_SIGNING_ALLOWED=NO \
             > test.log 2>&1 || { grep -E 'error:|failed|Failing tests' test.log | head -80; exit 1; }
-          grep -E 'Executed|Test run with|TEST EXECUTE SUCCEEDED|TEST SUCCEEDED' test.log | tail -n 5
+          grep -E 'Executed|Test run with|TEST EXECUTE SUCCEEDED|TEST SUCCEEDED' test.log | tail -n 5 || true
 
       - name: Upload test results
         if: always()
