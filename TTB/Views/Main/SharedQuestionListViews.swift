@@ -287,7 +287,7 @@ struct QuestionListShareSheet: View {
 
 private struct QuestionListShareActivityAnchor: UIViewRepresentable {
     @Binding var payload: QuestionListShareActivityPayload?
-    let onFinish: (Bool) -> Void
+    let onFinish: @MainActor (Bool) -> Void
 
     func makeUIView(context: Context) -> UIView {
         let view = UIView(frame: .zero)
@@ -309,10 +309,10 @@ private struct QuestionListShareActivityAnchor: UIViewRepresentable {
     @MainActor
     final class Coordinator {
         var payload: Binding<QuestionListShareActivityPayload?>
-        var onFinish: (Bool) -> Void
+        var onFinish: @MainActor (Bool) -> Void
         private var presentedPayloadID: String?
 
-        init(payload: Binding<QuestionListShareActivityPayload?>, onFinish: @escaping (Bool) -> Void) {
+        init(payload: Binding<QuestionListShareActivityPayload?>, onFinish: @escaping @MainActor (Bool) -> Void) {
             self.payload = payload
             self.onFinish = onFinish
         }
