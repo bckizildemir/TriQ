@@ -101,6 +101,10 @@ The five canonical triage roles, each label string equal to its name (`needs-tri
 
 Single-context — root `CONTEXT.md` plus `docs/adr/`. See `docs/agents/domain.md`.
 
+## Firebase objects
+
+Fetch a Firebase object (`Firestore.firestore()`, `Functions.europeWest1`, `Storage.storage()`) inside the method that uses it, in every Swift file under `TTB/`. Do not store it. See `docs/agents/firebase-objects.md`.
+
 ## Security & Configuration Tips
 - `TTB/Secrets.xcconfig` holds non-secret client configuration (see the template); the copy step is in the build section above.
 - Never commit secrets or service account files (for example `Scripts/seed_questions/serviceAccountKey.json`).
