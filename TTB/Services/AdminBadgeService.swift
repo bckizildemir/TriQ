@@ -35,22 +35,19 @@ struct AdminBadgeSeedDefinition: Decodable {
 
 @MainActor
 final class AdminBadgeService {
-    private let db: Firestore
     private let decoder: JSONDecoder
     private let bundle: Bundle
 
     init(
-        db: Firestore = Firestore.firestore(),
         decoder: JSONDecoder = JSONDecoder(),
         bundle: Bundle = .main
     ) {
-        self.db = db
         self.decoder = decoder
         self.bundle = bundle
     }
 
     func loadBadges() async throws -> [Badge] {
-        let snapshot = try await db.collection("badges").getDocuments()
+        let snapshot = try await Firestore.firestore().collection("badges").getDocuments()
 
         return snapshot.documents
             .compactMap { Badge.fromFirestore($0.data(), id: $0.documentID) }
@@ -60,14 +57,15 @@ final class AdminBadgeService {
     }
 
     func saveBadge(_ badge: Badge) async throws {
-        try await db.collection("badges").document(badge.id).setData(badge.toFirestore())
+        try await Firestore.firestore().collection("badges").document(badge.id).setData(badge.toFirestore())
     }
 
     func deleteBadge(id: String) async throws {
-        try await db.collection("badges").document(id).delete()
+        try await Firestore.firestore().collection("badges").document(id).delete()
     }
 
     func restoreDefaultBadges() async throws -> Int {
+        let db = Firestore.firestore()
         let snapshot = try await db.collection("badges").getDocuments()
         let existingIDs = Set(snapshot.documents.map(\.documentID))
         let missingBadges = try Self.restorableBadges(

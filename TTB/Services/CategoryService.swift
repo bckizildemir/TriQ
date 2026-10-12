@@ -7,14 +7,10 @@ protocol CategoryReading: Sendable {
 }
 
 final class CategoryService {
-    // Computed, not stored: the service keeps no non-Sendable Firebase state, so it
-    // is Sendable. The SDK returns the same cached instance on every call.
-    private var db: Firestore { Firestore.firestore() }
-
     func listenToCategories(
         completion: @escaping (Result<[Category], Error>) -> Void
     ) -> ListenerRegistration {
-        db.collection("categories")
+        Firestore.firestore().collection("categories")
             .order(by: "sortOrder")
             .addSnapshotListener { snapshot, error in
                 if let error {
@@ -31,7 +27,7 @@ final class CategoryService {
     }
 
     func fetchCategories() async throws -> [Category] {
-        let snapshot = try await db.collection("categories")
+        let snapshot = try await Firestore.firestore().collection("categories")
             .order(by: "sortOrder")
             .getDocuments()
 
@@ -41,18 +37,19 @@ final class CategoryService {
     }
 
     func saveCategory(_ category: Category) async throws {
-        try await db.collection("categories")
+        try await Firestore.firestore().collection("categories")
             .document(category.id)
             .setData(category.toFirestore(), merge: true)
     }
 
     func deleteCategory(id: String) async throws {
-        try await db.collection("categories")
+        try await Firestore.firestore().collection("categories")
             .document(id)
             .delete()
     }
 
     func seedDefaultCategoriesIfNeeded(createdBy: String?) async throws {
+        let db = Firestore.firestore()
         let batch = db.batch()
         var hasWork = false
 
@@ -103,7 +100,7 @@ final class CategoryService {
 
         var categories: [Category] = []
         for chunk in uniqueIDs.chunked(into: 10) {
-            let snapshot = try await db.collection("categories")
+            let snapshot = try await Firestore.firestore().collection("categories")
                 .whereField(FieldPath.documentID(), in: chunk)
                 .getDocuments()
 

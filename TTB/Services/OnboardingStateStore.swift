@@ -2,10 +2,8 @@ import FirebaseFirestore
 import Foundation
 
 actor OnboardingStateStore {
-  private let db = Firestore.firestore()
-
   func hasCompletedCurrentOnboarding(for userId: String) async throws -> Bool {
-    let snapshot = try await db.collection("users").document(userId).getDocument()
+    let snapshot = try await Firestore.firestore().collection("users").document(userId).getDocument()
     let data = snapshot.data() ?? [:]
 
     let storedOnboardingVersion = data["onboardingVersion"] as? Int ?? 0
@@ -18,7 +16,7 @@ actor OnboardingStateStore {
   }
 
   func completeCurrentOnboarding(for userId: String) async throws {
-    try await db.collection("users").document(userId).setData(
+    try await Firestore.firestore().collection("users").document(userId).setData(
       [
         "onboardingVersion": AppConfig.onboardingVersion,
         "onboardingCompletedAt": FieldValue.serverTimestamp(),
