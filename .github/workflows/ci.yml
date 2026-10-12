@@ -4,14 +4,54 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      ios: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios == 'true' }}
+      functions: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.functions == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # A skipped job reports as skipped, which a required check accepts as passing.
+      # "every" makes the "!" patterns exclude files: a file counts only if it matches all of them.
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          predicate-quantifier: every
+          filters: |
+            ios:
+              - '**'
+              - '!Documentation/**'
+              - '!docs/**'
+              - '!**/*.md'
+              - '!.claude/**'
+            functions:
+              - 'functions/**'
+              - 'firestore.rules'
+              - 'storage.rules'
+              - 'firestore.indexes.json'
+              - 'firebase.json'
+              - '.github/workflows/ci.yml'
+
   build:
     name: Build app and tests
+    needs: changes
+    if: needs.changes.outputs.ios == 'true'
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -31,12 +71,19 @@ jobs:
           path: ~/Library/Caches/ci-spm
           key: spm-${{ hashFiles('TTB.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
 
+      - name: Pick a simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for r in sorted(d, reverse=True) if "iOS" in r for x in d[r] if x["name"].startswith("iPhone")))')
+          echo "Simulator: $UDID"
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+
+      # Scheme TTB also compiles the UI test target. The test step reuses these products.
       - name: Build app and test targets
         run: |
           xcodebuild build-for-testing \
             -project TTB.xcodeproj \
             -scheme TTB \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination "id=$SIM_UDID" \
             -clonedSourcePackagesDirPath ~/Library/Caches/ci-spm \
             -skipPackagePluginValidation \
             -skipMacroValidation \
@@ -46,22 +93,32 @@ jobs:
 
       - name: Run unit tests
         run: |
-          UDID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for r in sorted(d, reverse=True) if "iOS" in r for x in d[r] if x["name"].startswith("iPhone")))')
-          echo "Simulator: $UDID"
-          xcodebuild test \
+          xcodebuild test-without-building \
             -project TTB.xcodeproj \
-            -scheme TTBTests \
-            -destination "id=$UDID" \
+            -scheme TTB \
+            -only-testing:TTBTests \
+            -destination "id=$SIM_UDID" \
+            -resultBundlePath TestResults.xcresult \
             -clonedSourcePackagesDirPath ~/Library/Caches/ci-spm \
             -skipPackagePluginValidation \
             -skipMacroValidation \
             CODE_SIGNING_ALLOWED=NO \
             > test.log 2>&1 || { grep -E 'error:|failed|Failing tests' test.log | head -80; exit 1; }
-          grep -E 'Executed|Test run with|TEST SUCCEEDED' test.log | tail -n 5
+          grep -E 'Executed|Test run with|TEST EXECUTE SUCCEEDED|TEST SUCCEEDED' test.log | tail -n 5
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xcresult
+          if-no-files-found: ignore
 
       # The archive for TestFlight builds Release for a device. Debug-only code (#if DEBUG) that
       # Release code still calls compiles in the steps above and fails only here.
+      # It runs on main only; a pull request skips it.
       - name: Build Release for device
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           xcodebuild build \
             -project TTB.xcodeproj \
@@ -88,6 +145,8 @@ jobs:
 
   functions:
     name: Functions and security rules tests
+    needs: changes
+    if: needs.changes.outputs.functions == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
