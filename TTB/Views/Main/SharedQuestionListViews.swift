@@ -275,19 +275,34 @@ struct QuestionListShareSheet: View {
         }
     }
 
-    /// A cancelled activity sheet raises no toast: nothing was shared.
-    private func activityDidFinish(completed: Bool) {
-        guard completed else { return }
-        toastCenter.showSuccess(
-            title: String(localized: "toast.listShared"),
-            accessibilityIdentifier: "question-list-share-toast"
-        )
+    /// A cancelled activity sheet raises no toast: nothing was shared. Copy has its own toast.
+    private func activityDidFinish(_ outcome: QuestionListShareActivityAnchor.Outcome) {
+        switch outcome {
+        case .cancelled:
+            break
+        case .copied:
+            toastCenter.showSuccess(
+                title: String(localized: "toast.copied"),
+                accessibilityIdentifier: "question-list-copy-link-toast"
+            )
+        case .shared:
+            toastCenter.showSuccess(
+                title: String(localized: "toast.listShared"),
+                accessibilityIdentifier: "question-list-share-toast"
+            )
+        }
     }
 }
 
 private struct QuestionListShareActivityAnchor: UIViewRepresentable {
     @Binding var payload: QuestionListShareActivityPayload?
-    let onFinish: @MainActor (Bool) -> Void
+    let onFinish: @MainActor (Outcome) -> Void
+
+    enum Outcome {
+        case cancelled
+        case copied
+        case shared
+    }
 
     func makeUIView(context: Context) -> UIView {
         let view = UIView(frame: .zero)
@@ -309,10 +324,10 @@ private struct QuestionListShareActivityAnchor: UIViewRepresentable {
     @MainActor
     final class Coordinator {
         var payload: Binding<QuestionListShareActivityPayload?>
-        var onFinish: @MainActor (Bool) -> Void
+        var onFinish: @MainActor (Outcome) -> Void
         private var presentedPayloadID: String?
 
-        init(payload: Binding<QuestionListShareActivityPayload?>, onFinish: @escaping @MainActor (Bool) -> Void) {
+        init(payload: Binding<QuestionListShareActivityPayload?>, onFinish: @escaping @MainActor (Outcome) -> Void) {
             self.payload = payload
             self.onFinish = onFinish
         }
@@ -333,14 +348,21 @@ private struct QuestionListShareActivityAnchor: UIViewRepresentable {
             controller.popoverPresentationController?.sourceView = sourceView
             controller.popoverPresentationController?.sourceRect = sourceView.bounds
             let payloadID = payload.id
-            controller.completionWithItemsHandler = { [weak self] _, completed, _, _ in
+            controller.completionWithItemsHandler = { [weak self] activityType, completed, _, _ in
+                let outcome: Outcome = if !completed {
+                    .cancelled
+                } else if activityType == .copyToPasteboard {
+                    .copied
+                } else {
+                    .shared
+                }
                 Task { @MainActor in
                     guard let self else { return }
                     if self.payload.wrappedValue?.id == payloadID {
                         self.payload.wrappedValue = nil
                     }
                     self.presentedPayloadID = nil
-                    self.onFinish(completed)
+                    self.onFinish(outcome)
                 }
             }
 
