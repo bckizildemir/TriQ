@@ -22,15 +22,15 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      ios: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios == 'true' }}
-      functions: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.functions == 'true' }}
+      ios: ${{ github.event_name == 'workflow_dispatch' || steps.ios.outputs.ios == 'true' }}
+      functions: ${{ github.event_name == 'workflow_dispatch' || steps.functions.outputs.functions == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
       # A skipped job reports as skipped, which a required check accepts as passing.
       # "every" makes the "!" patterns exclude files: a file counts only if it matches all of them.
       - uses: dorny/paths-filter@v3
-        id: filter
+        id: ios
         with:
           predicate-quantifier: every
           filters: |
@@ -40,6 +40,11 @@ jobs:
               - '!docs/**'
               - '!**/*.md'
               - '!.claude/**'
+
+      - uses: dorny/paths-filter@v3
+        id: functions
+        with:
+          filters: |
             functions:
               - 'functions/**'
               - 'firestore.rules'
