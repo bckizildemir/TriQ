@@ -18,7 +18,7 @@ extension User {
         }
     }
 
-    /// Satisfies `AccountDeletionService`'s reauthentication step.
+    /// Used by `AccountDeletionService`'s reauthentication step.
     nonisolated(nonsending) func reauthenticateAsync(with credential: AuthCredential) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             reauthenticate(with: credential) { _, error in
