@@ -45,11 +45,7 @@ struct UITestHomeRootView: View {
     }
 
     var body: some View {
-        HomeView(
-            profileViewBuilder: UITestLaunchOptions.isHomeProfileQuestionListHarnessEnabled
-                ? { ProfileView(model: environment.profileModel) }
-                : nil
-        )
+        HomeView()
         .overlay {
             Text("home-profile-harness-\(churnCounter)")
                 .frame(width: 0, height: 0)

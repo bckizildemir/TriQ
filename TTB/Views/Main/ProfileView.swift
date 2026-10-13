@@ -1,4 +1,3 @@
-import FirebaseAuth
 import SwiftUI
 
 // MARK: - Profile Section Header
@@ -608,21 +607,16 @@ struct ProfileView: View {
   @EnvironmentObject var categoryModel: CategoryModel
   @EnvironmentObject var guestFavoriteModel: GuestFavoriteModel
   @Environment(\.dismiss) private var dismiss
-  @StateObject private var model: ProfileModel
+  /// The app-wide model that Home also reads, so an edit here reaches the Home avatar (#70).
+  @ObservedObject private var model: ProfileModel
   @EnvironmentObject private var badgeModel: BadgeModel
   @State private var activeSheet: ProfileSheet?
   @State private var shouldShowDeletePasswordAfterEditDismiss = false
   @State private var isShowingErrorAlert = false
+  @State private var hasRefreshedForPresentation = false
 
-  @MainActor
-  init() {
-    let userId = Auth.auth().currentUser?.uid ?? ""
-    _model = StateObject(wrappedValue: ProfileModel(userId: userId))
-  }
-
-  @MainActor
-  init(model: @autoclosure @escaping () -> ProfileModel) {
-    _model = StateObject(wrappedValue: model())
+  init(model: ProfileModel) {
+    self.model = model
   }
 
   var body: some View {
@@ -882,6 +876,13 @@ struct ProfileView: View {
       .onAppear {
         badgeModel.loadBadges()
       }
+      .task {
+        // Once per presentation: `.task` runs again when a pushed screen pops, and a refresh then
+        // would clear an alert raised while that screen was on top.
+        guard !hasRefreshedForPresentation else { return }
+        hasRefreshedForPresentation = true
+        await model.refreshForPresentation()
+      }
       .onChange(of: authModel.isAnonymous) { _, isAnonymous in
         handleAnonymousStateChange(isAnonymous)
       }
@@ -992,7 +993,7 @@ struct ProfileView: View {
 
 // MARK: - Preview
 #Preview("Profile View") {
-  ProfileView()
+  ProfileView(model: ProfileModel(userId: "preview", startsAuthListener: false, loadsRemoteData: false))
     .environmentObject(AuthModel())
     .environmentObject(QuestionModel())
     .environmentObject(FavoriteStore.previews)
@@ -1002,7 +1003,7 @@ struct ProfileView: View {
 }
 
 #Preview("Profile View - Dark Mode") {
-  ProfileView()
+  ProfileView(model: ProfileModel(userId: "preview", startsAuthListener: false, loadsRemoteData: false))
     .environmentObject(AuthModel())
     .environmentObject(QuestionModel())
     .environmentObject(FavoriteStore.previews)

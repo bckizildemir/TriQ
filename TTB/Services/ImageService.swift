@@ -43,12 +43,13 @@ enum ImageServiceError: LocalizedError {
 actor ImageService {
     static let shared = ImageService()
 
-    // In-memory cache keyed by storage path
+    // In-memory cache keyed by download URL
     private let cache = NSCache<NSString, UIImage>()
     // Deduplicate concurrent uploads targeting the same storage path.
     private var inFlightUploads: [String: Task<String, Error>] = [:]
 
-    private init() {
+    /// Internal, not private, so a test can build a fresh instance with an empty cache.
+    init() {
         cache.countLimit = 60
         cache.totalCostLimit = 60 * 1024 * 1024 // 60MB
     }
@@ -136,7 +137,7 @@ actor ImageService {
         }
 
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
+            let (data, _) = try await URLSession.shared.data(for: Self.profileImageRequest(for: url))
             // Downsampled decode: uploads are capped at 800 px, but legacy profile photos predate
             // that cap and would otherwise decode at their original size.
             guard let image = DownsampledImageDecoder.image(from: data) ?? UIImage(data: data) else {
@@ -154,15 +155,22 @@ actor ImageService {
         }
     }
 
+    /// The fixed Storage path keeps one download URL across uploads, so a response that
+    /// `URLCache` stored for the old photo would match the new one. `cache` already holds the
+    /// photo for this run; the download only runs on a cache miss, such as after a relaunch.
+    static func profileImageRequest(for url: URL) -> URLRequest {
+        URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
+    }
+
     private func profileImagePath(userId: String) -> String {
         "profiles/\(userId)/profile.jpg"
     }
 
     // MARK: - Load from cache
 
-    /// Returns a cached UIImage for the given path if available.
-    func cachedImage(for path: String) -> UIImage? {
-        cache.object(forKey: path as NSString)
+    /// Returns a cached UIImage for the given key if available.
+    func cachedImage(for key: String) -> UIImage? {
+        cache.object(forKey: key as NSString)
     }
 
     /// Stores a downloaded UIImage in the cache.
@@ -170,10 +178,10 @@ actor ImageService {
     /// The cost matters: `NSCache` only enforces `totalCostLimit` for entries whose cost the caller
     /// supplies. Inserting without one left `countLimit = 60` as the only bound, which for
     /// full-resolution bitmaps is gigabytes rather than the intended 60 MB.
-    func cacheImage(_ image: UIImage, for path: String) {
+    func cacheImage(_ image: UIImage, for key: String) {
         cache.setObject(
             image,
-            forKey: path as NSString,
+            forKey: key as NSString,
             cost: DownsampledImageDecoder.decodedByteCost(of: image)
         )
     }
@@ -208,9 +216,17 @@ actor ImageService {
         defer { inFlightUploads.removeValue(forKey: path) }
 
         let url = try await uploadTask.value
-        // Cache what was actually uploaded, not the larger original the caller handed in.
-        cacheImage(Self.resizeIfNeeded(image, maxDimension: Self.uploadMaxDimension), for: path)
+        storeUploadedImage(image, downloadURL: url)
         return url
+    }
+
+    /// Caches what was actually uploaded, not the larger original the caller handed in.
+    ///
+    /// The key is the download URL, the key `loadProfileImage(from:)` reads. A fixed path such as
+    /// `profiles/<uid>/profile.jpg` keeps its URL across uploads, so an entry keyed by path left
+    /// the old photo under the URL key, and the next load by URL returned it (#70).
+    func storeUploadedImage(_ image: UIImage, downloadURL: String) {
+        cacheImage(Self.resizeIfNeeded(image, maxDimension: Self.uploadMaxDimension), for: downloadURL)
     }
 
     /// Longest-edge cap applied to every upload.

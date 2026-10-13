@@ -32,9 +32,15 @@ class ProfileModel: ObservableObject {
   private let fileManager = LocalFileManager.shared
   private let usernameService = UsernameService()
   private var loadedUsername: String = ""
+  private var loadedEmail: String = ""
+  private let loadsRemoteData: Bool
   private(set) var userId: String {
     didSet {
-      if oldValue != userId && !userId.isEmpty {
+      guard oldValue != userId else { return }
+      // The model is shared and outlives each sign-in (#70): drop the previous user's state first,
+      // including on sign-out, so a new account never shows the old one's data.
+      resetUserState()
+      if loadsRemoteData && !userId.isEmpty {
         Task { @MainActor in
           // `loadUserProfile()` applies the statistics from the same document.
           await loadUserProfile()
@@ -52,6 +58,7 @@ class ProfileModel: ObservableObject {
 
   init(userId: String = "", startsAuthListener: Bool = true, loadsRemoteData: Bool = true) {
     self.userId = userId
+    self.loadsRemoteData = loadsRemoteData
     if startsAuthListener {
       setupAuthListener()
     }
@@ -75,6 +82,7 @@ class ProfileModel: ObservableObject {
     username = uiTestUsername
     loadedUsername = uiTestUsername
     self.email = email
+    loadedEmail = email
     self.statistics = statistics
     self.isAdmin = isAdmin
     isLoading = false
@@ -93,9 +101,29 @@ class ProfileModel: ObservableObject {
     authListener = Auth.auth().addStateDidChangeListener { [weak self] (_, user) in
       guard let self = self else { return }
       Task { @MainActor in
-        self.userId = user?.uid ?? ""
+        self.applySignedInUser(user?.uid ?? "")
       }
     }
+  }
+
+  /// Switches the model to another signed-in user, or to none (`""`) after a sign-out.
+  func applySignedInUser(_ uid: String) {
+    userId = uid
+  }
+
+  private func resetUserState() {
+    username = ""
+    email = ""
+    loadedUsername = ""
+    loadedEmail = ""
+    profileImage = nil
+    tempImage = nil
+    isEditing = false
+    showingImagePicker = false
+    showingAlert = false
+    alertMessage = ""
+    isAdmin = false
+    statistics = Statistics()
   }
 
   @MainActor
@@ -109,6 +137,7 @@ class ProfileModel: ObservableObject {
         username = data["username"] as? String ?? ""
         loadedUsername = username
         email = data["email"] as? String ?? ""
+        loadedEmail = email
         isAdmin = data["isAdmin"] as? Bool ?? false
 
         // The statistics live on this same document, and every caller loads both — so read them
@@ -147,6 +176,15 @@ class ProfileModel: ObservableObject {
       name: "profile_\(userId)",
       maxPixelSize: DownsampledImageDecoder.pickedPhotoMaxPixelSize
     )
+  }
+
+  /// The app-wide model outlives each profile presentation (#70). Drop an alert flag that no screen
+  /// showed, such as a failed load at launch, and fetch the counters that answers saved on other
+  /// screens changed since then. The photo and username stay as they are.
+  func refreshForPresentation() async {
+    showingAlert = false
+    guard loadsRemoteData else { return }
+    await loadStatistics()
   }
 
   /// Refreshes just the answer counters. `loadUserProfile()` already applies them from the document
@@ -193,7 +231,16 @@ class ProfileModel: ObservableObject {
   func updateProfile() async {
     guard !userId.isEmpty else { return }
     isLoading = true
-    defer { isLoading = false }
+    var didSave = false
+    defer {
+      isLoading = false
+      // The edit sheet writes its drafts into this shared model before the save; a failed save
+      // must not leave them on screen as if they were saved.
+      if !didSave {
+        username = loadedUsername
+        email = loadedEmail
+      }
+    }
 
     do {
       let normalizedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -215,6 +262,8 @@ class ProfileModel: ObservableObject {
 
       username = normalizedUsername
       loadedUsername = normalizedUsername
+      loadedEmail = email
+      didSave = true
 
       isEditing = false
     } catch UsernameServiceError.usernameAlreadyExists {
