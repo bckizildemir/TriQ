@@ -663,7 +663,6 @@ extension AIModel {
 
 // MARK: - AI Usage Service
 actor AIUsageService: AIUsageServiceProtocol {
-    private let db = Firestore.firestore()
     private let userId: String
     
     init(userId: String) {
@@ -671,6 +670,7 @@ actor AIUsageService: AIUsageServiceProtocol {
     }
     
     func getUsageStats() async throws -> AIUsageStats {
+        let db = Firestore.firestore()
         let document = try await db.collection("users")
             .document(userId)
             .collection("aiUsage")
@@ -686,6 +686,7 @@ actor AIUsageService: AIUsageServiceProtocol {
     }
     
     func updateUsageStats(_ stats: AIUsageStats) async throws {
+        let db = Firestore.firestore()
         try await db.collection("users")
             .document(userId)
             .collection("aiUsage")

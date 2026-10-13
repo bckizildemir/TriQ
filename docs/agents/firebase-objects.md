@@ -10,9 +10,9 @@ cached instance on each call, so a second fetch costs nothing.
 
 ## Scope
 
-The rule covers every Swift file under `TTB/`, Services and Models. The Services follow it now
-(TriQ#12, TriQ#74). `TTB/Models` does not follow it yet. TriQ#78 applies it there. Do not read this
-doc as a claim that Models already comply.
+The rule covers every Swift file under `TTB/`, Services and Models. Both follow it now (TriQ#12,
+TriQ#74, TriQ#78). `LiveAuthModelAuthProvider.auth` in `TTB/Models/AuthModelDependencies.swift` is a
+computed `Auth` property. It is outside this rule, which names `Firestore`, `Functions`, and `Storage`.
 
 ## Why
 
