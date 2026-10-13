@@ -28,7 +28,6 @@ class ProfileModel: ObservableObject {
   @Published private(set) var statistics: Statistics = Statistics()
   @Published private(set) var isLoading: Bool = false
 
-  private let db = Firestore.firestore()
   private let fileManager = LocalFileManager.shared
   private let usernameService = UsernameService()
   private var loadedUsername: String = ""
@@ -128,6 +127,7 @@ class ProfileModel: ObservableObject {
 
   @MainActor
   func loadUserProfile() async {
+    let db = Firestore.firestore()
     guard !userId.isEmpty else { return }
     isLoading = true
 
@@ -191,6 +191,7 @@ class ProfileModel: ObservableObject {
   /// it fetches, so this is for standalone refreshes rather than the initial load.
   @MainActor
   func loadStatistics() async {
+    let db = Firestore.firestore()
     guard !userId.isEmpty else { return }
     do {
       let document = try await db.collection("users").document(userId).getDocument()
@@ -207,6 +208,7 @@ class ProfileModel: ObservableObject {
 
   @MainActor
   private func applyStatistics(from data: [String: Any]?) async {
+    let db = Firestore.firestore()
     guard let data else { return }
 
     statistics.daily = data["dailyAnswers"] as? Int ?? 0
@@ -280,6 +282,7 @@ class ProfileModel: ObservableObject {
   }
 
   private func commitProfileUpdate(username: String, email: String) async throws {
+    let db = Firestore.firestore()
     let batch = db.batch()
     let userRef = db.collection("users").document(userId)
 
@@ -327,6 +330,7 @@ class ProfileModel: ObservableObject {
   @MainActor
   @discardableResult
   func uploadProfileImage(_ image: UIImage) async -> Bool {
+    let db = Firestore.firestore()
     guard !userId.isEmpty else { return false }
 
     do {
