@@ -39,16 +39,6 @@ struct HomeView: View {
                             ProgressView()
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                         } else {
-                            if !homeCategories.isEmpty {
-                                CategoryChipsRow(categories: homeCategories) { category in
-                                    CategoryQuestionsView(
-                                        category: category.id,
-                                        model: model,
-                                        badgeModel: badgeModel
-                                    )
-                                }
-                            }
-
                             if !model.todaysQuestions.isEmpty {
                                 CategorySection(
                                     title: String(localized: "main.home.todayQuestions"),
@@ -90,13 +80,25 @@ struct HomeView: View {
                         }
                     }
                     .padding(.horizontal)
-                    .padding(.top, 8)
+                    .padding(.top)
                     .padding(.bottom, 20)
                 }
-                
-                // background effect that blurs content as it passes under toolbars
-                // .scrollEdgeEffectStyle(.hard, for: .top)
-
+                // Pinned outside the feed so the chips stay reachable while it scrolls (#59).
+                .backport.safeAreaBar(edge: .top) {
+                    if !model.isLoading && !homeCategories.isEmpty {
+                        CategoryChipsRow(categories: homeCategories) { category in
+                            CategoryQuestionsView(
+                                category: category.id,
+                                model: model,
+                                badgeModel: badgeModel
+                            )
+                        }
+                        // `CategoryChipsRow` pulls itself out by its inset; this padding
+                        // puts the chips back on the page margin.
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                    }
+                }
                 .background(Color.theme.background)
                 .navigationChromeTitle(
                     semanticTitle: timeBasedGreeting,
@@ -105,6 +107,7 @@ struct HomeView: View {
                     titleFont: .system(size: 20, weight: .semibold),
                     subtitleFont: .system(size: 13, weight: .semibold)
                 )
+                .backport.minimizesNavigationBarOnScrollDown()
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(action: {
