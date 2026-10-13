@@ -12,6 +12,8 @@ struct UITestHomeRootView: View {
 
     init() {
         let isProfileHarness = UITestLaunchOptions.isHomeProfileQuestionListHarnessEnabled
+        let isLongFeed = UITestLaunchOptions.shouldUseHomeLongFeed
+        let questions = isLongFeed ? UITestHomeFixture.longFeedQuestions : UITestHomeFixture.questions
 
         _environment = StateObject(
             wrappedValue: .uiTest(
@@ -19,8 +21,8 @@ struct UITestHomeRootView: View {
                 authModel: UITestAuthModelFactory.permanentUser(uid: Self.profileUserId),
                 questionModel: QuestionModel(
                     localQuestions: isProfileHarness
-                        ? UITestHomeFixture.questions + [Self.profileQuestionFixture]
-                        : UITestHomeFixture.questions,
+                        ? questions + [Self.profileQuestionFixture]
+                        : questions,
                     localUserAnswers: UITestLaunchOptions.shouldSeedHomeSavedAnswer
                         ? UITestHomeFixture.savedAnswers(userId: Self.profileUserId)
                         : [:]
@@ -32,7 +34,11 @@ struct UITestHomeRootView: View {
                         statistics: .init(daily: 3, weekly: 9, total: 27)
                     )
                     : nil,
-                categoryModel: CategoryModel(localCategories: UITestHomeFixture.categories),
+                categoryModel: CategoryModel(
+                    localCategories: isLongFeed
+                        ? UITestHomeFixture.longFeedCategories
+                        : UITestHomeFixture.categories
+                ),
                 questionListStore: QuestionListStore(
                     localLists: isProfileHarness ? [Self.profileListFixture] : []
                 ),
