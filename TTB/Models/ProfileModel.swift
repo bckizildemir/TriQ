@@ -36,7 +36,11 @@ class ProfileModel: ObservableObject {
   private let loadsRemoteData: Bool
   private(set) var userId: String {
     didSet {
-      if oldValue != userId && !userId.isEmpty {
+      guard oldValue != userId else { return }
+      // The model is shared and outlives each sign-in (#70): drop the previous user's state first,
+      // including on sign-out, so a new account never shows the old one's data.
+      resetUserState()
+      if loadsRemoteData && !userId.isEmpty {
         Task { @MainActor in
           // `loadUserProfile()` applies the statistics from the same document.
           await loadUserProfile()
@@ -97,9 +101,29 @@ class ProfileModel: ObservableObject {
     authListener = Auth.auth().addStateDidChangeListener { [weak self] (_, user) in
       guard let self = self else { return }
       Task { @MainActor in
-        self.userId = user?.uid ?? ""
+        self.applySignedInUser(user?.uid ?? "")
       }
     }
+  }
+
+  /// Switches the model to another signed-in user, or to none (`""`) after a sign-out.
+  func applySignedInUser(_ uid: String) {
+    userId = uid
+  }
+
+  private func resetUserState() {
+    username = ""
+    email = ""
+    loadedUsername = ""
+    loadedEmail = ""
+    profileImage = nil
+    tempImage = nil
+    isEditing = false
+    showingImagePicker = false
+    showingAlert = false
+    alertMessage = ""
+    isAdmin = false
+    statistics = Statistics()
   }
 
   @MainActor

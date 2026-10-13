@@ -48,4 +48,24 @@ struct ProfileModelSharedStateTests {
         #expect(model.statistics.weekly == 2)
         #expect(model.statistics.total == 3)
     }
+
+    /// A new account in the same process must not show the previous account's data (#70).
+    @Test func changingTheSignedInUserClearsThePreviousUsersState() {
+        let model = Self.makeModel()
+        model.alertMessage = "Old load error"
+        model.showingAlert = true
+
+        model.applySignedInUser("")
+
+        #expect(model.username.isEmpty)
+        #expect(model.email.isEmpty)
+        #expect(model.statistics.total == 0)
+        #expect(!model.isAdmin)
+        #expect(!model.showingAlert)
+
+        model.applySignedInUser("new-user")
+
+        #expect(model.username.isEmpty)
+        #expect(model.email.isEmpty)
+    }
 }
