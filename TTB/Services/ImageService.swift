@@ -110,10 +110,13 @@ actor ImageService {
         return try await uploadImage(image, to: path)
     }
 
-    /// Deletes the current user's profile image from Firebase Storage.
-    /// - Parameter downloadURL: the URL the photo was cached under, when the caller knows it.
-    func deleteProfileImage(downloadURL: String? = nil) async throws {
-        guard let userId = Auth.auth().currentUser?.uid else {
+    /// Deletes `userId`'s profile image from Firebase Storage.
+    /// - Parameters:
+    ///   - userId: the user the caller acts for; it must be the signed-in user, so the Storage
+    ///     delete and the caller's own writes target the same account.
+    ///   - downloadURL: the URL the photo was cached under, when the caller knows it.
+    func deleteProfileImage(userId: String, downloadURL: String? = nil) async throws {
+        guard !userId.isEmpty, Auth.auth().currentUser?.uid == userId else {
             throw ImageServiceError.notAuthenticated
         }
         let path = profileImagePath(userId: userId)

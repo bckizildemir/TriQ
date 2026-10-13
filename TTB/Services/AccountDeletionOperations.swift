@@ -96,7 +96,7 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
 
     func deleteProfileAssets(userId: String) async throws {
         try await ignoreMissingStorageObject {
-            try await ImageService.shared.deleteProfileImage()
+            try await ImageService.shared.deleteProfileImage(userId: userId)
         }
         fileManager.deleteImage(name: "profile_\(userId)")
     }

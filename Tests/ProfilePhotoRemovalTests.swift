@@ -41,7 +41,10 @@ struct ProfilePhotoRemovalTests {
         #expect(model.profileImage == nil)
         #expect(!model.hasProfilePhoto)
         #expect(!model.showingAlert)
-        #expect(await remover.calls == [.init(userId: userId, downloadURL: Self.downloadURL)])
+        #expect(await remover.calls == [
+            .deleteStoredPhoto(userId: userId, downloadURL: Self.downloadURL),
+            .clearPhotoFields(userId: userId),
+        ])
     }
 
     /// The local copy is the fallback when the download fails, so leaving it would bring the
@@ -59,7 +62,7 @@ struct ProfilePhotoRemovalTests {
     @Test func failedRemovalKeepsThePhotoAndShowsAnAlert() async {
         let userId = "remove-photo-\(UUID().uuidString)"
         let photo = Self.solidImage(.red)
-        let remover = FakeProfilePhotoRemover(error: URLError(.notConnectedToInternet))
+        let remover = FakeProfilePhotoRemover(deleteError: URLError(.notConnectedToInternet))
         let model = Self.makeModel(userId: userId, photo: photo, remover: remover)
 
         await model.removeProfilePhoto()
@@ -67,6 +70,105 @@ struct ProfilePhotoRemovalTests {
         #expect(model.profileImage === photo)
         #expect(model.showingAlert)
         #expect(!model.alertMessage.isEmpty)
+    }
+
+    /// The Storage file is gone but the URL is not: the local copy must go anyway, or a relaunch
+    /// falls back to it, and Remove must stay on offer so the user can retry.
+    @Test func aFailedFieldWriteStillDeletesTheLocalCopyAndKeepsRemoveOnOffer() async throws {
+        let userId = "remove-photo-\(UUID().uuidString)"
+        try LocalFileManager.shared.saveImage(Self.solidImage(.red), name: "profile_\(userId)")
+        let remover = FakeProfilePhotoRemover(clearError: URLError(.notConnectedToInternet))
+        let model = Self.makeModel(userId: userId, remover: remover)
+
+        await model.removeProfilePhoto()
+
+        #expect(LocalFileManager.shared.loadImage(name: "profile_\(userId)") == nil)
+        #expect(model.showingAlert)
+        #expect(model.hasProfilePhoto)
+    }
+
+    /// While the Storage file still exists, the local copy is a valid fallback.
+    @Test func aFailedStorageDeleteKeepsTheLocalCopy() async throws {
+        let userId = "remove-photo-\(UUID().uuidString)"
+        try LocalFileManager.shared.saveImage(Self.solidImage(.red), name: "profile_\(userId)")
+        let remover = FakeProfilePhotoRemover(deleteError: URLError(.notConnectedToInternet))
+        let model = Self.makeModel(userId: userId, remover: remover)
+
+        await model.removeProfilePhoto()
+
+        #expect(LocalFileManager.shared.loadImage(name: "profile_\(userId)") != nil)
+        #expect(await remover.calls == [.deleteStoredPhoto(userId: userId, downloadURL: Self.downloadURL)])
+    }
+
+    /// A sign-out during the Storage step: the field write would run without this user's auth,
+    /// so it is skipped, and the next user's state stays as the sign-out left it.
+    @Test func aSignOutDuringRemovalSkipsTheFieldWrite() async {
+        let userId = "remove-photo-\(UUID().uuidString)"
+        let remover = FakeProfilePhotoRemover(suspendsDelete: true)
+        let model = Self.makeModel(userId: userId, remover: remover)
+
+        let removal = Task { await model.removeProfilePhoto() }
+        await remover.waitUntilDeleteIsSuspended()
+        model.applySignedInUser("user-b")
+        await remover.resumeDelete()
+        await removal.value
+
+        #expect(await remover.calls == [.deleteStoredPhoto(userId: userId, downloadURL: Self.downloadURL)])
+        #expect(!model.showingAlert)
+        #expect(model.userId == "user-b")
+    }
+
+    @Test func aFailedRemovalAfterASignOutShowsNoAlertToTheNextUser() async {
+        let userId = "remove-photo-\(UUID().uuidString)"
+        let remover = FakeProfilePhotoRemover(
+            deleteError: URLError(.notConnectedToInternet),
+            suspendsDelete: true
+        )
+        let model = Self.makeModel(userId: userId, remover: remover)
+
+        let removal = Task { await model.removeProfilePhoto() }
+        await remover.waitUntilDeleteIsSuspended()
+        model.applySignedInUser("user-b")
+        await remover.resumeDelete()
+        await removal.value
+
+        #expect(!model.showingAlert)
+        #expect(model.alertMessage.isEmpty)
+    }
+
+    /// `""` means the user removed the photo; the local copy must not bring it back.
+    @Test func aRemovedPhotoDoesNotComeBackFromTheLocalCopy() async throws {
+        let userId = "remove-photo-\(UUID().uuidString)"
+        try LocalFileManager.shared.saveImage(Self.solidImage(.red), name: "profile_\(userId)")
+        let model = Self.makeModel(userId: userId, photo: nil, remover: FakeProfilePhotoRemover())
+
+        await model.applyProfilePhoto(storedValue: "")
+
+        #expect(model.profileImage == nil)
+        #expect(!model.hasProfilePhoto)
+    }
+
+    @Test func noStoredURLLoadsTheLegacyLocalCopy() async throws {
+        let userId = "remove-photo-\(UUID().uuidString)"
+        try LocalFileManager.shared.saveImage(Self.solidImage(.red), name: "profile_\(userId)")
+        let model = Self.makeModel(userId: userId, photo: nil, remover: FakeProfilePhotoRemover())
+
+        await model.applyProfilePhoto(storedValue: nil)
+
+        #expect(model.profileImage != nil)
+    }
+
+    /// After a removal whose field write failed, the URL stays and its download fails. Remove
+    /// must still be on offer so the user can finish the removal.
+    @Test func aStoredURLWhoseDownloadFailsStillOffersRemove() async {
+        let userId = "remove-photo-\(UUID().uuidString)"
+        let model = Self.makeModel(userId: userId, photo: nil, remover: FakeProfilePhotoRemover())
+
+        // An unsupported scheme fails at once, with no network.
+        await model.applyProfilePhoto(storedValue: "unsupported-scheme://profile.jpg")
+
+        #expect(model.profileImage == nil)
+        #expect(model.hasProfilePhoto)
     }
 
     @Test func removalWithoutAPhotoDoesNothing() async {

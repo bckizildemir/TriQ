@@ -27,6 +27,9 @@ class ProfileModel: ObservableObject {
   @Published private(set) var isAdmin: Bool = false
   @Published private(set) var statistics: Statistics = Statistics()
   @Published private(set) var isLoading: Bool = false
+  /// Edit Profile disables its photo and save controls while this is `true`, so an upload and a
+  /// delete never race on the same Storage path.
+  @Published private(set) var isRemovingPhoto: Bool = false
 
   /// The download URL the photo was loaded from or uploaded to; the image cache key.
   private var profileImageURL: String?
@@ -166,23 +169,7 @@ class ProfileModel: ObservableObject {
         // here rather than making `loadStatistics()` fetch `users/{uid}` a second time.
         await applyStatistics(from: data)
 
-        switch ProfilePhotoSource(storedValue: data["profileImageURL"]) {
-        case .remote(let urlString):
-          profileImageURL = urlString
-          // Try loading from Firebase Storage URL; fall back to local cache on failure
-          if let remote = try? await ImageService.shared.loadProfileImage(from: urlString) {
-            profileImage = remote
-          } else if let local = loadLocalProfileImage() {
-            profileImage = local
-          }
-        case .removed:
-          profileImageURL = nil
-          profileImage = nil
-        case .legacyLocal:
-          profileImageURL = nil
-          // Legacy: load from local storage for users who haven't uploaded to Firebase yet
-          profileImage = loadLocalProfileImage()
-        }
+        await applyProfilePhoto(storedValue: data["profileImageURL"])
       }
       isLoading = false
     } catch {
@@ -193,6 +180,31 @@ class ProfileModel: ObservableObject {
       )
       showingAlert = true
       isLoading = false
+    }
+  }
+
+  /// Applies the user document's `profileImageURL`. Internal, not private, so a test can reach
+  /// each branch without Firestore.
+  func applyProfilePhoto(storedValue: Any?) async {
+    switch ProfilePhotoSource(storedValue: storedValue) {
+    case .remote(let urlString):
+      // Kept even when the download fails, so Edit Profile still offers Remove: a removal whose
+      // Firestore write failed leaves this URL behind with no Storage file (#71).
+      profileImageURL = urlString
+      // Try loading from Firebase Storage URL; fall back to local cache on failure
+      if let remote = try? await ImageService.shared.loadProfileImage(from: urlString) {
+        profileImage = remote
+      } else if let local = loadLocalProfileImage() {
+        profileImage = local
+      }
+    case .removed:
+      // The local copy must not bring a removed photo back.
+      profileImageURL = nil
+      profileImage = nil
+    case .legacyLocal:
+      profileImageURL = nil
+      // Legacy: load from local storage for users who haven't uploaded to Firebase yet
+      profileImage = loadLocalProfileImage()
     }
   }
 
@@ -390,21 +402,29 @@ class ProfileModel: ObservableObject {
     }
   }
 
-  /// Whether Edit Profile offers "Remove photo".
+  /// Whether Edit Profile offers "Remove photo". A stored URL counts even when its download failed,
+  /// so a removal that deleted the Storage file but not the URL can be retried.
   var hasProfilePhoto: Bool {
-    profileImage != nil
+    profileImage != nil || profileImageURL != nil
   }
 
   /// Deletes the photo in Storage, writes `""` to `profileImageURL`, and drops the local copy
   /// (#71). Home and Profile read this shared model, so both show the default avatar at once.
   func removeProfilePhoto() async {
-    guard !userId.isEmpty, hasProfilePhoto else { return }
+    guard !userId.isEmpty, hasProfilePhoto, !isRemovingPhoto else { return }
     let removedUserId = userId
-    isLoading = true
-    defer { isLoading = false }
+    isRemovingPhoto = true
+    defer { isRemovingPhoto = false }
 
     do {
-      try await photoRemover.removeProfilePhoto(userId: removedUserId, downloadURL: profileImageURL)
+      try await photoRemover.deleteStoredPhoto(userId: removedUserId, downloadURL: profileImageURL)
+      // The local copy is the fallback when a download fails. Once the Storage file is gone it
+      // must go too, even if a later step fails, or a relaunch brings the removed photo back.
+      fileManager.deleteImage(name: "profile_\(removedUserId)")
+      // After a sign-out the write would run without this user's auth. The stored URL keeps
+      // Remove on offer, so the user can finish the removal after the next sign-in.
+      guard userId == removedUserId else { return }
+      try await photoRemover.clearPhotoFields(userId: removedUserId)
     } catch {
       // A sign-out during the await already reset the state; its alert would show on the next user.
       guard userId == removedUserId else { return }
@@ -417,9 +437,6 @@ class ProfileModel: ObservableObject {
       return
     }
 
-    // The local copy is the fallback when a download fails; left in place, it would bring the
-    // removed photo back. Delete it even if the user signed out meanwhile.
-    fileManager.deleteImage(name: "profile_\(removedUserId)")
     guard userId == removedUserId else { return }
     profileImageURL = nil
     tempImage = nil
