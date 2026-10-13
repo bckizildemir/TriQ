@@ -10962,6 +10962,74 @@
         }
       }
     },
+    "profile.edit.removePhoto" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Profile Photo"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil Fotoğrafını Kaldır"
+          }
+        }
+      }
+    },
+    "profile.edit.removePhotoConfirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Photo"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotoğrafı Kaldır"
+          }
+        }
+      }
+    },
+    "profile.edit.removePhotoMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your profile shows the default avatar again."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profilinde yeniden varsayılan avatar görünür."
+          }
+        }
+      }
+    },
+    "profile.edit.removePhotoTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove your profile photo?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil fotoğrafın kaldırılsın mı?"
+          }
+        }
+      }
+    },
     "profile.edit.saveAccessibility" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11094,6 +11162,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İstatistikler yüklenemedi: %@"
+          }
+        }
+      }
+    },
+    "profile.error.removeImage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile photo could not be removed: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil fotoğrafı kaldırılamadı: %@"
           }
         }
       }

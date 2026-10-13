@@ -11,6 +11,8 @@ struct EditProfileView: View {
     @State private var tempEmail: String = ""
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showingDeleteConfirmation = false
+    @State private var showingRemovePhotoConfirmation = false
+    @State private var isSaving = false
     
     var body: some View {
         NavigationStack {
@@ -42,8 +44,40 @@ struct EditProfileView: View {
                         .frame(minHeight: 44)
                         .contentShape(Rectangle())
                     }
+                    // A photo picked during a removal would be dropped when the removal ends.
+                    .disabled(model.isRemovingPhoto)
                     .accessibilityLabel(String(localized: "profile.edit.changePhotoAccessibility"))
                     .accessibilityHint(String(localized: "profile.edit.changePhotoHint"))
+
+                    if model.hasProfilePhoto {
+                        Button(role: .destructive) {
+                            showingRemovePhotoConfirmation = true
+                        } label: {
+                            HStack {
+                                Text(String(localized: "profile.edit.removePhoto"))
+                                Spacer()
+                                Image(systemName: "trash")
+                            }
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                        }
+                        .disabled(actionsDisabled || model.isLoading || model.isRemovingPhoto || isSaving)
+                        .accessibilityIdentifier("profile-edit-remove-photo-button")
+                        .confirmationDialog(
+                            String(localized: "profile.edit.removePhotoTitle"),
+                            isPresented: $showingRemovePhotoConfirmation,
+                            titleVisibility: .visible
+                        ) {
+                            Button(String(localized: "profile.edit.removePhotoConfirm"), role: .destructive) {
+                                Task {
+                                    await model.removeProfilePhoto()
+                                }
+                            }
+                            Button(String(localized: "common.cancel"), role: .cancel) {}
+                        } message: {
+                            Text(String(localized: "profile.edit.removePhotoMessage"))
+                        }
+                    }
                 }
 
                 if onDeleteAccount != nil {
@@ -79,6 +113,8 @@ struct EditProfileView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         Task {
+                            isSaving = true
+                            defer { isSaving = false }
                             model.username = tempUsername
                             model.email = tempEmail
                             await model.updateProfile()
@@ -93,6 +129,8 @@ struct EditProfileView: View {
                         Label(String(localized: "common.save"), systemImage: "checkmark")
                             .labelStyle(.iconOnly)
                     }
+                    // An upload and a delete must not race on the same Storage path.
+                    .disabled(model.isRemovingPhoto || isSaving)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
                     .accessibilityLabel(String(localized: "profile.edit.saveAccessibility"))

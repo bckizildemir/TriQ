@@ -25,7 +25,11 @@ struct UITestProfileRootView: View {
                 profileModel: ProfileModel(
                     uiTestUsername: "Profile Harness",
                     email: "profile@example.com",
-                    statistics: .init(daily: 3, weekly: 9, total: 27)
+                    statistics: .init(daily: 3, weekly: 9, total: 27),
+                    profileImage: UITestLaunchOptions.shouldSeedProfilePhoto
+                        ? Self.photoFixture
+                        : nil,
+                    photoRemover: UITestProfilePhotoRemover()
                 ),
                 questionListStore: QuestionListStore(localLists: [Self.listFixture])
             )
@@ -51,6 +55,14 @@ struct UITestProfileRootView: View {
         for index in 1...80 {
             try? await Task.sleep(nanoseconds: 250_000_000)
             churnCounter = index
+        }
+    }
+
+    /// A solid orange square, so the seeded photo stands apart from the default glyph on screen.
+    private static var photoFixture: UIImage {
+        UIGraphicsImageRenderer(size: CGSize(width: 8, height: 8)).image { context in
+            UIColor.systemOrange.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 8, height: 8))
         }
     }
 

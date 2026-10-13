@@ -91,6 +91,53 @@ extension ProfileSheetPresentationUITests {
         XCTAssertTrue(upgradeSheet.exists)
     }
 
+    /// Edit Profile offers "Remove photo" only while a photo exists (#71). The harness remover
+    /// needs no Firebase, so this covers the control and the shared-model update, not the backend.
+    func testRemovePhotoIsOfferedOnlyWithAPhoto() {
+        let app = launchProfileHarness(extraArguments: ["-ui-test-profile-photo"])
+        openEditProfile(in: app)
+
+        let removeButton = app.buttons["profile-edit-remove-photo-button"]
+        XCTAssertTrue(removeButton.waitForExistence(timeout: 5))
+        removeButton.tap()
+
+        let confirmButton = app.buttons["Remove Photo"]
+        XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
+        confirmButton.tap()
+
+        XCTAssertTrue(waitUntil(timeout: 5) { !removeButton.exists })
+    }
+
+    func testRemovePhotoIsHiddenWithoutAPhoto() {
+        let app = launchProfileHarness(extraArguments: [])
+        openEditProfile(in: app)
+
+        XCTAssertTrue(app.buttons["Change profile photo"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["profile-edit-remove-photo-button"].exists)
+    }
+
+    private func launchProfileHarness(extraArguments: [String]) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments += [profileHarnessArgument] + extraArguments + [
+            "-AppleLanguages",
+            "(en)",
+            "-AppleLocale",
+            "en_US",
+        ]
+        app.launch()
+        return app
+    }
+
+    private func openEditProfile(in app: XCUIApplication) {
+        let editButton = app.buttons["profile-edit-button"]
+        XCTAssertTrue(scrollUntilHittable(editButton, in: app))
+        editButton.tap()
+
+        let editSheet = app.descendants(matching: .any)["profile-edit-sheet"]
+        XCTAssertTrue(editSheet.waitForExistence(timeout: 5))
+        waitForSheetStability()
+    }
+
     private func waitForSheetStability() {
         RunLoop.current.run(until: Date().addingTimeInterval(1.25))
     }

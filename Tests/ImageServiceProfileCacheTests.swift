@@ -22,6 +22,17 @@ struct ImageServiceProfileCacheTests {
         #expect(loaded === newImage)
     }
 
+    /// Removing the photo (#71) must drop the entry under its download URL, the key uploads and
+    /// loads use, or the removed photo stays in memory until the app quits (#85).
+    @Test func evictingTheDownloadURLDropsTheCachedPhoto() async {
+        let service = ImageService()
+        await service.cacheImage(Self.solidImage(.red), for: Self.downloadURL)
+
+        await service.evictProfileImage(downloadURL: Self.downloadURL)
+
+        #expect(await service.cachedImage(for: Self.downloadURL) == nil)
+    }
+
     /// After a relaunch the in-memory cache is empty, so the download decides what Home shows. The
     /// same URL must not come back from `URLCache` with the bytes of the photo it replaced.
     @Test func profileDownloadSkipsTheLocalHTTPCache() throws {

@@ -96,7 +96,7 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
 
     func deleteProfileAssets(userId: String) async throws {
         try await ignoreMissingStorageObject {
-            try await ImageService.shared.deleteProfileImage()
+            try await ImageService.shared.deleteProfileImage(userId: userId)
         }
         fileManager.deleteImage(name: "profile_\(userId)")
     }
@@ -155,20 +155,8 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     private func ignoreMissingStorageObject(_ operation: () async throws -> Void) async throws {
         do {
             try await operation()
-        } catch let error as NSError where error.domain == StorageErrorDomain
-            && error.code == StorageErrorCode.objectNotFound.rawValue {
+        } catch where ImageService.isMissingStorageObject(error) {
             return
-        } catch let imageError as ImageServiceError {
-            switch imageError {
-            case .deleteFailed(let error as NSError)
-                where error.domain == StorageErrorDomain
-                && error.code == StorageErrorCode.objectNotFound.rawValue:
-                return
-            default:
-                throw imageError
-            }
-        } catch {
-            throw error
         }
     }
 }
