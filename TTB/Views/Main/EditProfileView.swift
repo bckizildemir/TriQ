@@ -12,6 +12,7 @@ struct EditProfileView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showingDeleteConfirmation = false
     @State private var showingRemovePhotoConfirmation = false
+    @State private var isSaving = false
     
     var body: some View {
         NavigationStack {
@@ -43,6 +44,8 @@ struct EditProfileView: View {
                         .frame(minHeight: 44)
                         .contentShape(Rectangle())
                     }
+                    // A photo picked during a removal would be dropped when the removal ends.
+                    .disabled(model.isRemovingPhoto)
                     .accessibilityLabel(String(localized: "profile.edit.changePhotoAccessibility"))
                     .accessibilityHint(String(localized: "profile.edit.changePhotoHint"))
 
@@ -58,7 +61,7 @@ struct EditProfileView: View {
                             .frame(minHeight: 44)
                             .contentShape(Rectangle())
                         }
-                        .disabled(actionsDisabled || model.isLoading)
+                        .disabled(actionsDisabled || model.isLoading || model.isRemovingPhoto || isSaving)
                         .accessibilityIdentifier("profile-edit-remove-photo-button")
                         .confirmationDialog(
                             String(localized: "profile.edit.removePhotoTitle"),
@@ -110,6 +113,8 @@ struct EditProfileView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         Task {
+                            isSaving = true
+                            defer { isSaving = false }
                             model.username = tempUsername
                             model.email = tempEmail
                             await model.updateProfile()
@@ -124,6 +129,8 @@ struct EditProfileView: View {
                         Label(String(localized: "common.save"), systemImage: "checkmark")
                             .labelStyle(.iconOnly)
                     }
+                    // An upload and a delete must not race on the same Storage path.
+                    .disabled(model.isRemovingPhoto || isSaving)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
                     .accessibilityLabel(String(localized: "profile.edit.saveAccessibility"))
