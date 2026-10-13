@@ -31,7 +31,7 @@ final class UITestAuthUser: AuthModelUser {
         return linkedUser
     }
 
-    func forceRefreshIDToken() async throws {}
+    nonisolated(nonsending) func forceRefreshIDToken() async throws {}
 }
 
 final class UITestAuthProvider: AuthModelAuthProviding {

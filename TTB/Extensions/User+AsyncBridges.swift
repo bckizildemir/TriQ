@@ -18,9 +18,23 @@ extension User {
         }
     }
 
+    /// Used by `AccountDeletionService`'s reauthentication step.
     nonisolated(nonsending) func reauthenticateAsync(with credential: AuthCredential) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             reauthenticate(with: credential) { _, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: ())
+                }
+            }
+        }
+    }
+
+    /// Satisfies `AuthModelUser.forceRefreshIDToken()`.
+    nonisolated(nonsending) func forceRefreshIDToken() async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            getIDTokenForcingRefresh(true) { _, error in
                 if let error {
                     continuation.resume(throwing: error)
                 } else {
