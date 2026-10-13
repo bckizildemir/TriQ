@@ -34,11 +34,15 @@ open TTB.xcodeproj
 Scripts/xcb.sh build
 Scripts/xcb.sh test --scheme TTBTests                                   # fast local loop: unit tests only
 Scripts/xcb.sh test --scheme TTBTests --only TTBTests/FavoriteStoreTests # changed area
-Scripts/xcb.sh test                                                     # full suite (unit + UI) once, before the PR
+Scripts/xcb.sh test --only TTBUITests/<SuiteName>                       # a UI test you added or changed
 ```
 - Use the first command for day-to-day development in Xcode.
 - Agents build and test through `Scripts/xcb.sh`, never a bare `xcodebuild`. The script holds a machine-wide lock, so builds from every worktree and from CatCareCalendar queue one at a time on this 16GB Mac; it shares one DerivedData and package checkout across worktrees, so Firebase compiles once. A run can wait minutes for the lock: give it a long Bash timeout or run it in the background. `Scripts/xcb.sh --help` lists the options.
-- Two schemes. `TTBTests` is the inner loop: it builds the app and the unit test bundle only and skips the UI test target. `TTB` is the full run with unit and UI tests. Test the changed area with `--scheme TTBTests --only`; run the full `TTB` scheme once, before the PR. Neither scheme collects code coverage.
+- Two schemes. `TTBTests` is the inner loop: it builds the app and the unit test bundle only and skips the UI test target. `TTB` is the full run with unit and UI tests. Neither scheme collects code coverage.
+- Run locally only the tests you added or changed, plus the suites of the files you changed (`--scheme TTBTests --only`). CI (`.github/workflows/ci.yml`) runs the full `TTBTests` unit suite on every PR and is the gate; read its result. The full local run queues behind one simulator and the build lock and repeats CI. List the tests you ran in the PR body.
+- CI does not run `TTBUITests`. Run locally only the UI tests you added or changed (`Scripts/xcb.sh test --only TTBUITests/...`).
+- `Scripts/xcb.sh` prints errors only. Compiler warnings are in its log: `~/Library/Caches/xcb/<Project>/logs/`.
+- Simulator UI checks (iPhone 12, iOS 26.5): call xcodebuildmcp `open_sim` before `snapshot_ui`; with the Simulator window closed it returns an empty tree. The system photo picker (`ImagePicker.swift` PHPicker, `EditProfileView` PhotosPicker) runs out of process and neither tool sees its cells: say in the PR that a photo pick was not checked by hand. A hand-off between an alert, a sheet and a disappearing view needs one check with animations on; the harness flags in `TTB/App/UITestLaunchOptions.swift` leave animations on, so keep it that way.
 - A new worktree has no `TTB/Secrets.xcconfig` (gitignored), and the build fails at once without it. Copy `TTB/Secrets.xcconfig.template` to `TTB/Secrets.xcconfig` before the first `Scripts/xcb.sh` run. Do not commit `TTB/Secrets.xcconfig`.
 - The baseline simulator is iPhone 12 on iOS 26.5; the script shuts down any other booted simulator before a test.
 - To see a change in the app, build with the script, then install and launch the `.app` path it prints with xcodebuildmcp (`install_app_sim`, `launch_app_sim`). xcodebuildmcp's own `build_*`/`test_*` tools bypass the lock.
