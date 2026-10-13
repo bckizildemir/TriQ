@@ -435,6 +435,7 @@ struct MostAnsweredView: View {
                 semanticTitle: title,
                 visualTitle: Text(title)
             )
+            .backport.minimizesNavigationBarOnScrollDown()
         }
         .fullScreenCover(
             item: $presentedQuestion
