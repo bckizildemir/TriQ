@@ -22,6 +22,17 @@ struct ImageServiceProfileCacheTests {
         #expect(loaded === newImage)
     }
 
+    /// After a relaunch the in-memory cache is empty, so the download decides what Home shows. The
+    /// same URL must not come back from `URLCache` with the bytes of the photo it replaced.
+    @Test func profileDownloadSkipsTheLocalHTTPCache() throws {
+        let url = try #require(URL(string: Self.downloadURL))
+
+        let request = ImageService.profileImageRequest(for: url)
+
+        #expect(request.url == url)
+        #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
+    }
+
     private static func solidImage(_ color: UIColor) -> UIImage {
         UIGraphicsImageRenderer(size: CGSize(width: 4, height: 4)).image { context in
             color.setFill()
