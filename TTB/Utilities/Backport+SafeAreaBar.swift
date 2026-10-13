@@ -6,10 +6,10 @@ extension Backport where Content: View {
     /// iOS 26+ uses `safeAreaBar(edge:)`, which also extends the scroll edge effect under the
     /// bar. Earlier versions use `safeAreaInset(edge:)` with a `.bar` background, so content
     /// that scrolls under the bar stays readable.
-    @ContentBuilder
+    @ViewBuilder
     func safeAreaBar(
         edge: VerticalEdge,
-        @ContentBuilder content bar: () -> some View
+        @ViewBuilder content bar: () -> some View
     ) -> some View {
         if #available(iOS 26.0, *) {
             content.safeAreaBar(edge: edge, content: bar)
