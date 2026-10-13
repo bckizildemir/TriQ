@@ -84,7 +84,7 @@ struct HomeView: View {
                     .padding(.bottom, 20)
                 }
                 // Pinned outside the feed so the chips stay reachable while it scrolls (#59).
-                .backport.safeAreaBar(edge: .top) {
+                .backport.safeAreaBarOnTop(fallbackBackground: Color.theme.background) {
                     if !model.isLoading && !homeCategories.isEmpty {
                         CategoryChipsRow(categories: homeCategories) { category in
                             CategoryQuestionsView(
