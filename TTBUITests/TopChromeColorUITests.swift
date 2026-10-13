@@ -2,8 +2,20 @@ import XCTest
 
 // nonisolated keeps the inherited XCTestCase initializers nonisolated; the tests run in the @MainActor extension below.
 nonisolated final class TopChromeColorUITests: XCTestCase {
+    private var previousAppearance: XCUIDevice.Appearance = .unspecified
+
     override func setUpWithError() throws {
         continueAfterFailure = true
+        // The scan expects the light page color (white); the dark variant would fail at rest.
+        previousAppearance = XCUIDevice.shared.appearance
+        XCUIDevice.shared.appearance = .light
+    }
+
+    override func tearDownWithError() throws {
+        // `.unspecified` cannot be set back, so only a real earlier choice is restored.
+        if previousAppearance != .unspecified {
+            XCUIDevice.shared.appearance = previousAppearance
+        }
     }
 }
 
