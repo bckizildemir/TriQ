@@ -28,7 +28,11 @@ class ProfileModel: ObservableObject {
   @Published private(set) var statistics: Statistics = Statistics()
   @Published private(set) var isLoading: Bool = false
 
+  /// The download URL the photo was loaded from or uploaded to; the image cache key.
+  private var profileImageURL: String?
+
   private let fileManager = LocalFileManager.shared
+  private let photoRemover: any ProfilePhotoRemoving
   private let usernameService = UsernameService()
   private var loadedUsername: String = ""
   private var loadedEmail: String = ""
@@ -55,9 +59,15 @@ class ProfileModel: ObservableObject {
     var total: Int = 0
   }
 
-  init(userId: String = "", startsAuthListener: Bool = true, loadsRemoteData: Bool = true) {
+  init(
+    userId: String = "",
+    startsAuthListener: Bool = true,
+    loadsRemoteData: Bool = true,
+    photoRemover: any ProfilePhotoRemoving = LiveProfilePhotoRemover()
+  ) {
     self.userId = userId
     self.loadsRemoteData = loadsRemoteData
+    self.photoRemover = photoRemover
     if startsAuthListener {
       setupAuthListener()
     }
@@ -75,9 +85,20 @@ class ProfileModel: ObservableObject {
     uiTestUsername: String,
     email: String,
     statistics: Statistics,
-    isAdmin: Bool = false
+    isAdmin: Bool = false,
+    userId: String = "ui-test-profile-user",
+    profileImage: UIImage? = nil,
+    profileImageURL: String? = nil,
+    photoRemover: any ProfilePhotoRemoving = LiveProfilePhotoRemover()
   ) {
-    self.init(userId: "ui-test-profile-user", startsAuthListener: false, loadsRemoteData: false)
+    self.init(
+      userId: userId,
+      startsAuthListener: false,
+      loadsRemoteData: false,
+      photoRemover: photoRemover
+    )
+    self.profileImage = profileImage
+    self.profileImageURL = profileImageURL
     username = uiTestUsername
     loadedUsername = uiTestUsername
     self.email = email
@@ -116,6 +137,7 @@ class ProfileModel: ObservableObject {
     loadedUsername = ""
     loadedEmail = ""
     profileImage = nil
+    profileImageURL = nil
     tempImage = nil
     isEditing = false
     showingImagePicker = false
@@ -144,14 +166,20 @@ class ProfileModel: ObservableObject {
         // here rather than making `loadStatistics()` fetch `users/{uid}` a second time.
         await applyStatistics(from: data)
 
-        if let urlString = data["profileImageURL"] as? String {
+        switch ProfilePhotoSource(storedValue: data["profileImageURL"]) {
+        case .remote(let urlString):
+          profileImageURL = urlString
           // Try loading from Firebase Storage URL; fall back to local cache on failure
           if let remote = try? await ImageService.shared.loadProfileImage(from: urlString) {
             profileImage = remote
           } else if let local = loadLocalProfileImage() {
             profileImage = local
           }
-        } else {
+        case .removed:
+          profileImageURL = nil
+          profileImage = nil
+        case .legacyLocal:
+          profileImageURL = nil
           // Legacy: load from local storage for users who haven't uploaded to Firebase yet
           profileImage = loadLocalProfileImage()
         }
@@ -342,6 +370,7 @@ class ProfileModel: ObservableObject {
         "hasProfilePicture": true,
         "updatedAt": FieldValue.serverTimestamp(),
       ])
+      profileImageURL = downloadURL
 
       // Also cache locally for offline access. The JPEG encode plus disk write is several hundred
       // milliseconds, and this method is `@MainActor`, so keep it off the main thread.
@@ -358,6 +387,44 @@ class ProfileModel: ObservableObject {
       )
       showingAlert = true
       return false
+    }
+  }
+
+  /// Whether Edit Profile offers "Remove photo".
+  var hasProfilePhoto: Bool {
+    profileImage != nil
+  }
+
+  /// Deletes the photo in Storage, writes `""` to `profileImageURL`, and drops the local copy
+  /// (#71). Home and Profile read this shared model, so both show the default avatar at once.
+  func removeProfilePhoto() async {
+    guard !userId.isEmpty, hasProfilePhoto else { return }
+    let removedUserId = userId
+    isLoading = true
+    defer { isLoading = false }
+
+    do {
+      try await photoRemover.removeProfilePhoto(userId: removedUserId, downloadURL: profileImageURL)
+    } catch {
+      // A sign-out during the await already reset the state; its alert would show on the next user.
+      guard userId == removedUserId else { return }
+      alertMessage = String(
+        format: String(localized: "profile.error.removeImage"),
+        locale: AppLocalization.currentLocale,
+        error.localizedDescription
+      )
+      showingAlert = true
+      return
+    }
+
+    // The local copy is the fallback when a download fails; left in place, it would bring the
+    // removed photo back. Delete it even if the user signed out meanwhile.
+    fileManager.deleteImage(name: "profile_\(removedUserId)")
+    guard userId == removedUserId else { return }
+    profileImageURL = nil
+    tempImage = nil
+    withAnimation(.easeInOut(duration: 0.2)) {
+      profileImage = nil
     }
   }
 
