@@ -40,6 +40,7 @@ enum UITestLaunchOptions {
     static let aiSeedDraftHarnessArgument = "-ui-test-ai-seed-draft"
     static let guestFavoritesOneBelowCapArgument = "-ui-test-guest-favorites-one-below-cap"
     static let homeSavedAnswerArgument = "-ui-test-home-saved-answer"
+    static let profilePhotoHarnessArgument = "-ui-test-profile-photo"
 
     static var isCategoryQuestionsHarnessEnabled: Bool { Harness.categoryQuestions.isEnabled }
     static var isGuestFavoriteMilestoneHarnessEnabled: Bool { Harness.guestFavoriteMilestone.isEnabled }
@@ -84,6 +85,11 @@ enum UITestLaunchOptions {
     /// dropped draft from a saved one.
     static var shouldSeedHomeSavedAnswer: Bool {
         ProcessInfo.processInfo.arguments.contains(homeSavedAnswerArgument)
+    }
+
+    /// Starts the profile harness with a photo and a remover that needs no Firebase (#71).
+    static var shouldSeedProfilePhoto: Bool {
+        ProcessInfo.processInfo.arguments.contains(profilePhotoHarnessArgument)
     }
 
     /// Every argument that means "this launch is a harness".

@@ -25,7 +25,11 @@ struct UITestProfileRootView: View {
                 profileModel: ProfileModel(
                     uiTestUsername: "Profile Harness",
                     email: "profile@example.com",
-                    statistics: .init(daily: 3, weekly: 9, total: 27)
+                    statistics: .init(daily: 3, weekly: 9, total: 27),
+                    profileImage: UITestLaunchOptions.shouldSeedProfilePhoto
+                        ? UIImage(systemName: "photo.fill")
+                        : nil,
+                    photoRemover: UITestProfilePhotoRemover()
                 ),
                 questionListStore: QuestionListStore(localLists: [Self.listFixture])
             )

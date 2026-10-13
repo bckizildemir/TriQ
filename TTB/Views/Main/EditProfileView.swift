@@ -11,6 +11,7 @@ struct EditProfileView: View {
     @State private var tempEmail: String = ""
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showingDeleteConfirmation = false
+    @State private var showingRemovePhotoConfirmation = false
     
     var body: some View {
         NavigationStack {
@@ -44,6 +45,36 @@ struct EditProfileView: View {
                     }
                     .accessibilityLabel(String(localized: "profile.edit.changePhotoAccessibility"))
                     .accessibilityHint(String(localized: "profile.edit.changePhotoHint"))
+
+                    if model.hasProfilePhoto {
+                        Button(role: .destructive) {
+                            showingRemovePhotoConfirmation = true
+                        } label: {
+                            HStack {
+                                Text(String(localized: "profile.edit.removePhoto"))
+                                Spacer()
+                                Image(systemName: "trash")
+                            }
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                        }
+                        .disabled(actionsDisabled || model.isLoading)
+                        .accessibilityIdentifier("profile-edit-remove-photo-button")
+                        .confirmationDialog(
+                            String(localized: "profile.edit.removePhotoTitle"),
+                            isPresented: $showingRemovePhotoConfirmation,
+                            titleVisibility: .visible
+                        ) {
+                            Button(String(localized: "profile.edit.removePhotoConfirm"), role: .destructive) {
+                                Task {
+                                    await model.removeProfilePhoto()
+                                }
+                            }
+                            Button(String(localized: "common.cancel"), role: .cancel) {}
+                        } message: {
+                            Text(String(localized: "profile.edit.removePhotoMessage"))
+                        }
+                    }
                 }
 
                 if onDeleteAccount != nil {
