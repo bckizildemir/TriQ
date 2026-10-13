@@ -613,6 +613,7 @@ struct ProfileView: View {
   @State private var activeSheet: ProfileSheet?
   @State private var shouldShowDeletePasswordAfterEditDismiss = false
   @State private var isShowingErrorAlert = false
+  @State private var hasRefreshedForPresentation = false
 
   init(model: ProfileModel) {
     self.model = model
@@ -874,6 +875,13 @@ struct ProfileView: View {
     content
       .onAppear {
         badgeModel.loadBadges()
+      }
+      .task {
+        // Once per presentation: `.task` runs again when a pushed screen pops, and a refresh then
+        // would clear an alert raised while that screen was on top.
+        guard !hasRefreshedForPresentation else { return }
+        hasRefreshedForPresentation = true
+        await model.refreshForPresentation()
       }
       .onChange(of: authModel.isAnonymous) { _, isAnonymous in
         handleAnonymousStateChange(isAnonymous)
