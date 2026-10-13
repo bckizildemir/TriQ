@@ -473,27 +473,25 @@ struct MostAnsweredView: View {
         // own answers, and it was read for the empty check and again for the `ForEach`.
         let items = currentItems
 
-        if viewModel.isLoading || viewModel.error != nil || items.isEmpty {
+        // One scroll view for every state: the filter scrolls with the list, so the list reaches
+        // the navigation bar and iOS 27 can minimize the bar on scroll, as on Home (#59). The
+        // filter and the refresh control keep their identity when the list empties or fills.
+        ScrollView {
             VStack(spacing: 12) {
                 filterPicker
 
-                if viewModel.isLoading {
+                if viewModel.isLoading && items.isEmpty {
                     ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .frame(maxWidth: .infinity)
+                        .containerRelativeFrame(.vertical)
                         .accessibilityLabel(String(localized: "bestof.loading"))
                 } else if let errorMessage = viewModel.error {
                     errorView(message: errorMessage)
-                } else {
+                        .containerRelativeFrame(.vertical)
+                } else if items.isEmpty {
                     emptyStateView
-                }
-            }
-        } else {
-            // The filter scrolls with the list, so the list reaches the navigation bar and
-            // iOS 27 can minimize the bar on scroll, as on Home (#59).
-            ScrollView {
-                VStack(spacing: 12) {
-                    filterPicker
-
+                        .containerRelativeFrame(.vertical)
+                } else {
                     LazyVStack(spacing: 16) {
                         ForEach(items) { item in
                             MostAnsweredQuestionCard(
@@ -513,9 +511,9 @@ struct MostAnsweredView: View {
                     .padding(.vertical)
                 }
             }
-            .refreshable {
-                await viewModel.load()
-            }
+        }
+        .refreshable {
+            await viewModel.load()
         }
     }
 
