@@ -430,6 +430,7 @@ struct MostAnsweredView: View {
 
         NavigationStack {
             contentView
+            .backport.pageColoredNavigationBar(Color.theme.background)
             .background(Color.theme.background)
             .navigationChromeTitle(
                 semanticTitle: title,
@@ -472,26 +473,27 @@ struct MostAnsweredView: View {
         // own answers, and it was read for the empty check and again for the `ForEach`.
         let items = currentItems
 
-        VStack(spacing: 12) {
-            Picker(String(localized: "bestof.filter.label"), selection: $selectedFilter) {
-                ForEach(TimeFilter.allCases) { filter in
-                    Text(filter.title).tag(filter)
+        if viewModel.isLoading || viewModel.error != nil || items.isEmpty {
+            VStack(spacing: 12) {
+                filterPicker
+
+                if viewModel.isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .accessibilityLabel(String(localized: "bestof.loading"))
+                } else if let errorMessage = viewModel.error {
+                    errorView(message: errorMessage)
+                } else {
+                    emptyStateView
                 }
             }
-            .pickerStyle(.segmented)
-            .padding(.horizontal)
-            .padding(.top, 8)
+        } else {
+            // The filter scrolls with the list, so the list reaches the navigation bar and
+            // iOS 27 can minimize the bar on scroll, as on Home (#59).
+            ScrollView {
+                VStack(spacing: 12) {
+                    filterPicker
 
-            if viewModel.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .accessibilityLabel(String(localized: "bestof.loading"))
-            } else if let errorMessage = viewModel.error {
-                errorView(message: errorMessage)
-            } else if items.isEmpty {
-                emptyStateView
-            } else {
-                ScrollView {
                     LazyVStack(spacing: 16) {
                         ForEach(items) { item in
                             MostAnsweredQuestionCard(
@@ -510,11 +512,22 @@ struct MostAnsweredView: View {
                     }
                     .padding(.vertical)
                 }
-                .refreshable {
-                    await viewModel.load()
-                }
+            }
+            .refreshable {
+                await viewModel.load()
             }
         }
+    }
+
+    private var filterPicker: some View {
+        Picker(String(localized: "bestof.filter.label"), selection: $selectedFilter) {
+            ForEach(TimeFilter.allCases) { filter in
+                Text(filter.title).tag(filter)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal)
+        .padding(.top, 8)
     }
 
     // MARK: Empty State
