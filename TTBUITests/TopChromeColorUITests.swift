@@ -1,49 +1,77 @@
 import XCTest
 
 // nonisolated keeps the inherited XCTestCase initializers nonisolated; the tests run in the @MainActor extension below.
-nonisolated final class HomeTopChromeColorUITests: XCTestCase {
+nonisolated final class TopChromeColorUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = true
     }
 }
 
 @MainActor
-extension HomeTopChromeColorUITests {
+extension TopChromeColorUITests {
     /// The status bar, navigation bar and chip row show the page color, at rest and after a scroll.
-    func testTopChromeHasNoGreyBand() {
-        let app = XCUIApplication()
-        app.launchArguments += [
-            "-ui-test-home-harness",
-            "-ui-test-home-long-feed",
-            "-AppleLanguages",
-            "(en)",
-            "-AppleLocale",
-            "en_US"
-        ]
-        app.launch()
+    func testHomeTopChromeHasNoGreyBand() {
+        let app = launch(harness: "-ui-test-home-harness", "-ui-test-home-long-feed")
         let chip = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "home-category-chip-")).firstMatch
         XCTAssertTrue(chip.waitForExistence(timeout: 10))
+        let card = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question-card-home.")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
         RunLoop.current.run(until: Date().addingTimeInterval(1))
-        let bandBottom = chip.frame.maxY + 6
-        let anyCard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question-card-home.")).firstMatch
-        XCTAssertTrue(anyCard.waitForExistence(timeout: 5))
-        // Pin the card by its identifier so the scrolled check reads the same card.
-        let firstCard = app.buttons[anyCard.identifier]
-        let firstCardTop = firstCard.frame.minY
 
-        assertColumnIsPageColor(state: "rest", bandBottom: bandBottom)
+        assertTopChromeIsPageColor(
+            screen: "home",
+            in: app,
+            bandBottom: chip.frame.maxY + 6,
+            // Pin the card by its identifier so the scrolled check reads the same card.
+            scrollProbe: app.buttons[card.identifier]
+        )
+    }
+
+    /// The status bar and navigation bar show the page color on Best Of, at rest and after the
+    /// filter has scrolled away under the bar.
+    func testBestOfTopChromeHasNoGreyBand() {
+        let app = launch(harness: "-ui-test-most-answered-harness")
+        let card = app.buttons["question-card-mostAnswered-preview-most-answered-1"]
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+
+        assertTopChromeIsPageColor(
+            screen: "best-of",
+            in: app,
+            bandBottom: app.navigationBars.firstMatch.frame.maxY + 6,
+            scrollProbe: card
+        )
+    }
+
+    private func launch(harness arguments: String...) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments += arguments + ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        return app
+    }
+
+    /// Checks the band above `bandBottom` at rest, scrolls the content up, checks that
+    /// `scrollProbe` moved, then checks the band again.
+    private func assertTopChromeIsPageColor(
+        screen: String,
+        in app: XCUIApplication,
+        bandBottom: CGFloat,
+        scrollProbe: XCUIElement
+    ) {
+        let probeTop = scrollProbe.frame.minY
+        assertColumnIsPageColor(state: "\(screen)-rest", bandBottom: bandBottom)
 
         let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
         let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
         start.press(forDuration: 0.05, thenDragTo: end)
         RunLoop.current.run(until: Date().addingTimeInterval(1.5))
-        // The long-feed fixture is taller than the screen, so the drag must move the feed.
+        // The fixture is taller than the screen, so the drag must move the content.
         XCTAssertTrue(
-            !firstCard.exists || firstCard.frame.minY < firstCardTop - 50,
-            "the feed did not scroll; the scrolled check would test the rest state again"
+            !scrollProbe.exists || scrollProbe.frame.minY < probeTop - 50,
+            "\(screen): the content did not scroll; the scrolled check would test the rest state again"
         )
 
-        assertColumnIsPageColor(state: "scrolled", bandBottom: bandBottom)
+        assertColumnIsPageColor(state: "\(screen)-scrolled", bandBottom: bandBottom)
     }
 
     /// Scans the pixel column 4 pt from the leading edge, left of every title, button and chip.
