@@ -26,6 +26,10 @@ extension HomeCategoryChipsUITests {
         let careerChip = app.buttons[careerChipID]
         XCTAssertTrue(careerChip.waitForExistence(timeout: 5))
         XCTAssertTrue(waitUntil(timeout: 5) { careerChip.isHittable })
+
+        // The chip row is pinned above the feed, so a feed scroll must not move it away (#59).
+        app.swipeUp()
+        XCTAssertTrue(waitUntil(timeout: 5) { careerChip.isHittable })
         careerChip.tap()
 
         let categoryTitle = app.navigationBars["Career"]
