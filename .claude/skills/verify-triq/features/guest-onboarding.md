@@ -52,5 +52,6 @@ Preconditions: a fresh run through `vt doctor` (exit 0, `appcheck:` line present
   `2026-10-15-004022-181b`). Check `vt doctor`'s `appcheck` line first.
 - On 2026-10-15, with the token, the device log still showed one refused
   `Write at users/<uid> failed: Missing or insufficient permissions` near the guest sign-in; the
-  onboarding completed. Not yet explained; report it if it shows again.
+  onboarding completed. Reproduced in a third run; cause and fix are in #94 (two `ensureExists`
+  calls race at sign-in). Expected until #94 is fixed; after the fix, its absence is the proof.
 - The greeting heading changes with the time of day ("Good night 🌙"); do not assert on it.
