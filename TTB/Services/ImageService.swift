@@ -110,19 +110,41 @@ actor ImageService {
         return try await uploadImage(image, to: path)
     }
 
-    /// Deletes the current user's profile image from Firebase Storage.
-    func deleteProfileImage() async throws {
-        guard let userId = Auth.auth().currentUser?.uid else {
+    /// Deletes `userId`'s profile image from Firebase Storage.
+    /// - Parameters:
+    ///   - userId: the user the caller acts for; it must be the signed-in user, so the Storage
+    ///     delete and the caller's own writes target the same account.
+    ///   - downloadURL: the URL the photo was cached under, when the caller knows it.
+    func deleteProfileImage(userId: String, downloadURL: String? = nil) async throws {
+        guard !userId.isEmpty, Auth.auth().currentUser?.uid == userId else {
             throw ImageServiceError.notAuthenticated
         }
         let path = profileImagePath(userId: userId)
         let ref = Storage.storage().reference().child(path)
-        cache.removeObject(forKey: path as NSString)
+        if let downloadURL {
+            evictProfileImage(downloadURL: downloadURL)
+        }
         do {
             try await ref.delete()
         } catch {
             throw ImageServiceError.deleteFailed(error)
         }
+    }
+
+    /// Drops the photo cached under its download URL, the key uploads write and
+    /// `loadProfileImage(from:)` reads. The Storage path is not a key in this cache (#85).
+    func evictProfileImage(downloadURL: String) {
+        cache.removeObject(forKey: downloadURL as NSString)
+    }
+
+    /// Whether `error` says the Storage object does not exist, raw or wrapped by a delete.
+    nonisolated static func isMissingStorageObject(_ error: any Error) -> Bool {
+        if case .deleteFailed(let underlying)? = error as? ImageServiceError {
+            return isMissingStorageObject(underlying)
+        }
+        let nsError = error as NSError
+        return nsError.domain == StorageErrorDomain
+            && nsError.code == StorageErrorCode.objectNotFound.rawValue
     }
 
     /// Downloads a profile image from a Firebase Storage URL string.

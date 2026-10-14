@@ -147,9 +147,8 @@ final class LiveAuthModelAuthProvider: AuthModelAuthProviding {
 }
 
 final class LiveAuthUserDocumentManager: AuthUserDocumentManaging {
-    private let db = Firestore.firestore()
-
     func ensureExists(for user: AuthModelUser) async {
+        let db = Firestore.firestore()
         let userRef = db.collection("users").document(user.uid)
         do {
             let snapshot = try await userRef.getDocument()
@@ -185,6 +184,7 @@ final class LiveAuthUserDocumentManager: AuthUserDocumentManaging {
     }
 
     func profileSnapshot(userId: String) async throws -> UserProfileSnapshot? {
+        let db = Firestore.firestore()
         let snapshot = try await db.collection("users").document(userId).getDocument()
         guard let data = snapshot.data() else { return nil }
         return UserProfileSnapshot(
@@ -195,6 +195,7 @@ final class LiveAuthUserDocumentManager: AuthUserDocumentManaging {
     }
 
     func deleteUserAndAuth(user: AuthModelUser) async {
+        let db = Firestore.firestore()
         do {
             try await db.collection("users").document(user.uid).delete()
             try await user.deleteAsync()
