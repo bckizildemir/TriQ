@@ -19,7 +19,7 @@ before you drive the app, then use the matching feature file as the recipe. The 
 ## Driving conventions
 
 - Tap with `vt tap <axe selector>`; it exits 1 when the screen did not change after two taps. Then
-  read `vt ui`.
+  read `vt ui`. A tap that writes live uses `vt tap --once` (no second tap).
 - Match by identifier (`vt tap --id …`) first, by label (`--label`) with `--element-type` second.
   Coordinates (`axe tap -x … -y … --tap-style physical --udid $UDID`) only when an element has neither.
 - The tab bar has no identifiers. Labels: Home | Ana Sayfa, Best Of | En İyiler, Trio | Trio.

@@ -33,7 +33,8 @@ V=.claude/skills/verify-triq/scripts/vt.sh
 - One fresh simulator per run, one driver. Touch no other simulator — not the shared `iPhone 12`
   devices that TriQ, Purrtine and other sessions use. Never `xcrun simctl shutdown all`. One verify
   run at a time across both apps: `$V start` waits for `/tmp/verify-triq.lock` and for any Purrtine
-  verify run (`/tmp/verify-purrtine.lock` or a booted `verify-purrtine-*` device).
+  verify run with a fresh lock (`/tmp/verify-purrtine.lock`, heartbeat under 45 minutes old). The wait
+  is one-way: Purrtine's `vp.sh` does not check for a TriQ run.
 - Device: **iPhone 12, iOS 26.5** (owner, 2026-10-15).
 
 ## Live Firebase (read before you drive)
@@ -107,7 +108,8 @@ $V doctor                      # must exit 0
 ### Why hold
 
 `Scripts/xcb.sh test` shuts down other booted simulators before it runs (`shut_down_other_simulators`).
-`$V hold` takes the same machine-wide lock that xcb uses (`~/Library/Caches/xcb/build.lock`, its
+Since 2026-10-15 it skips devices named `verify-*`, but a checkout with an older `xcb.sh` does not, and
+other builds still compete for this 16 GB Mac during a drive. `$V hold` takes the same machine-wide lock that xcb uses (`~/Library/Caches/xcb/build.lock`, its
 `pid` and `owner` files), owned by a watcher process, so other sessions' builds and tests wait while
 you drive. It ends at `$V cleanup`, or after 30 minutes (`VT_HOLD_MAX=<seconds>`). Take it after
 `build` — `build` needs that lock itself — and keep the drive short.
@@ -140,7 +142,7 @@ simulators. Exit 0 means worth driving. Run it first whenever anything looks off
 ```bash
 UDID=$(cat /tmp/verify-triq.lock/udid)
 $V ui                                             # Type | Label | Id | Value | frame [disabled]
-$V tap --label 'Continue as Guest' --element-type Button
+$V tap --once --label 'Continue as Guest' --element-type Button   # writes live: no retap
 $V tap --id onboarding-continue-button
 axe type 'coffee' --udid $UDID                    # after a tap on the field
 axe tap -x 195 -y 420 --tap-style physical --udid $UDID   # only when an element has no id or label
@@ -149,8 +151,11 @@ axe tap -x 195 -y 420 --tap-style physical --udid $UDID   # only when an element
 - Prefer `--id` (identifiers do not change with the language), then `--label` with
   `--element-type`. The sign-in screen and the tab bar have no identifiers; use labels.
 - Use `$V tap`, not a bare `axe tap`. `axe tap` exits 0 even when nothing happened. `$V tap` taps
-  with `--tap-style physical --wait-timeout 10` and taps once more only when the tree did not
-  change; it exits 1 when the screen still did not change. Never retap blindly.
+  with `--tap-style physical --wait-timeout 10`, waits up to 8 s for the tree to change, and taps
+  once more only when it did not; it exits 1 when the screen still did not change. Never retap blindly.
+- **A tap that writes live uses `$V tap --once`** (no second tap): "Continue as Guest", Save, Publish,
+  a signed-in favorite. A slow server call can take longer than 8 s, and a second tap would write
+  twice (a second guest user) or undo the first. After a `--once` warning, read `$V ui`; do not tap again.
 - System alerts show in `$V ui` as SpringBoard elements (the notification and photo permission
   prompts appear only on the last onboarding step, and only when the user taps Allow on that card).
 - xcodebuildmcp works too: pass `simulatorId=$UDID` to `snapshot_ui`, `tap` (element refs from
@@ -225,7 +230,7 @@ no longer exists or nobody touched it for 45 minutes (`VT_STALE_MINUTES`), delet
 ## Helpers
 
 - `scripts/vt.sh` — the run: `start [--device NAME] [--lang en|tr]`, `build`, `hold`, `install`,
-  `launch`, `doctor`, `ui`, `tap AXE-TAP-ARGS…`, `shot NAME`, `tree NAME`, `revive`, `cleanup`,
+  `launch`, `doctor`, `ui`, `tap [--once] AXE-TAP-ARGS…`, `shot NAME`, `tree NAME`, `revive`, `cleanup`,
   `status`. `$V` alone prints this list.
 
 ## Maintenance pass (`/maintain-verification-skill`)

@@ -33,7 +33,7 @@ Preconditions: [Guest onboarding](./guest-onboarding.md) done; Home shows at lea
 - Read-only path: `vt tap --id question-card-input-0`, `axe type 'coffee' --udid $UDID`, then
   `vt tap --id question-card-fullscreen-close`. Expect the dialog; tap "Close without saving"
   (`vt tap --label 'Close without saving' --element-type Button`). Expect Home again. Nothing is written.
-- Save path (owner's yes first): fill the inputs with real words, `vt tap --id question-card-fullscreen-save`.
+- Save path (owner's yes first): fill the inputs with real words, `vt tap --once --id question-card-fullscreen-save`.
   Prove the save from a second view: reopen the same card and read the inputs' values.
 
 ## Gotchas

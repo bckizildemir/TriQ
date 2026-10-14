@@ -9,7 +9,8 @@
 #   launch                                launch the app with NO launch arguments
 #   doctor                                read-only: is this run worth driving?
 #   ui                                    compact tree: type | label | id | value | frame
-#   tap AXE-TAP-ARGS...                   axe tap (physical style), retried once if the screen did not change
+#   tap [--once] AXE-TAP-ARGS...          axe tap (physical style); waits up to 8 s for a change, then taps
+#                                         once more unless --once (use --once on taps that write live)
 #   shot NAME                             screenshot -> evidence/NN-NAME.png
 #   tree NAME                             accessibility tree -> evidence/NN-NAME.json
 #   revive                                boot the device again after another session shut it down
@@ -18,15 +19,17 @@
 #
 # State lives in the lock directory, so every Bash call (a new shell) finds the same run.
 #
-# Why hold: Scripts/xcb.sh shuts down other booted simulators before each `test`, so
-# another session's test can kill this run's device mid-drive. While `hold` is in force, xcb
+# Why hold: Scripts/xcb.sh used to shut down every other booted simulator before each `test`
+# (since 2026-10-15 it skips devices named verify-*, but an older checkout of xcb.sh does not).
+# The hold also keeps other builds off this 16 GB Mac during the drive. While `hold` is in force, xcb
 # runs from other sessions wait for the lock, exactly as they wait for a build. A watcher
 # process owns the lock; it lets go when cleanup removes the verify lock, or after
 # VT_HOLD_MAX seconds (default 1800), whichever comes first. The hold depends on xcb's lock
 # format (pid + owner files in $XCB_LOCK_DIR): change Scripts/xcb.sh's lock and this file together.
 #
 # Purrtine runs the same kind of skill (verify-purrtine, /tmp/verify-purrtine.lock). Its runs
-# and ours share the xcb lock and this Mac's memory, so `start` waits while one is in progress.
+# and ours share the xcb lock and this Mac's memory, so `start` waits while a fresh Purrtine lock
+# exists. The wait is one-way: verify-purrtine's vp.sh does not check for this run.
 
 set -euo pipefail
 
@@ -81,6 +84,7 @@ lock_is_stale() {
 remove_stale_lock() {
   local udid name; udid="$(state udid)"; name="$(state device_name)"
   say "removing stale lock: $(state owner)"
+  release_hold
   if [[ -n "$udid" && "$name" == "$DEVICE_PREFIX"* ]] && device_exists "$udid"; then
     xcrun simctl shutdown "$udid" 2>/dev/null || true
     xcrun simctl delete "$udid" || true
@@ -88,10 +92,19 @@ remove_stale_lock() {
   rm -rf "$LOCK_DIR"
 }
 
-# A Purrtine verify run is in progress: its lock exists or one of its devices is booted.
+# A Purrtine verify run is in progress: its lock exists and was touched in the last
+# STALE_MINUTES (vp.sh keeps a heartbeat file, like ours). A stale lock or a leftover booted
+# verify-purrtine-* device without a lock only gets a warning: that run crashed, and its own
+# vp.sh start or cleanup removes it. We never touch Purrtine's lock or devices.
 purrtine_busy() {
-  [[ -d "$PURRTINE_LOCK_DIR" ]] && return 0
-  xcrun simctl list devices booted 2>/dev/null | grep -q 'verify-purrtine-'
+  [[ -d "$PURRTINE_LOCK_DIR" ]] || return 1
+  if [[ -f "$PURRTINE_LOCK_DIR/heartbeat" ]]; then
+    [[ -z "$(find "$PURRTINE_LOCK_DIR/heartbeat" -mmin +"$STALE_MINUTES" 2>/dev/null)" ]] && return 0
+  elif [[ -z "$(find "$PURRTINE_LOCK_DIR" -maxdepth 0 -mmin +2 2>/dev/null)" ]]; then
+    return 0
+  fi
+  say "WARN stale Purrtine verify lock ($PURRTINE_LOCK_DIR, no heartbeat for ${STALE_MINUTES} min): not waiting for it"
+  return 1
 }
 
 acquire_lock() {
@@ -104,6 +117,9 @@ acquire_lock() {
     sleep 15
     waited=$((waited + 15))
   done
+  if xcrun simctl list devices booted 2>/dev/null | grep -q 'verify-purrtine-'; then
+    say "WARN a verify-purrtine-* device is booted with no live Purrtine lock; not touched"
+  fi
   until mkdir "$LOCK_DIR" 2>/dev/null; do
     if lock_is_stale; then remove_stale_lock; continue; fi
     if (( waited % 60 == 0 )); then
@@ -150,6 +166,9 @@ cmd_start() {
   done
   [[ "$lang" == en || "$lang" == tr ]] || fail "--lang takes en or tr"
   acquire_lock
+  # Any failure from here on would leave a fresh lock that blocks the next start for
+  # STALE_MINUTES; undo the half-made run instead.
+  trap 'rc=$?; if [[ $rc -ne 0 ]]; then echo "vt: start failed (exit $rc); cleaning up" >&2; cmd_cleanup >&2; fi' EXIT
 
   local run_id evidence name udid
   run_id="$(date '+%H%M%S')-$(printf '%04x' $((RANDOM)))"
@@ -173,9 +192,9 @@ cmd_start() {
   # system language of this device explicitly. The app gets no test flag.
   local languages=en-US locale=en_US
   [[ "$lang" == tr ]] && { languages=tr-TR; locale=tr_TR; }
-  xcrun simctl spawn "$udid" defaults write -g AppleLanguages -array "$languages"
-  xcrun simctl spawn "$udid" defaults write -g AppleLocale -string "$locale"
-  xcrun simctl shutdown "$udid"
+  xcrun simctl spawn "$udid" defaults write -g AppleLanguages -array "$languages" || fail "could not set the device language"
+  xcrun simctl spawn "$udid" defaults write -g AppleLocale -string "$locale" || fail "could not set the device locale"
+  xcrun simctl shutdown "$udid" || fail "could not shut down the device for the language reboot"
   xcrun simctl boot "$udid" || fail "simctl boot failed after the language change; run vt.sh cleanup"
   xcrun simctl bootstatus "$udid" >/dev/null || fail "device did not finish booting; run vt.sh cleanup"
   say "device language $languages, locale $locale (rebooted)"
@@ -185,6 +204,7 @@ cmd_start() {
     echo "started=$(date '+%Y-%m-%d %H:%M:%S')"
   } > "$evidence/run.txt"
   touch "$LOCK_DIR/heartbeat"
+  trap - EXIT
   say "booted. UDID=$udid"
   say "evidence $evidence"
 }
@@ -280,6 +300,9 @@ cmd_install() {
   need_run
   local app="$LOCK_DIR/app/$APP_NAME"
   [[ -d "$app" ]] || fail "no copied app (run vt.sh build)"
+  # Check first: an app launched without the token stores a random one in its place.
+  [[ -s "$APP_CHECK_TOKEN_FILE" ]] \
+    || fail "no App Check debug token at $APP_CHECK_TOKEN_FILE (see SKILL.md, Live Firebase)"
   boot_if_needed
   xcrun simctl install "$(state udid)" "$app" || fail "simctl install failed"
   say "installed $APP_NAME"
@@ -428,22 +451,37 @@ def walk(nodes):
 walk(json.load(sys.stdin))' || fail "could not parse the accessibility tree"
 }
 
-tree_hash() { axe describe-ui --udid "$(state udid)" 2>/dev/null | shasum | cut -c1-12; }
+# Never fails: under set -e and pipefail a failed axe call here used to end `tap` with no message.
+tree_hash() { { axe describe-ui --udid "$(state udid)" 2>/dev/null || echo none; } | shasum | cut -c1-12; }
+
+# Wait up to 8 s for the tree to differ from $1; a slow live call can take longer than one frame.
+wait_for_change() {
+  local before="$1" i
+  for i in 1 2 3 4; do
+    sleep 2
+    [[ "$(tree_hash)" != "$before" ]] && return 0
+  done
+  return 1
+}
 
 cmd_tap() {
   need_run
-  [[ $# -gt 0 ]] || fail "tap needs axe selector args, e.g. --id mainTab.home"
-  local udid before after try
+  local once=0
+  if [[ "${1:-}" == --once ]]; then once=1; shift; fi
+  [[ $# -gt 0 ]] || fail "tap needs axe selector args, e.g. --id onboarding-continue-button"
+  local udid before
   udid="$(state udid)"
   before="$(tree_hash)"
-  for try in 1 2; do
-    axe tap "$@" --tap-style physical --wait-timeout 10 --udid "$udid" >/dev/null || fail "axe tap $* found no element"
-    sleep 2
-    after="$(tree_hash)"
-    if [[ "$after" != "$before" ]]; then say "tap $* -> screen changed"; return 0; fi
-    # A tap during a transition animation can be lost (seen 2026-10-14 in Purrtine).
-    [[ $try == 1 ]] && say "screen unchanged after tap $*; tapping once more"
-  done
+  axe tap "$@" --tap-style physical --wait-timeout 10 --udid "$udid" >/dev/null || fail "axe tap $* found no element"
+  if wait_for_change "$before"; then say "tap $* -> screen changed"; return 0; fi
+  if [[ $once == 1 ]]; then
+    say "WARN screen unchanged 8 s after tap $* (--once: no second tap); read vt.sh ui"
+    return 1
+  fi
+  # A tap during a transition animation can be lost (seen 2026-10-14 in Purrtine).
+  say "screen unchanged 8 s after tap $*; tapping once more"
+  axe tap "$@" --tap-style physical --wait-timeout 10 --udid "$udid" >/dev/null || fail "axe tap $* found no element"
+  if wait_for_change "$before"; then say "tap $* -> screen changed"; return 0; fi
   say "WARN screen unchanged after two taps on $*; read vt.sh ui"
   return 1
 }
@@ -494,5 +532,5 @@ case "$sub" in
   revive) cmd_revive ;;
   cleanup) cmd_cleanup ;;
   status) cmd_status ;;
-  *) sed -n '2,30p' "$0"; exit 2 ;;
+  *) sed -n '2,35p' "$0"; exit 2 ;;
 esac

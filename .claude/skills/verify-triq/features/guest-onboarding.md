@@ -33,7 +33,8 @@ the finish writes onboarding fields to `users/<uid>`. Standing yes from the owne
 Preconditions: a fresh run through `vt doctor` (exit 0, `appcheck:` line present). `vt ui` shows
 `Button | Continue as Guest`.
 
-- `vt shot login`, then `vt tap --label 'Continue as Guest' --element-type Button`.
+- `vt shot login`, then `vt tap --once --label 'Continue as Guest' --element-type Button`
+  (`--once`: a second tap could create a second guest user).
 - Expect `GenericElement | Onboarding progress | | 20 percent` and `onboarding-continue-button`.
   `vt shot onboarding-welcome`, `vt tree onboarding-welcome`.
 - Four times: `vt tap --id onboarding-continue-button`. Expect `100 percent` and
