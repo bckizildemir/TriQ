@@ -59,6 +59,22 @@ struct UITestMostAnsweredRootView: View {
                 ]
             ),
             userAnswers: ["Reading", "Training", "Planning"]
+        ),
+        // A third card makes the Today list taller than an iPhone 12 screen, so the list can
+        // scroll the filter away and minimize the bar (#59).
+        MostAnsweredItem(
+            question: Question(
+                id: "preview-most-answered-5",
+                text: "Which three small wins made you smile today?",
+                category: "Daily",
+                totalRespondents: 15,
+                answerStats: [
+                    "0": ["Good coffee": 5],
+                    "1": ["A kind message": 4],
+                    "2": ["Sunshine": 3]
+                ]
+            ),
+            userAnswers: ["Good coffee", "A kind message", "Sunshine"]
         )
     ]
 

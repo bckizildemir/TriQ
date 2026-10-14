@@ -393,6 +393,8 @@ struct MostAnsweredView: View {
     @StateObject private var viewModel: MostAnsweredViewModel
     @State private var presentedQuestion: ExpandedQuestionState?
     @State private var selectedFilter: TimeFilter = .daily
+    /// Height of the filter, padding included, so a state view fills only the space under it.
+    @State private var filterHeight: CGFloat = 0
 
     private let expansionSourceID = "mostAnswered"
     private let onShowHome: () -> Void
@@ -430,11 +432,13 @@ struct MostAnsweredView: View {
 
         NavigationStack {
             contentView
+            .backport.pageColoredNavigationBar(Color.theme.background)
             .background(Color.theme.background)
             .navigationChromeTitle(
                 semanticTitle: title,
                 visualTitle: Text(title)
             )
+            .backport.minimizesNavigationBarOnScrollDown()
         }
         .fullScreenCover(
             item: $presentedQuestion
@@ -470,27 +474,33 @@ struct MostAnsweredView: View {
         // Resolved once and threaded down: `currentItems` rebuilds every item to fold in the user's
         // own answers, and it was read for the empty check and again for the `ForEach`.
         let items = currentItems
+        // Read here, in the body, so a new filter height lays the state views out again.
+        let stateViewOffset = filterHeight + Self.filterSpacing
+        // The visible scroll height less the filter above it, so the loading, error and empty
+        // views fill the screen without making the page scroll.
+        let stateViewHeight: (CGFloat, Axis) -> CGFloat = { length, _ in
+            max(0, length - stateViewOffset)
+        }
 
-        VStack(spacing: 12) {
-            Picker(String(localized: "bestof.filter.label"), selection: $selectedFilter) {
-                ForEach(TimeFilter.allCases) { filter in
-                    Text(filter.title).tag(filter)
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding(.horizontal)
-            .padding(.top, 8)
+        // One scroll view for every state: the filter scrolls with the list, so the list reaches
+        // the navigation bar and iOS 27 can minimize the bar on scroll, as on Home (#59). The
+        // filter and the refresh control keep their identity when the list empties or fills.
+        ScrollView {
+            VStack(spacing: Self.filterSpacing) {
+                filterPicker
 
-            if viewModel.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .accessibilityLabel(String(localized: "bestof.loading"))
-            } else if let errorMessage = viewModel.error {
-                errorView(message: errorMessage)
-            } else if items.isEmpty {
-                emptyStateView
-            } else {
-                ScrollView {
+                if viewModel.isLoading && items.isEmpty {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .containerRelativeFrame(.vertical, alignment: .center, stateViewHeight)
+                        .accessibilityLabel(String(localized: "bestof.loading"))
+                } else if let errorMessage = viewModel.error {
+                    errorView(message: errorMessage)
+                        .containerRelativeFrame(.vertical, alignment: .center, stateViewHeight)
+                } else if items.isEmpty {
+                    emptyStateView
+                        .containerRelativeFrame(.vertical, alignment: .center, stateViewHeight)
+                } else {
                     LazyVStack(spacing: 16) {
                         ForEach(items) { item in
                             MostAnsweredQuestionCard(
@@ -509,12 +519,30 @@ struct MostAnsweredView: View {
                     }
                     .padding(.vertical)
                 }
-                .refreshable {
-                    await viewModel.load()
-                }
             }
         }
+        .refreshable {
+            await viewModel.load()
+        }
     }
+
+    private var filterPicker: some View {
+        Picker(String(localized: "bestof.filter.label"), selection: $selectedFilter) {
+            ForEach(TimeFilter.allCases) { filter in
+                Text(filter.title).tag(filter)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal)
+        .padding(.top, 8)
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.height
+        } action: { height in
+            filterHeight = height
+        }
+    }
+
+    private static let filterSpacing: CGFloat = 12
 
     // MARK: Empty State
 

@@ -37,6 +37,7 @@ struct AIView: View {
                 semanticTitle: title,
                 visualTitle: Text(title)
             )
+            .backport.minimizesNavigationBarOnScrollDown()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
