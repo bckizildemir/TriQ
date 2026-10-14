@@ -172,7 +172,8 @@ cmd_start() {
   local runtime_id="com.apple.CoreSimulator.SimRuntime.iOS-${os/./-}" runtimes
   # Read into a variable first: `simctl | grep -q` under pipefail can fail when grep exits early.
   runtimes="$(xcrun simctl list runtimes)" || fail "simctl list runtimes failed"
-  grep -qF "$runtime_id" <<<"$runtimes" || fail "no iOS $os runtime on this Mac (xcrun simctl list runtimes)"
+  # Match the whole last field: a substring test would accept 8.5 (iOS-8-5 is inside iOS-18-5).
+  awk -v id="$runtime_id" '$NF == id { found = 1 } END { exit !found }' <<<"$runtimes" || fail "no iOS $os runtime on this Mac (xcrun simctl list runtimes)"
   acquire_lock
   # Any failure from here on would leave a fresh lock that blocks the next start for
   # STALE_MINUTES; undo the half-made run instead.
