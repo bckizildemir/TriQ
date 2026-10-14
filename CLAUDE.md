@@ -34,18 +34,15 @@ open TTB.xcodeproj
 Scripts/xcb.sh build
 Scripts/xcb.sh test --scheme TTBTests                                   # fast local loop: unit tests only
 Scripts/xcb.sh test --scheme TTBTests --only TTBTests/FavoriteStoreTests # changed area
-Scripts/xcb.sh test --only TTBUITests/<SuiteName>                       # a UI test you added or changed
 ```
 - Use the first command for day-to-day development in Xcode.
 - Agents build and test through `Scripts/xcb.sh`, never a bare `xcodebuild`. The script holds a machine-wide lock, so builds from every worktree and from CatCareCalendar queue one at a time on this 16GB Mac; it shares one DerivedData and package checkout across worktrees, so Firebase compiles once. A run can wait minutes for the lock: give it a long Bash timeout or run it in the background. `Scripts/xcb.sh --help` lists the options.
 - Two schemes. `TTBTests` is the inner loop: it builds the app and the unit test bundle only and skips the UI test target. `TTB` is the full run with unit and UI tests. Neither scheme collects code coverage.
 - Run locally only the tests you added or changed, plus the suites of the files you changed (`--scheme TTBTests --only`). CI (`.github/workflows/ci.yml`) runs the full `TTBTests` unit suite on every PR and is the gate; read its result. The full local run queues behind one simulator and the build lock and repeats CI. List the tests you ran in the PR body.
-- CI does not run `TTBUITests`. Run locally only the UI tests you added or changed (`Scripts/xcb.sh test --only TTBUITests/...`).
 - `Scripts/xcb.sh` prints errors only. Compiler warnings are in its log: `~/Library/Caches/xcb/<Project>/logs/`.
-- Simulator UI checks (iPhone 12, iOS 26.5): call xcodebuildmcp `open_sim` before `snapshot_ui`; with the Simulator window closed it returns an empty tree. The system photo picker (`ImagePicker.swift` PHPicker, `EditProfileView` PhotosPicker) runs out of process and neither tool sees its cells: say in the PR that a photo pick was not checked by hand. A hand-off between an alert, a sheet and a disappearing view needs one check with animations on; the harness flags in `TTB/App/UITestLaunchOptions.swift` leave animations on, so keep it that way.
+- **Verify trial** (owner, 2026-10-15). UI tests, simulator checks and iOS-version passes are paused while the owner tries the verification skill, the same as in Purrtine. Prove what a user sees with `verify-triq` (`.claude/skills/verify-triq/`, made with `/create-verification-skill`): a fresh simulator, no launch flags, the live Firebase project, evidence in `~/verify-evidence/triq/`. Its feature files name what each journey writes on the server; a write or a paid call needs the owner's yes. The paused rules are parked outside the repo at `~/.claude/parked/2026-10-15-verify-trial-triq/`; they do not apply during the trial. `/maintain-verification-skill` keeps the skill current; only the owner can start it.
 - A new worktree has no `TTB/Secrets.xcconfig` (gitignored), and the build fails at once without it. Copy `TTB/Secrets.xcconfig.template` to `TTB/Secrets.xcconfig` before the first `Scripts/xcb.sh` run. Do not commit `TTB/Secrets.xcconfig`.
-- The baseline simulator is iPhone 12 on iOS 26.5; the script shuts down any other booted simulator before a test.
-- To see a change in the app, build with the script, then install and launch the `.app` path it prints with xcodebuildmcp (`install_app_sim`, `launch_app_sim`). xcodebuildmcp's own `build_*`/`test_*` tools bypass the lock.
+- The baseline simulator is iPhone 12 on iOS 26.5; the script shuts down any other booted simulator before a test, except devices named `verify-*` (a verify-skill run).
 - `Scripts/xcb.sh` is shared with CatCareCalendar; keep the two copies identical.
 
 ```bash
@@ -79,9 +76,9 @@ Before you add or edit a live Firebase adapter — a type that calls the Firebas
 
 ### Project skills
 
-Nine project skills live in `.claude/skills/` and ship with this repository. The Firestore database is fixed: `(default)`, Standard edition, `eur3`. Run `firebase-security-rules-auditor` after each `firestore.rules` change.
+Ten project skills live in `.claude/skills/` and ship with this repository. The Firestore database is fixed: `(default)`, Standard edition, `eur3`. Run `firebase-security-rules-auditor` after each `firestore.rules` change.
 
-`.claude/skills/README.md` records the origin and the refresh policy of each of these 9 skills, names the one upstream snapshot commit behind the six vendored skills, and gives the commands that detect local edits since the import. The policy column is a decision, not a fact any command re-derives. Read that file before you refresh a vendored skill.
+`.claude/skills/README.md` records the origin and the refresh policy of each of these 10 skills, names the one upstream snapshot commit behind the six vendored skills, and gives the commands that detect local edits since the import. The policy column is a decision, not a fact any command re-derives. Read that file before you refresh a vendored skill.
 
 The eight mandatory Swift skills in the table above (`swiftui-pro`, `swiftui-ui-patterns`, `swift-concurrency-pro`, `swift-testing-pro`, `swiftui-liquid-glass`, `ios-navigation-chrome`, `ios-memory-perf`, `swift-style-guide`) are personal skills. `swift-style-guide` was written for iOS 26 / Swift 6.2; this project reports `IPHONEOS_DEPLOYMENT_TARGET = 18.2` and `SWIFT_VERSION = 5.0` (verified 2026-10-02), so treat its version numbers as the target for new code and flag any API the deployment target can't support. Each machine installs them in `~/.claude/skills`, and this repository does not ship them.
 
