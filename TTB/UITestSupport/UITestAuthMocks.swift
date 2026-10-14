@@ -146,6 +146,13 @@ struct UITestBadgeProgressBackfill: BadgeProgressBackfilling {
 actor UITestAccountDeletionService: AccountDeletionPerforming {
     func deleteCurrentAccount(password: String?) async throws {
         _ = password
+        // Lets a UI test reach the failure UI without Firebase (TriQ#88).
+        if UITestLaunchOptions.shouldFailAccountDeletion {
+            // A real callable takes a moment; failing at once would re-present the alert before
+            // the dismissed one has gone, and a test could not tell the retry ran.
+            try await Task.sleep(for: .seconds(1))
+            throw AccountDeletionError.dataDeletionFailed
+        }
     }
 }
 
