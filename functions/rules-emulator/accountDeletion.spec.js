@@ -87,6 +87,9 @@ async function seedWorld() {
     "questions/aliceQ/userAnswers/alice": { userId: "alice", answers: ["a"], answeredAt },
     "questions/aliceQ/userAnswers/bob": { userId: "bob", answers: ["b"], answeredAt },
     "questions/bobQ": { source: "userCreated", createdBy: "bob", moderationStatus: "approved" },
+    // An official question alice added as an admin: it belongs to the app, not to alice.
+    "questions/officialQ": { source: "seeded", createdBy: "alice" },
+    "questions/officialQ/userAnswers/bob": { userId: "bob", answers: ["c"], answeredAt },
 
     "questionLists/aliceList": { ownerId: "alice", name: "Mine", questionIds: ["seeded1", "aliceQ"] },
     "questionLists/bobList": { ownerId: "bob", name: "Bob's", questionIds: ["seeded1", "aliceQ", "bobQ"] },
@@ -117,6 +120,14 @@ async function seedWorld() {
     },
     "questionListShares/carolShare/recipients/alice": {
       recipientId: "alice", status: "left", updatedAt: answeredAt,
+    },
+    // dave's revoked share, which alice had accepted.
+    "questionListShares/daveShare": {
+      ownerId: "dave", sourceListId: "daveList", shareCode: "DAVE11", status: "revoked",
+      isLinkEnabled: false, acceptedRecipientCount: 0, updatedAt: answeredAt,
+    },
+    "questionListShares/daveShare/recipients/alice": {
+      recipientId: "alice", status: "revoked", updatedAt: answeredAt,
     },
   };
 
@@ -176,6 +187,7 @@ describe("deleteOwnAccountData", () => {
       "questionListShares/aliceShare/recipients/bob",
       "questionListShares/bobShare/recipients/alice",
       "questionListShares/carolShare/recipients/alice",
+      "questionListShares/daveShare/recipients/alice",
     ]) {
       assert.equal(await exists(path), false, `${path} should be deleted`);
     }
@@ -212,6 +224,9 @@ describe("deleteOwnAccountData", () => {
       "aiUsageDaily/bob",
       "questions/seeded1/userAnswers/bob",
       "questions/bobQ",
+      "questions/officialQ",
+      "questions/officialQ/userAnswers/bob",
+      "questionListShares/daveShare",
       "questionLists/bobList",
       "questionListShares/bobShare/recipients/carol",
       "questionListShares/carolShare",

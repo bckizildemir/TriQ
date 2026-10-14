@@ -81,7 +81,12 @@ async function removeFavorites(db, uid) {
 // MARK: - Community questions
 
 async function deleteOwnQuestions({ db, bucket, uid }) {
-  const snapshot = await db.collection("questions").where("createdBy", "==", uid).get();
+  // Community questions only. An admin's official questions are `source: "seeded"` with the
+  // admin's uid in createdBy (AdminQuestionView); they belong to the app and stay.
+  const snapshot = await db.collection("questions")
+    .where("createdBy", "==", uid)
+    .where("source", "==", "userCreated")
+    .get();
 
   for (const questionSnapshot of snapshot.docs) {
     const questionRef = questionSnapshot.ref;

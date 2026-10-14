@@ -272,8 +272,9 @@ exports.purgeOwnAnswersForAccountDeletion = onCall({ region: REGION }, async (re
 
 // Account deletion (TriQ#88): deletes all of the caller's data with the admin SDK, because the
 // rules deny clients most of it on purpose. The app deletes the Auth user only after this
-// succeeds, so a failure leaves the account in place for a retry.
-exports.deleteOwnAccountData = onCall({ region: REGION }, async (request) => {
+// succeeds, so a failure leaves the account in place for a retry. The answer purge runs one
+// answer at a time, so a heavy user needs more than the 60 second default.
+exports.deleteOwnAccountData = onCall({ region: REGION, timeoutSeconds: 300 }, async (request) => {
   if (!request.auth?.uid) {
     throw new HttpsError("unauthenticated", "Authentication is required.");
   }
