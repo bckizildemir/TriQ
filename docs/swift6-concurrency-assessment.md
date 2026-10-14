@@ -421,7 +421,7 @@ package target). Do not touch `project.pbxproj` in this commit. It conflicts wit
 
 Set `SWIFT_STRICT_CONCURRENCY = complete` and `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` on
 `TTBUITests` only. Measured: `** TEST BUILD SUCCEEDED **`, 718 → 56. Then fix the 56
-override-isolation warnings (4 per file, 14 files). Run the UI tests on iPhone 12 / iOS 26.5 to
+override-isolation warnings (4 per file, 14 files). Run the UI tests on iPhone 12 / iOS 27.0 to
 confirm they still pass, because main-actor isolation changes where the test bodies run.
 
 ### Stage 2 — app target to warning mode
