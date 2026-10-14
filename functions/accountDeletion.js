@@ -1,5 +1,5 @@
 const { HttpsError } = require("firebase-functions/v2/https");
-const { FieldValue, Timestamp } = require("firebase-admin/firestore");
+const { FieldPath, FieldValue, Timestamp } = require("firebase-admin/firestore");
 
 // Firestore allows 500 writes in one batch. Stay under it.
 const BATCH_WRITE_LIMIT = 400;
@@ -8,19 +8,21 @@ const BATCH_WRITE_LIMIT = 400;
 const RECIPIENT_STATUSES = ["accepted", "left", "revoked"];
 
 /**
- * Deletes all data the caller owns, for account deletion (TriQ#88). The client calls this after
- * reauthentication and deletes the Firebase Auth user only after it succeeds.
+ * Deletes the caller's account (TriQ#88): all data the caller owns, then the Firebase Auth user
+ * as the very last step. The client calls this after reauthentication and only signs out locally
+ * after it succeeds.
  *
  * Safe to run again: every step finds its work with a query or ignores a missing document or
- * file, so a retry after a partial failure finishes the job. `users/<uid>` goes last of the
- * Firestore data, so a failed run still leaves the profile for the retry to read.
+ * file, and an Auth user that is already gone counts as deleted, so a retry after a partial
+ * failure finishes the job. `users/<uid>` goes last of the Firestore data, so a failed run still
+ * leaves the profile for the retry to read.
  *
- * Other users' data is touched only where the brief allows it: their answers, answer images and
+ * Other users' data is touched only where the owner allowed it: their answers, answer images and
  * favorites on the caller's own community questions go with those questions; the caller's
- * question ids leave their lists; and the caller's recipient entries on their shares go, with the
- * share's accepted count decremented.
+ * question ids leave their lists and shares (with the answers copied into those shares); and the
+ * caller's recipient entries on their shares go, with the share's accepted count decremented.
  */
-async function deleteOwnAccountData({ db, bucket, uid }) {
+async function deleteOwnAccountData({ db, bucket, auth, uid }) {
   if (typeof uid !== "string" || uid.length === 0) {
     throw new HttpsError("unauthenticated", "Authentication is required.");
   }
@@ -62,7 +64,25 @@ async function deleteOwnAccountData({ db, bucket, uid }) {
   // Last: removes any other subcollection, then the user document itself.
   await db.recursiveDelete(userRef);
 
-  return { success: true, profileImageURL, counts };
+  // The very last step: a failure anywhere above leaves the account, so the user can retry.
+  const authUserDeleted = await deleteAuthUser(auth, uid);
+
+  return { success: true, profileImageURL, authUserDeleted, counts };
+}
+
+// MARK: - Auth
+
+async function deleteAuthUser(auth, uid) {
+  try {
+    await auth.deleteUser(uid);
+    return true;
+  } catch (error) {
+    // A retry after a run that got this far: the account is already gone.
+    if (error?.code === "auth/user-not-found") {
+      return false;
+    }
+    throw error;
+  }
 }
 
 // MARK: - Favorites
@@ -90,8 +110,10 @@ async function deleteOwnQuestions({ db, bucket, uid }) {
 
   for (const questionSnapshot of snapshot.docs) {
     const questionRef = questionSnapshot.ref;
-    // Lists first: once the question is gone this query cannot find it again on a retry.
+    // Lists and shares first: once the question is gone these queries cannot find it again on
+    // a retry.
     await removeQuestionFromLists(db, questionRef.id);
+    await removeQuestionFromShares(db, questionRef.id);
     const answers = await questionRef.collection("userAnswers").get();
     for (const answer of answers.docs) {
       await deleteFilesWithPrefix(bucket, `answers/${answer.id}/${questionRef.id}/`);
@@ -115,6 +137,37 @@ async function removeQuestionFromLists(db, questionId) {
       updatedAt: FieldValue.serverTimestamp(),
     });
   });
+}
+
+// A share copies the list's question ids (questionIds), the owner's answers per question
+// (ownerAnswerSnapshots), and each recipient's reply per question (recipients/*
+// latestReplyAnswerSnapshots), all in questionListShares.js. Drop the deleted question from each.
+async function removeQuestionFromShares(db, questionId) {
+  const snapshot = await db.collection("questionListShares")
+    .where("questionIds", "array-contains", questionId)
+    .get();
+
+  for (const shareSnapshot of snapshot.docs) {
+    // Recipients before the share: a retry finds the share again only while it still lists the
+    // question.
+    const recipients = await shareSnapshot.ref.collection("recipients").get();
+    const repliedRecipients = recipients.docs.filter((recipient) =>
+      Object.hasOwn(recipient.data()?.latestReplyAnswerSnapshots || {}, questionId)
+    );
+    await commitInBatches(db, repliedRecipients, (batch, recipient) => {
+      batch.update(
+        recipient.ref,
+        new FieldPath("latestReplyAnswerSnapshots", questionId),
+        FieldValue.delete()
+      );
+    });
+
+    await shareSnapshot.ref.update(
+      "questionIds", FieldValue.arrayRemove(questionId),
+      new FieldPath("ownerAnswerSnapshots", questionId), FieldValue.delete(),
+      "updatedAt", FieldValue.serverTimestamp()
+    );
+  }
 }
 
 // MARK: - Shares

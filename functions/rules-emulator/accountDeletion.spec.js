@@ -1,5 +1,5 @@
-// Runs deleteOwnAccountData (TriQ#88) against the local Firestore and Storage emulators with the
-// admin SDK. Run with `npm run test:rules`; the project id is a demo- id, so nothing reaches a real
+// Runs deleteOwnAccountData (TriQ#88) against the local Firestore, Storage and Auth emulators with
+// the admin SDK. Run with `npm run test:rules`; the project id is a demo- id, so nothing reaches a real
 // Firebase project. It uses its own project id, so the rules spec's clearFirestore() in the same
 // emulator run cannot wipe this suite's data.
 const assert = require("node:assert/strict");
@@ -12,16 +12,20 @@ const BUCKET = `${PROJECT_ID}.appspot.com`;
 
 let db;
 let bucket;
-let deleteOwnAccountData;
+let auth;
+let deleteAccount;
 
 before(() => {
   assert.ok(process.env.FIRESTORE_EMULATOR_HOST, "run inside `firebase emulators:exec`");
   assert.ok(process.env.FIREBASE_STORAGE_EMULATOR_HOST, "run inside `firebase emulators:exec`");
+  assert.ok(process.env.FIREBASE_AUTH_EMULATOR_HOST, "run inside `firebase emulators:exec`");
   process.env.STORAGE_EMULATOR_HOST = `http://${process.env.FIREBASE_STORAGE_EMULATOR_HOST}`;
   admin.initializeApp({ projectId: PROJECT_ID, storageBucket: BUCKET });
   db = admin.firestore();
   bucket = admin.storage().bucket();
-  ({ deleteOwnAccountData } = require("../accountDeletion"));
+  auth = admin.auth();
+  const { deleteOwnAccountData } = require("../accountDeletion");
+  deleteAccount = (uid) => deleteOwnAccountData({ db, bucket, auth, uid });
 });
 
 after(async () => {
@@ -30,9 +34,31 @@ after(async () => {
 
 beforeEach(async () => {
   await clearFirestore();
+  await clearAuth();
   await bucket.deleteFiles({ force: true });
   await seedWorld();
 });
+
+async function clearAuth() {
+  const host = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+  const response = await fetch(
+    `http://${host}/emulator/v1/projects/${PROJECT_ID}/accounts`,
+    { method: "DELETE" }
+  );
+  assert.ok(response.ok, `clearing the Auth emulator failed: ${response.status}`);
+}
+
+async function authUserExists(uid) {
+  try {
+    await auth.getUser(uid);
+    return true;
+  } catch (error) {
+    if (error.code === "auth/user-not-found") {
+      return false;
+    }
+    throw error;
+  }
+}
 
 async function clearFirestore() {
   const host = process.env.FIRESTORE_EMULATOR_HOST;
@@ -102,16 +128,21 @@ async function seedWorld() {
     "questionListShares/aliceShare/recipients/bob": {
       recipientId: "bob", status: "accepted", updatedAt: answeredAt,
     },
-    // bob's share, accepted by alice and carol.
+    // bob's share of bobList, accepted by alice and carol. It copies alice's question and the
+    // answers to it: bob's own (ownerAnswerSnapshots) and carol's reply.
     "questionListShares/bobShare": {
       ownerId: "bob", sourceListId: "bobList", shareCode: "BOB111", status: "active",
       isLinkEnabled: true, acceptedRecipientCount: 2, updatedAt: answeredAt,
+      questionIds: ["seeded1", "aliceQ", "bobQ"],
+      includeOwnerAnswers: true,
+      ownerAnswerSnapshots: { seeded1: ["tea", "pie"], aliceQ: ["b"] },
     },
     "questionListShares/bobShare/recipients/alice": {
       recipientId: "alice", recipientDisplayName: "Alice", status: "accepted", updatedAt: answeredAt,
     },
     "questionListShares/bobShare/recipients/carol": {
       recipientId: "carol", status: "accepted", updatedAt: answeredAt,
+      latestReplyAnswerSnapshots: { seeded1: ["x"], aliceQ: ["y"] },
     },
     // carol's share, which alice accepted and then left.
     "questionListShares/carolShare": {
@@ -136,6 +167,9 @@ async function seedWorld() {
     batch.set(db.doc(path), data);
   }
   await batch.commit();
+
+  await auth.createUser({ uid: "alice", email: "alice@example.com", password: "secret-1" });
+  await auth.createUser({ uid: "bob", email: "bob@example.com", password: "secret-2" });
 
   const files = [
     "profiles/alice/profile.jpg",
@@ -166,10 +200,12 @@ async function fileExists(name) {
 
 describe("deleteOwnAccountData", () => {
   test("deletes every item the caller owns", async () => {
-    const result = await deleteOwnAccountData({ db, bucket, uid: "alice" });
+    const result = await deleteAccount("alice");
 
     assert.equal(result.success, true);
     assert.equal(result.profileImageURL, PROFILE_URL);
+    assert.equal(result.authUserDeleted, true);
+    assert.equal(await authUserExists("alice"), false, "the Auth user should be deleted");
 
     for (const path of [
       "users/alice",
@@ -207,15 +243,28 @@ describe("deleteOwnAccountData", () => {
   });
 
   test("removes other users' answers, images and favorites on the caller's own questions", async () => {
-    await deleteOwnAccountData({ db, bucket, uid: "alice" });
+    await deleteAccount("alice");
 
     assert.equal(await exists("questions/aliceQ/userAnswers/bob"), false);
     assert.equal(await fileExists("answers/bob/aliceQ/slot_0.jpg"), false);
     assert.deepEqual((await data("questionLists/bobList")).questionIds, ["seeded1", "bobQ"]);
   });
 
+  test("removes the caller's questions and the answers copied with them from other users' shares", async () => {
+    await deleteAccount("alice");
+
+    const share = await data("questionListShares/bobShare");
+    assert.deepEqual(share.questionIds, ["seeded1", "bobQ"]);
+    assert.deepEqual(share.ownerAnswerSnapshots, { seeded1: ["tea", "pie"] });
+    assert.equal(share.shareCode, "BOB111");
+    assert.deepEqual(
+      (await data("questionListShares/bobShare/recipients/carol")).latestReplyAnswerSnapshots,
+      { seeded1: ["x"] }
+    );
+  });
+
   test("leaves other users' data alone", async () => {
-    await deleteOwnAccountData({ db, bucket, uid: "alice" });
+    await deleteAccount("alice");
 
     for (const path of [
       "users/bob",
@@ -233,6 +282,7 @@ describe("deleteOwnAccountData", () => {
     ]) {
       assert.equal(await exists(path), true, `${path} should stay`);
     }
+    assert.equal(await authUserExists("bob"), true, "another user's Auth account should stay");
 
     for (const name of ["profiles/bob/profile.jpg", "answers/bob/seeded1/slot_0.jpg"]) {
       assert.equal(await fileExists(name), true, `${name} should stay`);
@@ -248,11 +298,14 @@ describe("deleteOwnAccountData", () => {
   });
 
   test("a second run succeeds and finds nothing left", async () => {
-    const first = await deleteOwnAccountData({ db, bucket, uid: "alice" });
-    const second = await deleteOwnAccountData({ db, bucket, uid: "alice" });
+    const first = await deleteAccount("alice");
+    const second = await deleteAccount("alice");
 
     assert.equal(second.success, true);
     assert.equal(second.profileImageURL, null);
+    // The Auth user is already gone; that counts as done, not as a failure.
+    assert.equal(first.authUserDeleted, true);
+    assert.equal(second.authUserDeleted, false);
     for (const [key, count] of Object.entries(second.counts)) {
       assert.equal(count, 0, `second run counted ${count} ${key}`);
     }
@@ -263,10 +316,11 @@ describe("deleteOwnAccountData", () => {
 
   test("an unauthenticated caller is refused before anything is deleted", async () => {
     await assert.rejects(
-      () => deleteOwnAccountData({ db, bucket, uid: undefined }),
+      () => deleteAccount(undefined),
       (error) => error.code === "unauthenticated"
     );
     assert.equal(await exists("users/alice"), true);
+    assert.equal(await authUserExists("alice"), true);
   });
 });
 
