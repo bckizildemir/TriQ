@@ -42,10 +42,12 @@ struct AccountDeletionSummary: Equatable, Sendable {
 
 protocol AccountDeletionOperations: Sendable {
     func reauthenticate(user: any AccountDeletionAuthUser, password: String?) async throws
-    /// Deletes all of the user's data on the server in one callable (TriQ#88). Safe to call again.
+    /// Deletes all of the user's data and then the Firebase Auth user on the server, in one
+    /// callable (TriQ#88). Safe to call again.
     func deleteAccountData() async throws -> AccountDeletionSummary
     func deleteLocalProfileImage(userId: String) async
-    func deleteAuthUser(_ user: any AccountDeletionAuthUser) async throws
+    /// Ends the local session after the server deleted the account.
+    func signOut() async
 }
 
 actor LiveAccountDeletionOperations: AccountDeletionOperations {
@@ -78,9 +80,10 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
         fileManager.deleteImage(name: "profile_\(userId)")
     }
 
-    func deleteAuthUser(_ user: any AccountDeletionAuthUser) async throws {
-        let firebaseUser = try currentFirebaseUser(matching: user)
-        try await firebaseUser.deleteAsync()
+    func signOut() async {
+        // The account no longer exists on the server, so a failed local sign-out has nothing to
+        // retry: the next token refresh fails and the auth listener signs the user out then.
+        try? Auth.auth().signOut()
     }
 
     private func currentFirebaseUser(matching snapshot: any AccountDeletionAuthUser) throws -> User {
@@ -111,7 +114,7 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     }
 
     /// Checks the callable's response. Anything but `success: true` counts as a failure, so the
-    /// Auth user is not deleted while the data may still exist. Pure, so a test needs no Firebase.
+    /// app keeps the session and offers a retry while the account may still exist. Pure, so a test needs no Firebase.
     static func summary(fromCallableData data: Any) throws -> AccountDeletionSummary {
         guard let payload = data as? [String: Any], payload["success"] as? Bool == true else {
             throw AccountDeletionError.dataDeletionFailed

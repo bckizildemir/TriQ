@@ -44,9 +44,9 @@ actor AccountDeletionService {
         self.imageService = imageService
     }
 
-    /// Reauthenticates a permanent user, deletes all of the user's data on the server, then
-    /// deletes the Auth user last (TriQ#88). If the server step fails, the Auth account stays, and
-    /// a retry runs the whole server step again; it is idempotent.
+    /// Reauthenticates a permanent user, then the server deletes all of the user's data and the
+    /// Auth user last (TriQ#88); the client only signs out locally. If the server step fails, the
+    /// account stays, and a retry runs the whole server step again; it is idempotent.
     func deleteCurrentAccount(password: String?) async throws {
         guard let currentUser = auth.currentUser() else {
             throw AccountDeletionError.unauthenticated
@@ -65,7 +65,7 @@ actor AccountDeletionService {
         }
         await operations.deleteLocalProfileImage(userId: currentUser.uid)
 
-        try await operations.deleteAuthUser(currentUser)
+        await operations.signOut()
     }
 
     static func validatePermanentUserReauthentication(

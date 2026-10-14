@@ -58,7 +58,7 @@ final class MockAccountDeletionOperations: AccountDeletionOperations {
         try? record("deleteLocalProfileImage")
     }
 
-    func deleteAuthUser(_ user: any AccountDeletionAuthUser) async throws {
-        try record("deleteAuthUser")
+    func signOut() async {
+        try? record("signOut")
     }
 }

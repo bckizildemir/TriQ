@@ -3,8 +3,9 @@ import Testing
 import UIKit
 @testable import TTB
 
-/// Account deletion runs all data deletion in one server callable, then deletes the Auth user
-/// last (TriQ#88). These cover what happens around that callable with a mock in its place.
+/// Account deletion runs in one server callable that deletes the data and then the Auth user; the
+/// client only signs out after it succeeds (TriQ#88). These cover what happens around that
+/// callable with a mock in its place.
 @Suite(.timeLimit(.minutes(1)))
 struct AccountDeletionServerStepTests {
     private static let downloadURL =
@@ -23,7 +24,7 @@ struct AccountDeletionServerStepTests {
         )
     }
 
-    @Test func callableFailureKeepsTheAuthUser() async {
+    @Test func callableFailureKeepsTheSession() async {
         let operations = MockAccountDeletionOperations()
         operations.failures["deleteAccountData"] = AccountDeletionError.dataDeletionFailed
         let service = Self.anonymousService(operations: operations)
@@ -35,7 +36,7 @@ struct AccountDeletionServerStepTests {
         #expect(operations.callLog == ["deleteAccountData"])
     }
 
-    @Test func retryAfterAFailureRunsTheCallableAgainAndDeletesTheAuthUser() async throws {
+    @Test func retryAfterAFailureRunsTheCallableAgainAndSignsOut() async throws {
         let operations = MockAccountDeletionOperations()
         operations.failures["deleteAccountData"] = AccountDeletionError.dataDeletionFailed
         let service = Self.anonymousService(operations: operations)
@@ -48,7 +49,7 @@ struct AccountDeletionServerStepTests {
             "deleteAccountData",
             "deleteAccountData",
             "deleteLocalProfileImage",
-            "deleteAuthUser",
+            "signOut",
         ])
     }
 

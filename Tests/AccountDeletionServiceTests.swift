@@ -93,7 +93,7 @@ final class AccountDeletionServiceTests: XCTestCase {
                 "reauthenticate",
                 "deleteAccountData",
                 "deleteLocalProfileImage",
-                "deleteAuthUser",
+                "signOut",
             ]
         )
     }
@@ -116,6 +116,6 @@ final class AccountDeletionServiceTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
 
-        XCTAssertFalse(operations.callLog.contains("deleteAuthUser"))
+        XCTAssertFalse(operations.callLog.contains("signOut"))
     }
 }
