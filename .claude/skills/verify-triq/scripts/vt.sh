@@ -2,7 +2,8 @@
 # vt.sh - one verify-triq run: a fresh simulator, the real TriQ app, evidence that survives.
 #
 # Subcommands (run from the repo root, in this order):
-#   start [--device NAME] [--lang en|tr]  take the verify lock, create + boot a fresh device
+#   start [--device NAME] [--os X.Y] [--lang en|tr]
+#                                         take the verify lock, create + boot a fresh device (default iOS 27.0)
 #   build                                 Scripts/xcb.sh build against that device, copy TTB.app
 #   hold                                  take the machine-wide xcb lock for the drive (see below)
 #   install                               install the copied .app on the device
@@ -37,7 +38,8 @@ LOCK_DIR="${VT_LOCK_DIR:-/tmp/verify-triq.lock}"
 PURRTINE_LOCK_DIR="/tmp/verify-purrtine.lock"
 LOCK_TIMEOUT="${VT_LOCK_TIMEOUT:-3600}"
 STALE_MINUTES="${VT_STALE_MINUTES:-45}"
-RUNTIME_ID="com.apple.CoreSimulator.SimRuntime.iOS-26-5"
+# Owner decision 2026-10-15: verify runs default to the newest iOS on this Mac (27.0).
+DEFAULT_OS="${VT_OS:-27.0}"
 DEFAULT_DEVICE="${VT_DEVICE:-iPhone 12}"
 BUNDLE_ID="app.berke.can.kizildemir.ttb"
 APP_NAME="TTB.app"
@@ -156,15 +158,21 @@ next_evidence_name() {
 }
 
 cmd_start() {
-  local device="$DEFAULT_DEVICE" lang="en"
+  local device="$DEFAULT_DEVICE" lang="en" os="$DEFAULT_OS"
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --device) device="${2:?}"; shift 2 ;;
+      --os) os="${2:?}"; shift 2 ;;
       --lang) lang="${2:?}"; shift 2 ;;
       *) fail "unknown option: $1" ;;
     esac
   done
   [[ "$lang" == en || "$lang" == tr ]] || fail "--lang takes en or tr"
+  [[ "$os" =~ ^[0-9]+\.[0-9]+$ ]] || fail "--os takes a version like 27.0 or 26.5"
+  local runtime_id="com.apple.CoreSimulator.SimRuntime.iOS-${os/./-}" runtimes
+  # Read into a variable first: `simctl | grep -q` under pipefail can fail when grep exits early.
+  runtimes="$(xcrun simctl list runtimes)" || fail "simctl list runtimes failed"
+  grep -qF "$runtime_id" <<<"$runtimes" || fail "no iOS $os runtime on this Mac (xcrun simctl list runtimes)"
   acquire_lock
   # Any failure from here on would leave a fresh lock that blocks the next start for
   # STALE_MINUTES; undo the half-made run instead.
@@ -179,13 +187,14 @@ cmd_start() {
   echo "$evidence" > "$LOCK_DIR/evidence"
   echo "$name" > "$LOCK_DIR/device_name"
   echo "$lang" > "$LOCK_DIR/lang"
-  printf 'run %s, device %s (%s), lang %s, repo %s, since %s\n' "$run_id" "$name" "$device" "$lang" \
+  echo "$os" > "$LOCK_DIR/os"
+  printf 'run %s, device %s (%s, iOS %s), lang %s, repo %s, since %s\n' "$run_id" "$name" "$device" "$os" "$lang" \
     "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" "$(date '+%Y-%m-%d %H:%M:%S')" > "$LOCK_DIR/owner"
 
   warn_other_booted
-  udid="$(xcrun simctl create "$name" "$device" "$RUNTIME_ID")" || fail "simctl create failed"
+  udid="$(xcrun simctl create "$name" "$device" "$runtime_id")" || fail "simctl create failed"
   echo "$udid" > "$LOCK_DIR/udid"
-  say "created $name ($device, iOS 26.5) $udid"
+  say "created $name ($device, iOS $os) $udid"
   xcrun simctl boot "$udid" || fail "simctl boot failed; run vt.sh cleanup"
   xcrun simctl bootstatus "$udid" >/dev/null || fail "device did not finish booting; run vt.sh cleanup"
   # A fresh device copies the Mac's languages (seen 2026-10-14: en-TR, tr-TR), so set the
@@ -199,7 +208,7 @@ cmd_start() {
   xcrun simctl bootstatus "$udid" >/dev/null || fail "device did not finish booting; run vt.sh cleanup"
   say "device language $languages, locale $locale (rebooted)"
   {
-    echo "run_id=$run_id"; echo "udid=$udid"; echo "device=$device"; echo "lang=$lang"
+    echo "run_id=$run_id"; echo "udid=$udid"; echo "device=$device"; echo "os=$os"; echo "lang=$lang"
     echo "git_rev=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "started=$(date '+%Y-%m-%d %H:%M:%S')"
   } > "$evidence/run.txt"
@@ -226,7 +235,8 @@ cmd_build() {
   trap 'kill "$beat" 2>/dev/null; echo "vt: build terminated" >&2; exit 143' TERM
   # Build against this run's own device, so the build never names a shared simulator.
   set +e
-  XCB_SIMULATOR="$name" Scripts/xcb.sh build 2>&1 | tee "$out"
+  # xcb finds XCB_SIMULATOR by name only on the XCB_OS runtime, so pass the run's OS.
+  XCB_SIMULATOR="$name" XCB_OS="$(state os)" Scripts/xcb.sh build 2>&1 | tee "$out"
   status="${PIPESTATUS[0]}"
   set -e
   { kill "$beat"; wait "$beat"; } 2>/dev/null || true
@@ -357,6 +367,7 @@ cmd_doctor() {
   local udid ok=0 dstate; udid="$(state udid)"; dstate="$(device_state "$udid")"
   printf 'owner:   %s\n' "$(state owner)"
   printf 'device:  %s %s state=%s\n' "$(state device_name)" "$udid" "$dstate"
+  printf 'os:      iOS %s\n' "$(state os)"
   if [[ "$dstate" != Booted ]]; then
     echo "FAIL device is not booted (an xcb.sh test in another session shuts down other simulators): run vt.sh revive"
     ok=1
@@ -509,7 +520,7 @@ cmd_cleanup() {
 cmd_status() {
   [[ -d "$LOCK_DIR" ]] || { say "no run in progress"; return 0; }
   local f
-  for f in owner run_id udid device_name lang evidence; do printf '%-12s %s\n' "$f" "$(state "$f")"; done
+  for f in owner run_id udid device_name os lang evidence; do printf '%-12s %s\n' "$f" "$(state "$f")"; done
   if [[ -f "$LOCK_DIR/hold_pid" ]]; then
     printf '%-12s %s (PID %s)\n' hold "$(hold_alive && echo alive || echo NOT-RUNNING)" "$(state hold_pid)"
   else

@@ -51,7 +51,7 @@
 // 56 override-isolation warnings remain: 14 files x 4 - init(),
 // init(invocation:), init(selector:), setUpWithError(). Each is now
 // main-actor-isolated while the XCTestCase declaration it overrides is
-// nonisolated. Run the UI tests on iPhone 12 / iOS 26.5 after this stage.
+// nonisolated. Run the UI tests on iPhone 12 / iOS 27.0 after this stage.
 //
 // APPLIED 2026-10-04 (issue #45): both settings are set directly on the
 // TTBUITests target, Debug and Release; this file stays unwired. Re-measured

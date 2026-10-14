@@ -35,7 +35,7 @@ V=.claude/skills/verify-triq/scripts/vt.sh
   run at a time across both apps: `$V start` waits for `/tmp/verify-triq.lock` and for any Purrtine
   verify run with a fresh lock (`/tmp/verify-purrtine.lock`, heartbeat under 45 minutes old). The wait
   is one-way: Purrtine's `vp.sh` does not check for a TriQ run.
-- Device: **iPhone 12, iOS 26.5** (owner, 2026-10-15).
+- Device: **iPhone 12, iOS 27.0** (owner, 2026-10-15; `--os 26.5` for an older runtime).
 
 ## Live Firebase (read before you drive)
 
@@ -90,8 +90,8 @@ $V launch                      # prints "app.berke.can.kizildemir.ttb: <pid>"
 $V doctor                      # must exit 0
 ```
 
-- `start` creates `verify-triq-<run-id>` (iPhone 12, iOS 26.5; `VT_DEVICE` or `--device` to
-  override), boots it, writes its system language, reboots it, and makes the evidence folder
+- `start` creates `verify-triq-<run-id>` (iPhone 12, iOS 27.0; `VT_DEVICE`/`--device` and
+  `VT_OS`/`--os` to override), boots it, writes its system language, reboots it, and makes the evidence folder
   `~/verify-evidence/triq/<YYYY-MM-DD>-<run-id>/` with `run.txt` (device, language, git rev).
 - `build` needs `TTB/Secrets.xcconfig`. A new worktree has none: `cp TTB/Secrets.xcconfig.template
   TTB/Secrets.xcconfig` first, never commit it. `build` stops with that message when it is missing.
@@ -226,6 +226,11 @@ no longer exists or nobody touched it for 45 minutes (`VT_STALE_MINUTES`), delet
 - **Labels collide.** The category chip `Home` and the tab `Home` share a label. Tap tabs with
   `--element-type RadioButton`.
 - **The hold blocks every build on the Mac.** Keep a drive short.
+- **iOS 27.0 boot.** On 2026-10-13 a shared iOS 27.0 device's SpringBoard crashed about 11 times in
+  2 minutes at boot, then ran stable (Purrtine). If `start` or `launch` hangs or `doctor` shows an
+  empty tree, run `$V cleanup` and start again; if it repeats, use `$V start --os 26.5` and say so.
+- **`build` passes the run's OS to xcb** (`XCB_OS`). xcb finds `XCB_SIMULATOR` by name only on that
+  runtime; without it an iOS 27 device is not found.
 
 ## Helpers
 

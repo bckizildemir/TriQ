@@ -56,7 +56,7 @@ import subprocess
 import sys
 
 device_name = "iPhone 12"
-runtime_major = "26"
+runtime_major = "27"
 
 try:
     runtimes = json.loads(subprocess.check_output(["xcrun", "simctl", "list", "runtimes", "-j"], text=True))
