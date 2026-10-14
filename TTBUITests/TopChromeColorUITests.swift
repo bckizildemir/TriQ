@@ -2,20 +2,8 @@ import XCTest
 
 // nonisolated keeps the inherited XCTestCase initializers nonisolated; the tests run in the @MainActor extension below.
 nonisolated final class TopChromeColorUITests: XCTestCase {
-    private var previousAppearance: XCUIDevice.Appearance = .unspecified
-
     override func setUpWithError() throws {
         continueAfterFailure = true
-        // The scan expects the light page color (white); the dark variant would fail at rest.
-        previousAppearance = XCUIDevice.shared.appearance
-        XCUIDevice.shared.appearance = .light
-    }
-
-    override func tearDownWithError() throws {
-        // `.unspecified` cannot be set back, so only a real earlier choice is restored.
-        if previousAppearance != .unspecified {
-            XCUIDevice.shared.appearance = previousAppearance
-        }
     }
 }
 
@@ -56,6 +44,18 @@ extension TopChromeColorUITests {
     }
 
     private func launch(harness arguments: String...) -> XCUIApplication {
+        // The scan expects the light page color (white); the dark variant would fail at rest.
+        // `XCUIDevice` is main-actor isolated, so the switch and its restore stay in this
+        // extension rather than in the nonisolated setUp and tearDown.
+        let previousAppearance = XCUIDevice.shared.appearance
+        XCUIDevice.shared.appearance = .light
+        addTeardownBlock { @MainActor in
+            // `.unspecified` cannot be set back, so only a real earlier choice is restored.
+            if previousAppearance != .unspecified {
+                XCUIDevice.shared.appearance = previousAppearance
+            }
+        }
+
         let app = XCUIApplication()
         app.launchArguments += arguments + ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
