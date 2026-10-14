@@ -113,7 +113,7 @@ async function deleteOwnQuestions({ db, bucket, uid }) {
     // Lists and shares first: once the question is gone these queries cannot find it again on
     // a retry.
     await removeQuestionFromLists(db, questionRef.id);
-    await removeQuestionFromShares(db, questionRef.id);
+    await removeQuestionFromShares(db, questionRef.id, uid);
     const answers = await questionRef.collection("userAnswers").get();
     for (const answer of answers.docs) {
       await deleteFilesWithPrefix(bucket, `answers/${answer.id}/${questionRef.id}/`);
@@ -142,12 +142,16 @@ async function removeQuestionFromLists(db, questionId) {
 // A share copies the list's question ids (questionIds), the owner's answers per question
 // (ownerAnswerSnapshots), and each recipient's reply per question (recipients/*
 // latestReplyAnswerSnapshots), all in questionListShares.js. Drop the deleted question from each.
-async function removeQuestionFromShares(db, questionId) {
+async function removeQuestionFromShares(db, questionId, ownerId) {
   const snapshot = await db.collection("questionListShares")
     .where("questionIds", "array-contains", questionId)
     .get();
 
   for (const shareSnapshot of snapshot.docs) {
+    // The caller's own shares are deleted whole by deleteOwnShares.
+    if (shareSnapshot.data()?.ownerId === ownerId) {
+      continue;
+    }
     // Recipients before the share: a retry finds the share again only while it still lists the
     // question.
     const recipients = await shareSnapshot.ref.collection("recipients").get();
