@@ -62,6 +62,10 @@ const {
 const { withSingleUseAppCheck } = require("./appCheckReplay");
 const { requiredDocId } = require("./firestoreIds");
 const {
+  deleteOwnAccountData,
+  purgeOwnAnswersForAccountDeletion,
+} = require("./accountDeletion");
+const {
   appListShareUrl,
   appQuestionUrl,
   canonicalListShareUrl,
@@ -81,7 +85,7 @@ const messaging = admin.messaging();
 const storage = admin.storage();
 const REGION = "europe-west1";
 
-// This codebase deploys 30 second-generation functions into one region. Cloud Run counts CPU
+// This codebase deploys 31 second-generation functions into one region. Cloud Run counts CPU
 // against a per-project-per-region quota as CPU times max instances summed over every service,
 // so on the default instance ceiling the project sits at the quota before a deploy starts — and
 // a deploy needs headroom for the new revision alongside the old one. Capping max instances
@@ -249,16 +253,45 @@ exports.sendTestContentReleaseNotification = onCall({ region: REGION }, async (r
   }
 });
 
+// Kept for app builds that predate deleteOwnAccountData; it deletes answers only.
 exports.purgeOwnAnswersForAccountDeletion = onCall({ region: REGION }, async (request) => {
   if (!request.auth?.uid) {
     throw new HttpsError("unauthenticated", "Authentication is required.");
   }
 
-  const deletedAnswerCount = await purgeOwnAnswersForAccountDeletion(request.auth.uid);
+  const deletedAnswerCount = await purgeOwnAnswersForAccountDeletion({
+    db,
+    bucket: storage.bucket(),
+    userId: request.auth.uid,
+  });
   return {
     success: true,
     deletedAnswerCount,
   };
+});
+
+// Account deletion (TriQ#88): deletes all of the caller's data with the admin SDK, because the
+// rules deny clients most of it on purpose. The app deletes the Auth user only after this
+// succeeds, so a failure leaves the account in place for a retry. The answer purge runs one
+// answer at a time, so a heavy user needs more than the 60 second default.
+exports.deleteOwnAccountData = onCall({ region: REGION, timeoutSeconds: 300 }, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Authentication is required.");
+  }
+
+  try {
+    return await deleteOwnAccountData({
+      db,
+      bucket: storage.bucket(),
+      uid: request.auth.uid,
+    });
+  } catch (error) {
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    logger.error("Failed to delete account data", { uid: request.auth.uid, ...serializeError(error) });
+    throw new HttpsError("internal", "Account data deletion failed. Try again.");
+  }
 });
 
 exports.toggleQuestionFavorite = onCall({ region: REGION }, async (request) => {
@@ -965,201 +998,6 @@ function serializeError(error) {
     stack: error?.stack,
     details: error?.details,
   };
-}
-
-async function purgeOwnAnswersForAccountDeletion(userId) {
-  const snapshot = await db.collectionGroup("userAnswers")
-    .where("userId", "==", userId)
-    .get();
-
-  let deletedAnswerCount = 0;
-
-  for (const document of snapshot.docs) {
-    const questionRef = document.ref.parent.parent;
-    if (!questionRef) {
-      continue;
-    }
-
-    await deleteAnswerImagesIfPresent(userId, questionRef.id);
-
-    const didDelete = await deleteAnswerForAccountDeletion(questionRef, userId);
-    if (didDelete) {
-      deletedAnswerCount += 1;
-    }
-  }
-
-  return deletedAnswerCount;
-}
-
-async function deleteAnswerImagesIfPresent(userId, questionId) {
-  const bucket = storage.bucket();
-
-  for (let slotIndex = 0; slotIndex < 3; slotIndex += 1) {
-    const file = bucket.file(`answers/${userId}/${questionId}/slot_${slotIndex}.jpg`);
-    await file.delete({ ignoreNotFound: true });
-  }
-}
-
-async function deleteAnswerForAccountDeletion(questionRef, userId) {
-  const userAnswerRef = questionRef.collection("userAnswers").doc(userId);
-  const replacementLastAnsweredAt = await latestRemainingAnsweredAt(questionRef, userId);
-
-  return db.runTransaction(async (transaction) => {
-    const [questionSnapshot, userAnswerSnapshot] = await Promise.all([
-      transaction.get(questionRef),
-      transaction.get(userAnswerRef),
-    ]);
-
-    if (!userAnswerSnapshot.exists) {
-      return false;
-    }
-
-    if (!questionSnapshot.exists) {
-      transaction.delete(userAnswerRef);
-      return true;
-    }
-
-    const questionData = questionSnapshot.data() || {};
-    const userAnswerData = userAnswerSnapshot.data() || {};
-    const answers = Array.isArray(userAnswerData.answers) ? userAnswerData.answers : [];
-    const answeredAt = userAnswerData.answeredAt?.toDate?.() || new Date();
-
-    const updatedState = applyQuestionAnswerDeletion(
-      {
-        answerStats: answerStatsFromFirestore(questionData.answerStats),
-        totalRespondents: numberOrZero(questionData.totalRespondents),
-        todayRespondents: numberOrZero(questionData.todayRespondents),
-        todayDate: typeof questionData.todayDate === "string" ? questionData.todayDate : "",
-        lastAnsweredAt: questionData.lastAnsweredAt?.toDate?.() || null,
-      },
-      answers,
-      answeredAt,
-      replacementLastAnsweredAt
-    );
-
-    const questionUpdates = {
-      answerStats: answerStatsForFirestore(updatedState.answerStats),
-      totalRespondents: updatedState.totalRespondents,
-      todayRespondents: updatedState.todayRespondents,
-      todayDate: updatedState.todayDate,
-      lastAnsweredAt: updatedState.lastAnsweredAt
-        ? admin.firestore.Timestamp.fromDate(updatedState.lastAnsweredAt)
-        : admin.firestore.FieldValue.delete(),
-    };
-
-    transaction.update(questionRef, questionUpdates);
-    transaction.delete(userAnswerRef);
-    return true;
-  });
-}
-
-async function latestRemainingAnsweredAt(questionRef, excludingUserId) {
-  const snapshot = await questionRef.collection("userAnswers")
-    .orderBy("answeredAt", "desc")
-    .limit(2)
-    .get();
-
-  for (const document of snapshot.docs) {
-    if (document.id === excludingUserId) {
-      continue;
-    }
-
-    const answeredAt = document.data()?.answeredAt?.toDate?.();
-    if (answeredAt) {
-      return answeredAt;
-    }
-  }
-
-  return null;
-}
-
-function applyQuestionAnswerDeletion(state, answers, answeredAt, replacementLastAnsweredAt) {
-  const updatedState = {
-    answerStats: cloneAnswerStats(state.answerStats),
-    totalRespondents: Math.max(0, numberOrZero(state.totalRespondents) - 1),
-    todayRespondents: numberOrZero(state.todayRespondents),
-    todayDate: typeof state.todayDate === "string" ? state.todayDate : "",
-    lastAnsweredAt: replacementLastAnsweredAt,
-  };
-
-  answers.forEach((answer, index) => {
-    if (typeof answer !== "string" || answer.length === 0) {
-      return;
-    }
-
-    const slotKey = `${index}`;
-    const slotStats = updatedState.answerStats[slotKey];
-    if (!slotStats) {
-      return;
-    }
-
-    const updatedCount = Math.max(0, numberOrZero(slotStats[answer]) - 1);
-    if (updatedCount === 0) {
-      delete slotStats[answer];
-    } else {
-      slotStats[answer] = updatedCount;
-    }
-
-    if (Object.keys(slotStats).length === 0) {
-      delete updatedState.answerStats[slotKey];
-    }
-  });
-
-  if (updatedState.todayDate === dateStringFor(answeredAt)) {
-    updatedState.todayRespondents = Math.max(0, numberOrZero(state.todayRespondents) - 1);
-    if (updatedState.todayRespondents === 0) {
-      updatedState.todayDate = "";
-    }
-  }
-
-  return updatedState;
-}
-
-function dateStringFor(date) {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function answerStatsFromFirestore(value) {
-  if (!value || typeof value !== "object") {
-    return {};
-  }
-
-  const parsed = {};
-  for (const [slotKey, slotValue] of Object.entries(value)) {
-    if (!slotValue || typeof slotValue !== "object" || Array.isArray(slotValue)) {
-      continue;
-    }
-
-    const typedSlot = {};
-    for (const [answer, count] of Object.entries(slotValue)) {
-      typedSlot[answer] = numberOrZero(count);
-    }
-    parsed[slotKey] = typedSlot;
-  }
-  return parsed;
-}
-
-function answerStatsForFirestore(answerStats) {
-  const payload = {};
-  for (const [slotKey, slotStats] of Object.entries(answerStats)) {
-    payload[slotKey] = { ...slotStats };
-  }
-  return payload;
-}
-
-function cloneAnswerStats(answerStats) {
-  const clone = {};
-  for (const [slotKey, slotStats] of Object.entries(answerStats)) {
-    clone[slotKey] = { ...slotStats };
-  }
-  return clone;
-}
-
-function numberOrZero(value) {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
 async function userIsAdmin(userId) {

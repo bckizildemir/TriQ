@@ -5,6 +5,9 @@ enum AccountDeletionError: LocalizedError, Equatable {
     case unauthenticated
     case missingPassword
     case missingEmail
+    /// The `deleteOwnAccountData` callable failed or answered without `success: true`. The Auth
+    /// account is kept, so the user can retry.
+    case dataDeletionFailed
 
     var errorDescription: String? {
         switch self {
@@ -20,6 +23,8 @@ enum AccountDeletionError: LocalizedError, Equatable {
             return AppLocalization.prefersEnglish
                 ? "No email address was found to re-authenticate this account."
                 : "Bu hesabı yeniden doğrulamak için bir e-posta adresi bulunamadı."
+        case .dataDeletionFailed:
+            return String(localized: "profile.deleteAccount.failed.message")
         }
     }
 }
@@ -27,15 +32,21 @@ enum AccountDeletionError: LocalizedError, Equatable {
 actor AccountDeletionService {
     private let operations: any AccountDeletionOperations
     private let auth: any AccountDeletionAuthProviding
+    private let imageService: ImageService
 
     init(
         operations: any AccountDeletionOperations = LiveAccountDeletionOperations(),
-        auth: any AccountDeletionAuthProviding = LiveAccountDeletionAuth()
+        auth: any AccountDeletionAuthProviding = LiveAccountDeletionAuth(),
+        imageService: ImageService = .shared
     ) {
         self.operations = operations
         self.auth = auth
+        self.imageService = imageService
     }
 
+    /// Reauthenticates a permanent user, deletes all of the user's data on the server, then
+    /// deletes the Auth user last (TriQ#88). If the server step fails, the Auth account stays, and
+    /// a retry runs the whole server step again; it is idempotent.
     func deleteCurrentAccount(password: String?) async throws {
         guard let currentUser = auth.currentUser() else {
             throw AccountDeletionError.unauthenticated
@@ -46,14 +57,14 @@ actor AccountDeletionService {
             try await operations.reauthenticate(user: currentUser, password: password)
         }
 
-        let userId = currentUser.uid
+        let summary = try await operations.deleteAccountData()
 
-        try await operations.purgeAnswers()
-        let favoriteQuestionIds = try await operations.favoriteQuestionReferences(for: userId)
-        try await operations.removeFavorites(userId: userId, questionIds: favoriteQuestionIds)
-        try await operations.deleteAIDocuments(userId: userId)
-        try await operations.deleteProfileAssets(userId: userId)
-        try await operations.deleteUserDocument(userId: userId)
+        // The server deleted the photo from Storage; drop the copies this device still holds.
+        if let profileImageURL = summary.profileImageURL {
+            await imageService.evictProfileImage(downloadURL: profileImageURL)
+        }
+        await operations.deleteLocalProfileImage(userId: currentUser.uid)
+
         try await operations.deleteAuthUser(currentUser)
     }
 

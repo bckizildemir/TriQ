@@ -179,8 +179,8 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      - name: Security rules tests (emulator)
-        run: npx -y firebase-tools@latest emulators:exec --project demo-ttb-rules --only firestore,storage "node --test rules-emulator/securityRules.spec.js"
+      - name: Security rules and account deletion tests (emulator)
+        run: npx -y firebase-tools@latest emulators:exec --project demo-ttb-rules --only firestore,storage "node --test rules-emulator/securityRules.spec.js rules-emulator/accountDeletion.spec.js"
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high

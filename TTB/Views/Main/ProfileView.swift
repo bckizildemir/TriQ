@@ -613,6 +613,8 @@ struct ProfileView: View {
   @State private var activeSheet: ProfileSheet?
   @State private var shouldShowDeletePasswordAfterEditDismiss = false
   @State private var isShowingErrorAlert = false
+  /// Read when the alert appears, so its title and buttons do not change while it is dismissed.
+  @State private var errorAlertOffersDeletionRetry = false
   @State private var hasRefreshedForPresentation = false
 
   init(model: ProfileModel) {
@@ -655,8 +657,13 @@ struct ProfileView: View {
     .toolbar {
       closeToolbar
     }
-    .alert(String(localized: "common.error.title"), isPresented: $isShowingErrorAlert) {
-      Button(String(localized: "common.ok"), role: .cancel, action: clearErrors)
+    .alert(errorAlertTitle, isPresented: $isShowingErrorAlert) {
+      if errorAlertOffersDeletionRetry {
+        Button(String(localized: "profile.deleteAccount.failed.tryAgain"), action: retryDeleteAccount)
+        Button(String(localized: "common.cancel"), role: .cancel, action: clearErrors)
+      } else {
+        Button(String(localized: "common.ok"), role: .cancel, action: clearErrors)
+      }
     } message: {
       Text(activeErrorMessage)
     }
@@ -897,10 +904,10 @@ struct ProfileView: View {
         }
       }
       .onChange(of: model.showingAlert) { _, _ in
-        isShowingErrorAlert = shouldShowErrorAlert
+        syncErrorAlert()
       }
       .onChange(of: authModel.errorState.isShowing) { _, _ in
-        isShowingErrorAlert = shouldShowErrorAlert
+        syncErrorAlert()
       }
       .onChange(of: activeSheet?.id) { oldSheetID, newSheetID in
         if oldSheetID == ProfileSheet.deletePasswordID,
@@ -959,6 +966,31 @@ struct ProfileView: View {
     }
   }
 
+  /// A guest's failed account deletion. Email users see the error inside the password sheet
+  /// instead, where they can tap Delete again (TriQ#88).
+  private var isAnonymousDeletionFailure: Bool {
+    !model.showingAlert && authModel.errorState.isAccountDeletionFailure && authModel.isAnonymous
+  }
+
+  private var errorAlertTitle: String {
+    errorAlertOffersDeletionRetry
+      ? String(localized: "profile.deleteAccount.failed.title")
+      : String(localized: "common.error.title")
+  }
+
+  private func syncErrorAlert() {
+    let shouldShow = shouldShowErrorAlert
+    if shouldShow {
+      errorAlertOffersDeletionRetry = isAnonymousDeletionFailure
+    }
+    isShowingErrorAlert = shouldShow
+  }
+
+  private func retryDeleteAccount() {
+    clearErrors()
+    handleDeleteAccountRequest()
+  }
+
   private var shouldShowErrorAlert: Bool {
     model.showingAlert || (activeSheet?.isDeletePassword != true && authModel.errorState.isShowing)
   }
@@ -969,6 +1001,9 @@ struct ProfileView: View {
     if authModel.isAnonymous {
       Task {
         await deleteCurrentAccount(password: nil)
+        // A failure fast enough to land in the same update as the dismissal would not fire
+        // onChange, so present the alert from here as well.
+        syncErrorAlert()
       }
     } else {
       activeSheet = .deletePassword(email: model.email)

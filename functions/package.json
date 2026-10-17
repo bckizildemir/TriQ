@@ -10,7 +10,7 @@
     "test": "node --test",
     "serve": "firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions",
-    "test:rules": "firebase emulators:exec --project demo-ttb-rules --only firestore,storage \"node --test rules-emulator/securityRules.spec.js\""
+    "test:rules": "firebase emulators:exec --project demo-ttb-rules --only firestore,storage \"node --test rules-emulator/securityRules.spec.js rules-emulator/accountDeletion.spec.js\""
   },
   "dependencies": {
     "firebase-admin": "^13.8.0",
