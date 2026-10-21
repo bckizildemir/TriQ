@@ -220,10 +220,16 @@ class QuestionModel: ObservableObject {
         featuredHomeQuestionsListener?.cancel()
         featuredHomeQuestionsListener = nil
 
-        let seededHandle = await listenerService.setupSeededQuestionsListener { [weak self] questions in
+        let seededHandle = await listenerService.setupSeededQuestionsListener { [weak self] result in
             guard let self, questionsListenerGeneration == generation else { return }
-            seededQuestions = questions
-            updatePublicQuestions()
+            switch result {
+            case .success(let questions):
+                seededQuestions = questions
+                updatePublicQuestions()
+            case .failure(let failure):
+                logger.error("Seeded questions failed to load: \(failure.localizedDescription)")
+                error = failure.localizedDescription
+            }
             isLoading = false
         }
         guard questionsListenerGeneration == generation else {
@@ -232,10 +238,15 @@ class QuestionModel: ObservableObject {
         }
         seededQuestionsListener = seededHandle
 
-        let featuredHandle = await listenerService.setupFeaturedHomeQuestionsListener { [weak self] questions in
+        let featuredHandle = await listenerService.setupFeaturedHomeQuestionsListener { [weak self] result in
             guard let self, questionsListenerGeneration == generation else { return }
-            featuredHomeQuestions = questions
-            updatePublicQuestions()
+            switch result {
+            case .success(let questions):
+                featuredHomeQuestions = questions
+                updatePublicQuestions()
+            case .failure(let failure):
+                logger.error("Featured home questions failed to load: \(failure.localizedDescription)")
+            }
         }
         guard questionsListenerGeneration == generation else {
             featuredHandle.cancel()
@@ -251,12 +262,17 @@ class QuestionModel: ObservableObject {
         trioListener?.cancel()
         trioListener = nil
 
-        let handle = await listenerService.setupTrioQuestionsListener { [weak self] questions in
+        let handle = await listenerService.setupTrioQuestionsListener { [weak self] result in
             guard let self, trioListenerGeneration == generation else { return }
-            trioQuestions = filteredTrioQuestions(
-                questions,
-                selectedLanguageCode: AppLocalization.currentLanguageCode
-            )
+            switch result {
+            case .success(let questions):
+                trioQuestions = filteredTrioQuestions(
+                    questions,
+                    selectedLanguageCode: AppLocalization.currentLanguageCode
+                )
+            case .failure(let failure):
+                logger.error("Trio questions failed to load: \(failure.localizedDescription)")
+            }
         }
         guard trioListenerGeneration == generation else {
             handle.cancel()

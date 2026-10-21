@@ -50,10 +50,10 @@ struct QuestionModelListenerGuardTests {
         let completions = await fake.completions(for: .seeded)
         #expect(completions.count == 2)
 
-        completions[0]([makeQuestion(id: "stale")])
+        completions[0](.success([makeQuestion(id: "stale")]))
         #expect(model.questions.isEmpty)
 
-        completions[1]([makeQuestion(id: "current")])
+        completions[1](.success([makeQuestion(id: "current")]))
         #expect(model.questions.map(\.id) == ["current"])
     }
 
@@ -116,8 +116,76 @@ struct QuestionModelListenerGuardTests {
         let completions = await fake.completions(for: .seeded)
         model.clearRemoteState()
 
-        completions[0]([makeQuestion(id: "stale")])
+        completions[0](.success([makeQuestion(id: "stale")]))
         #expect(model.questions.isEmpty)
+    }
+
+    @Test func aSeededFailureEndsLoadingSurfacesAnErrorAndKeepsQuestions() async throws {
+        let fake = FakeQuestionFeedListener()
+        let model = QuestionModel(listenerService: fake)
+
+        await model.refreshQuestions()
+        let first = try #require(await fake.completions(for: .seeded).last)
+        first(.success([makeQuestion(id: "kept")]))
+        await model.refreshQuestions()
+        #expect(model.isLoading)
+
+        let second = try #require(await fake.completions(for: .seeded).last)
+        second(.failure(URLError(.notConnectedToInternet)))
+
+        #expect(!model.isLoading)
+        #expect(model.error != nil)
+        #expect(model.questions.map(\.id) == ["kept"])
+    }
+
+    @Test func aSeededFailureAfterSignOutLeavesNoError() async {
+        let fake = FakeQuestionFeedListener()
+        let model = QuestionModel(listenerService: fake)
+
+        await model.startRemoteSession()
+        let completions = await fake.completions(for: .seeded)
+        model.clearRemoteState()
+
+        completions[0](.failure(URLError(.notConnectedToInternet)))
+        #expect(model.error == nil)
+        #expect(!model.isLoading)
+    }
+
+    @Test func aSeededFailureFromAnOverwrittenListenerLeavesNoErrorAndKeepsLoading() async {
+        let fake = FakeQuestionFeedListener()
+        let model = QuestionModel(listenerService: fake)
+
+        await model.refreshQuestions()
+        await model.refreshQuestions()
+        let completions = await fake.completions(for: .seeded)
+        #expect(completions.count == 2)
+
+        completions[0](.failure(URLError(.notConnectedToInternet)))
+        #expect(model.error == nil)
+        #expect(model.isLoading)
+    }
+
+    @Test func aTrioFailureLeavesNoErrorAndKeepsTrioQuestions() async throws {
+        let fake = FakeQuestionFeedListener()
+        let model = QuestionModel(listenerService: fake)
+
+        await model.refreshQuestions()
+        let completions = await fake.completions(for: .trio)
+        let trioQuestion = Question(
+            id: "trio",
+            text: "Question trio",
+            category: Question.categories[0],
+            contentId: "trio",
+            languageCode: AppLocalization.currentLanguageCode,
+            source: .userCreated
+        )
+        completions[0](.success([trioQuestion]))
+        #expect(model.trioQuestions.map(\.id) == ["trio"])
+
+        completions[0](.failure(URLError(.notConnectedToInternet)))
+
+        #expect(model.error == nil)
+        #expect(model.trioQuestions.map(\.id) == ["trio"])
     }
 
     private func liveCount(_ feed: Feed, in fake: FakeQuestionFeedListener) async -> Int {

@@ -3,18 +3,19 @@
 ///
 /// `Sendable` because the `@MainActor` `QuestionModel` hands this existential to `nonisolated async`
 /// requirements. `QuestionService` and the test fake are both `actor`s. Each `completion` runs on
-/// the main actor.
+/// the main actor. The three question feeds deliver a `Result`: a listener error arrives as a
+/// `.failure`, so the model can end its loading state.
 protocol QuestionFeedListening: Sendable {
     func setupSeededQuestionsListener(
-        completion: @escaping @MainActor @Sendable ([Question]) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[Question], any Error>) -> Void
     ) async -> FirestoreListenerHandle
 
     func setupFeaturedHomeQuestionsListener(
-        completion: @escaping @MainActor @Sendable ([Question]) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[Question], any Error>) -> Void
     ) async -> FirestoreListenerHandle
 
     func setupTrioQuestionsListener(
-        completion: @escaping @MainActor @Sendable ([Question]) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[Question], any Error>) -> Void
     ) async -> FirestoreListenerHandle
 
     /// Returns nil when no user is signed in.

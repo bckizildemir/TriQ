@@ -10,7 +10,7 @@ actor FakeQuestionFeedListener: QuestionFeedListening {
 
     typealias AnswersCompletion = @MainActor @Sendable ([String: UserAnswer]) -> Void
 
-    typealias QuestionsCompletion = @MainActor @Sendable ([Question]) -> Void
+    typealias QuestionsCompletion = @MainActor @Sendable (Result<[Question], any Error>) -> Void
 
     private let held: Set<Feed>
     private var registrationsByFeed: [Feed: [MockQuestionListListenerRegistration]] = [:]
