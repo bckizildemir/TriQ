@@ -14,7 +14,7 @@
 #                                         once more unless --once (use --once on taps that write live)
 #   shot NAME                             screenshot -> evidence/NN-NAME.png
 #   tree NAME                             accessibility tree -> evidence/NN-NAME.json
-#   revive                                boot the device again after another session shut it down
+#   revive                                boot the device if needed, end the app, launch it again
 #   cleanup                               delete the device, drop the locks, keep the evidence
 #   status                                print the run state
 #
@@ -363,6 +363,18 @@ wait_for_tree() {
   say "WARN no accessibility tree after 30s; run vt.sh doctor"
 }
 
+# True when the process uses 90 % CPU or more in 3 samples 1 s apart. One sample is a decayed
+# average and can read high just after launch. Never fails under set -e: a dead PID reads as 0.
+app_cpu_stays_high() {
+  local cpu i
+  for i in 1 2 3; do
+    cpu="$(ps -o %cpu= -p "$1" 2>/dev/null | tr -d ' ' | cut -d. -f1 || true)"
+    [[ "${cpu:-0}" -ge 90 ]] || return 1
+    [[ $i == 3 ]] || sleep 1
+  done
+  return 0
+}
+
 cmd_doctor() {
   [[ -d "$LOCK_DIR" ]] || fail "no run in progress"
   local udid ok=0 dstate; udid="$(state udid)"; dstate="$(device_state "$udid")"
@@ -392,9 +404,30 @@ cmd_doctor() {
   fi
   printf 'lang:    %s (AppleLanguages: %s)\n' "$(state lang)" \
     "$(xcrun simctl spawn "$udid" defaults read -g AppleLanguages 2>/dev/null | tr -d ' \n' || true)"
-  local count; count="$(axe describe-ui --udid "$udid" 2>/dev/null | grep -c '"AXLabel"' || true)"
+  # axe waits on a hung app for over a minute (2026-10-21): read the tree for 15 s at most.
+  local axout="$LOCK_DIR/doctor-ax.json" axpid i count
+  axe describe-ui --udid "$udid" >"$axout" 2>/dev/null &
+  axpid=$!
+  for i in $(seq 1 30); do kill -0 "$axpid" 2>/dev/null || break; sleep 0.5; done
+  if kill -0 "$axpid" 2>/dev/null; then
+    kill "$axpid" 2>/dev/null || true
+    for i in 1 2 3 4; do kill -0 "$axpid" 2>/dev/null || break; sleep 0.5; done
+    kill -9 "$axpid" 2>/dev/null || true
+  fi
+  wait "$axpid" 2>/dev/null || true
+  count="$(grep -c '"AXLabel"' "$axout" 2>/dev/null || true)"
+  rm -f "$axout"
   printf 'ax tree: %s labelled elements\n' "${count:-0}"
-  [[ "${count:-0}" -gt 0 ]] || echo "WARN empty accessibility tree: call xcodebuildmcp open_sim, then retry"
+  if [[ -n "$pid" ]] && ! kill -0 "$pid" 2>/dev/null; then
+    echo "FAIL the app (PID $pid) exited during doctor: run vt.sh launch, then doctor again"
+    ok=1
+  elif [[ -n "$pid" && "${count:-0}" -lt 3 ]] && app_cpu_stays_high "$pid"; then
+    # A hung app (main thread in a SwiftUI layout loop, 2026-10-21) shows 0-1 elements at 100% CPU.
+    echo "FAIL the app is hung (90% CPU or more in 3 samples, ${count:-0} labelled elements): run vt.sh revive"
+    ok=1
+  elif [[ "${count:-0}" -eq 0 ]]; then
+    echo "WARN empty accessibility tree: call xcodebuildmcp open_sim, then retry"
+  fi
   local copied="$LOCK_DIR/app/$APP_NAME"
   if [[ -f "$copied/GoogleService-Info.plist" ]]; then
     echo "live:    the app talks to live Firebase (ttbp-9d652); drive only what the feature file's live-data class allows"
@@ -423,6 +456,8 @@ cmd_revive() {
   need_run
   boot_if_needed
   if xcrun simctl get_app_container "$(state udid)" "$BUNDLE_ID" >/dev/null 2>&1; then
+    # A hung app (main thread in a layout loop, seen 2026-10-21) makes simctl launch wait forever.
+    xcrun simctl terminate "$(state udid)" "$BUNDLE_ID" 2>/dev/null || true
     xcrun simctl launch "$(state udid)" "$BUNDLE_ID" || fail "simctl launch failed"
     wait_for_tree
     say "app relaunched; its data on the device is kept"
