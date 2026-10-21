@@ -42,7 +42,7 @@ Scripts/xcb.sh test --scheme TTBTests --only TTBTests/FavoriteStoreTests # chang
 - `Scripts/xcb.sh` prints errors only. Compiler warnings are in its log: `~/Library/Caches/xcb/<Project>/logs/`.
 - **Verify trial** (owner, 2026-10-15). UI tests, simulator checks and iOS-version passes are paused while the owner tries the verification skill, the same as in Purrtine. Prove what a user sees with `verify-triq` (`.claude/skills/verify-triq/`, made with `/create-verification-skill`): a fresh simulator, no launch flags, the live Firebase project, evidence in `~/verify-evidence/triq/`. Its feature files name what each journey writes on the server; a write or a paid call needs the owner's yes. The paused rules are parked outside the repo at `~/.claude/parked/2026-10-15-verify-trial-triq/`; they do not apply during the trial. `/maintain-verification-skill` keeps the skill current; only the owner can start it.
 - A new worktree has no `TTB/Secrets.xcconfig` (gitignored), and the build fails at once without it. Copy `TTB/Secrets.xcconfig.template` to `TTB/Secrets.xcconfig` before the first `Scripts/xcb.sh` run. Do not commit `TTB/Secrets.xcconfig`.
-- The baseline simulator is iPhone 12 on iOS 26.5; the script shuts down any other booted simulator before a test, except devices named `verify-*` (a verify-skill run).
+- The baseline simulator is iPhone 12 on iOS 27.0 (owner, 2026-10-15); the script shuts down any other booted simulator before a test, except devices named `verify-*` (a verify-skill run).
 - `Scripts/xcb.sh` is shared with CatCareCalendar; keep the two copies identical.
 
 ```bash

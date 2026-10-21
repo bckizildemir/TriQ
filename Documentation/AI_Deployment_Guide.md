@@ -9,7 +9,7 @@
 ## Local Verification
 ```bash
 xcodebuild -project TTB.xcodeproj -scheme TTB -configuration Debug build
-xcodebuild -project TTB.xcodeproj -scheme TTB -destination 'platform=iOS Simulator,name=iPhone 12,OS=26.5' test
+xcodebuild -project TTB.xcodeproj -scheme TTB -destination 'platform=iOS Simulator,name=iPhone 12,OS=27.0' test
 ```
 
 ## App Check — do this before the first deploy of the enforced functions

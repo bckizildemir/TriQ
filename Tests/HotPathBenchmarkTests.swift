@@ -10,7 +10,7 @@ import XCTest
 ///
 /// Run with:
 ///   xcodebuild -project TTB.xcodeproj -scheme TTB \
-///     -destination 'platform=iOS Simulator,name=iPhone 12,OS=26.5' \
+///     -destination 'platform=iOS Simulator,name=iPhone 12,OS=27.0' \
 ///     -only-testing:TTBTests/HotPathBenchmarkTests test
 final class HotPathBenchmarkTests: XCTestCase {
 

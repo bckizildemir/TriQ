@@ -32,7 +32,7 @@ npm test --prefix functions -- <test-file>
 6. For Swift-side mapping/model behavior, add or run focused XCTest targets:
 
 ```bash
-xcodebuild -project TTB.xcodeproj -scheme TTB -destination 'platform=iOS Simulator,name=iPhone 12,OS=26.5' -only-testing:TTBTests/<TestClass> test
+xcodebuild -project TTB.xcodeproj -scheme TTB -destination 'platform=iOS Simulator,name=iPhone 12,OS=27.0' -only-testing:TTBTests/<TestClass> test
 ```
 
 7. For integration confidence, run:

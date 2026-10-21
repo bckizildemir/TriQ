@@ -22,7 +22,7 @@ Usage:
   Scripts/xcb.sh test  [options] [-- extra xcodebuild args]
 
 Options:
-  --os VERSION        Simulator iOS version (default: $XCB_OS or 26.5)
+  --os VERSION        Simulator iOS version (default: $XCB_OS or 27.0)
   --only IDENTIFIER   Passed as -only-testing:IDENTIFIER (repeatable),
                       e.g. --only TTBTests/FavoriteStoreTests
   --scheme NAME       Scheme (default: $XCB_SCHEME or the project name)
@@ -53,7 +53,7 @@ case "$ACTION" in
   *) usage >&2; exit 2 ;;
 esac
 
-OS_VERSION="${XCB_OS:-26.5}"
+OS_VERSION="${XCB_OS:-27.0}"
 SCHEME="${XCB_SCHEME:-}"
 ONLY_TESTING=()
 EXTRA_ARGS=()
