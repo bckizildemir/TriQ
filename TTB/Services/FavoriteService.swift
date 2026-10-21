@@ -2,7 +2,6 @@ import Foundation
 import FirebaseFirestore
 import FirebaseFunctions
 import os
-import Synchronization
 
 actor FavoriteService {
     private let logger = Logger(
@@ -149,7 +148,7 @@ extension FavoriteService: FavoriteServicing {
         userId: String,
         onChange: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
     ) -> FavoriteListenerHandle {
-        FirestoreFavoriteListenerHandle(
+        FirestoreListenerHandle(
             registration: setupFavoritesListener(userId: userId, completion: onChange)
         )
     }
@@ -160,24 +159,5 @@ extension FavoriteService: FavoriteServicing {
             userId: userId,
             currentFavoriteState: currentState
         )
-    }
-}
-
-/// Owns the Firebase registration, which is not `Sendable`, behind a lock, so the handle can
-/// cross from this actor to the main-actor store. The first `cancel()` removes the registration;
-/// later calls do nothing. With a `nil` registration (the empty-`userId` case) every `cancel()`
-/// does nothing.
-final class FirestoreFavoriteListenerHandle: FavoriteListenerHandle {
-    private let registration: Mutex<ListenerRegistration?>
-
-    init(registration: sending ListenerRegistration?) {
-        self.registration = Mutex(registration)
-    }
-
-    func cancel() {
-        // Take the registration out under the lock and remove it after, so Firebase never runs
-        // while the lock is held.
-        let removed = registration.withLock { $0.take() }
-        removed?.remove()
     }
 }
