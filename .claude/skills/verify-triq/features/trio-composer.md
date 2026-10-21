@@ -3,13 +3,13 @@
 The Trio tab lists approved community questions. A permanent account writes a question idea, can
 ask the AI for ideas, and submits it for review. A guest gets the account upgrade instead of the
 composer. Proved on 2026-10-21 (run `2026-10-21-140704-1396`, iOS 27.0, English): the guest gate as
-a guest, the composer as the verify test account.
+a guest, the composer as the run's own account.
 
 **Live-data class:** the Trio tab = reads live. **Generate ideas = AI call**: the callable
 `generateTrioQuestionSuggestions`. **Submit = writes live**: a client Firestore write of one
 `questions/<uuid>` document (`source: userCreated`, `moderationStatus: pending`, `createdBy: <uid>`),
 not a callable. Both need the owner's yes per drive. The composer needs a permanent account: the
-verify test account (see `../SKILL.md`).
+run's own account (see `../SKILL.md`, "A run's own account").
 
 ## Sub-features
 
@@ -42,7 +42,7 @@ Preconditions: [Guest onboarding](./guest-onboarding.md) done.
   `vt tap --label Continue --element-type Button`. `vt shot trio-feed`.
 - As a guest: `vt tap --id trio-create-question-button`. Expect `guest-upgrade-sheet`, not
   `trio-create-question-sheet`. `vt shot trio-guest-gate`. Close it with "Cancel".
-- As the account (sign in or upgrade first, with the owner's yes; [Profile](./profile.md)):
+- As the account (upgrade the run's guest first, with the owner's yes; [Profile](./profile.md)):
   `vt tap --id trio-create-question-button`. Expect `trio-create-question-sheet` and
   `trio-publish-button` with value `blocked`. `vt shot trio-composer`.
 - Tap `trio-draft-field`, type `Abc`: expect `trio-validation-error`. Clear it, type a real

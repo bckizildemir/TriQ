@@ -31,8 +31,8 @@ Preconditions: [Guest onboarding](./guest-onboarding.md) done; Home on screen.
 
 - `vt tap --label Profile`. Expect `Heading` "Profile" and `profile-guest-upgrade-button`.
   `vt shot profile-guest`, `vt tree profile-guest`.
-- Upgrade (owner's yes for one new account; credentials in `~/.config/verify-triq/test-account`,
-  see `../SKILL.md`): `vt tap --id profile-guest-upgrade-button`. Tap both "Show password" buttons
+- Upgrade (owner's yes for one new account; write the run's credentials file first, see
+  `../SKILL.md`, "A run's own account"): `vt tap --id profile-guest-upgrade-button`. Tap both "Show password" buttons
   first, then fill Username, Email, Password, Confirm password from the file. Take no shot or tree
   while the sheet shows the password. `vt tap --once --label 'Create Account' --element-type Button`.
   Expect the sheet to close.

@@ -49,8 +49,9 @@ to the real backend. There is no offline mode. Every feature file carries one li
 | AI call | calls an AI callable (`aiCallable` in `functions/index.js`) | the owner's yes for this action |
 
 **AI calls** go through `functions/aiProviderProxy.js`: Groq (`openai/gpt-oss-120b`) by default,
-free for now (owner, 2026-10-21). With `AI_PROVIDER=openrouter` the default model is not a free one,
-so treat every AI call as one that can bill. Each also counts against a daily quota per uid
+free for now (owner, 2026-10-21). The tracked `functions/.env.ttbp-9d652` sets `AI_PROVIDER=groq`;
+nobody has checked the deployed functions' values. With `AI_PROVIDER=openrouter` the default model
+(`x-ai/grok-4.1-fast`) is not a `:free` model and bills, so treat every AI call as one that can bill. Each also counts against a daily quota per uid
 (`DAILY_LIMITS` in `functions/aiUsageLimit.js`). **Opening a question card is an AI call**: it calls
 `suggestQuickAnswers` by itself when the question has fewer than 5 stored quick answers
 (`QuestionCardExpandedView.loadQuickAnswerSuggestions`).
@@ -58,8 +59,8 @@ so treat every AI call as one that can bill. Each also counts against a daily qu
 Owner rule (2026-10-15): a run may read; each write or AI call needs a yes, and a yes covers one
 action, not the next one (`~/.claude/CLAUDE.md`, "Cloud spend needs the user's yes"). Ask in plain
 words: what the run taps, what it leaves on the server, what it may cost. The QA account
-(TriQ memory `triq-qa-test-account.md`) and the verify test account (below) each need a yes before
-a run signs in with them.
+(TriQ memory `triq-qa-test-account.md`) needs a yes before a run signs in with it, and a run's own
+account (below) needs a yes before the upgrade that makes it.
 
 A fresh device can only reach Home through a sign-in, and the cheapest one is **Continue as
 Guest**: it creates one anonymous Firebase Auth user and one `users/<uid>` document (free tier,
@@ -68,23 +69,30 @@ create one guest this way.** The app is not published; the owner removes these t
 the release. So write the guest's uid (from the device log, `users/<uid>` paths) in a `live=` line in
 `run.txt`, so that the clean-up can find each one.
 
-### The verify test account (a permanent account)
+### A run's own account (a permanent account)
 
-The Trio composer and the signed-in profile open only for a permanent account. On 2026-10-21 a
-maintenance pass upgraded its guest through the profile's `profile-guest-upgrade-button` (owner's
-yes). The credentials are only on this Mac: `~/.config/verify-triq/test-account` (mode 600; keys
-`username=`, `email=`, `password=`). Read them in the shell and type them from the file. The password
-stays out of every shot, tree, `run.txt`, PR and report.
+The Trio composer and the signed-in profile open only for a permanent account. **Owner decision
+(2026-10-21): each run that needs one makes its own account** by an upgrade of the run's guest
+([Profile and guest upgrade](features/profile.md)). Reuse of an earlier run's account is not the
+recipe. Before the upgrade, write the run's credentials file (mode 600) and type the values from it:
 
-- A fresh device has no session: sign in with this account on the login screen (`Username or email
-  field`, `Password field`, `Sign In`), or upgrade the run's guest only with a new yes (a second
-  account).
-- **Password fields (iOS 27):** first tap each "Show password" eye button, then tap the field. A
+```bash
+umask 077; mkdir -p ~/.config/verify-triq/accounts
+# file ~/.config/verify-triq/accounts/<run-id>, three lines:
+#   username=verifytriq-<run-id>            (Latin letters, digits, . _ - ; at most 64)
+#   email=verifytriq-<run-id>@example.com
+#   password=<16 random letters and digits>Aa1
+```
+
+`<run-id>` is the evidence folder's name (for example `2026-10-21-140704-1396`). The password stays
+out of every shot, tree, `run.txt`, PR and report. Record the username and the uid in a `live=` line.
+
+- **Password fields (iOS 27, #99):** first tap each "Show password" eye button, then tap the field. A
   focused secure field opens the system "Use Strong Password?" popup: it runs out of process, axe
   cannot see it, it drops the typed text and it can leave every later tap dead until the device
   reboots (2026-10-21). With an eye open the field shows the password in plain text: take no
-  `shot` or `tree` until the sheet is closed.
-- The owner removes this account and its data with the other test data before the release.
+  `shot` or `tree` until the sheet is closed. Users hit the same popup: #99 tracks the app fix.
+- The owner removes these accounts and their data with the other test data before the release.
 
 ### App Check (a registered debug token)
 

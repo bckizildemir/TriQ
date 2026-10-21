@@ -43,8 +43,8 @@ the file was written from source and nobody has driven it yet.
 | [Trio question composer](./trio-composer.md) | AI call (ideas) and writes live (publish); a permanent account only | proved 2026-10-21 |
 
 Order for a full pass: guest onboarding, Home feed, guest favorites, question card, profile, Trio as
-guest, then the account part of profile and Trio (sign in with the verify test account, or upgrade
-the run's guest only with a new yes; see `../SKILL.md`).
+guest, then the upgrade of the run's guest to the run's own account (owner's yes; see `../SKILL.md`)
+and the account part of profile and Trio.
 
 ## Not reachable without a harness
 
