@@ -22,7 +22,39 @@ struct QuestionModelListenerGuardTests {
         #expect(await liveCount(.seeded, in: fake) == 1)
         #expect(await liveCount(.featuredHome, in: fake) == 1)
         #expect(await liveCount(.trio, in: fake) == 1)
-        #expect(await fake.registrations(for: .seeded).first?.isRemoved == true)
+        // Which call registered first is not promised; one is live and the other removed.
+        #expect(await fake.registrations(for: .seeded).count == 2)
+        #expect(await removedCount(.seeded, in: fake) == 1)
+    }
+
+    @Test func aSignOutDuringRefreshLeavesNoTrioOrFeaturedListener() async {
+        let fake = FakeQuestionFeedListener(holding: [.seeded])
+        let model = QuestionModel(listenerService: fake)
+
+        let refresh = Task { await model.refreshQuestions() }
+        await fake.waitUntilHeld(.seeded, count: 1)
+        model.clearRemoteState()
+        await fake.release(.seeded, at: 0)
+        await refresh.value
+
+        for feed in [Feed.seeded, .featuredHome, .trio] {
+            #expect(await liveCount(feed, in: fake) == 0)
+        }
+        #expect(await fake.registrations(for: .trio).isEmpty)
+        #expect(model.trioQuestions.isEmpty)
+    }
+
+    @Test func clearingRemoteStateClearsAnErrorFromTheOldSession() async throws {
+        let fake = FakeQuestionFeedListener()
+        let model = QuestionModel(listenerService: fake)
+
+        await model.refreshQuestions()
+        let seeded = try #require(await fake.completions(for: .seeded).last)
+        seeded(.failure(URLError(.notConnectedToInternet)))
+        #expect(model.error != nil)
+
+        model.clearRemoteState()
+        #expect(model.error == nil)
     }
 
     @Test func overlappingRefreshesKeepOneTrioRegistration() async {
@@ -38,7 +70,8 @@ struct QuestionModelListenerGuardTests {
         await second.value
 
         #expect(await liveCount(.trio, in: fake) == 1)
-        #expect(await fake.registrations(for: .trio).first?.isRemoved == true)
+        #expect(await fake.registrations(for: .trio).count == 2)
+        #expect(await removedCount(.trio, in: fake) == 1)
     }
 
     @Test func aDeliveryFromAnOverwrittenListenerDoesNotChangeQuestions() async {
@@ -186,6 +219,10 @@ struct QuestionModelListenerGuardTests {
 
         #expect(model.error == nil)
         #expect(model.trioQuestions.map(\.id) == ["trio"])
+    }
+
+    private func removedCount(_ feed: Feed, in fake: FakeQuestionFeedListener) async -> Int {
+        await fake.registrations(for: feed).count { $0.isRemoved }
     }
 
     private func liveCount(_ feed: Feed, in fake: FakeQuestionFeedListener) async -> Int {

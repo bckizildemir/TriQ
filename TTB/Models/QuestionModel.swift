@@ -155,6 +155,8 @@ class QuestionModel: ObservableObject {
         trioQuestions = []
         currentUserAnswers = [:]
         isLoading = false
+        // An error from the old session must not carry into the next one.
+        error = nil
     }
 
     private func setupUserAnswersListener() async {
@@ -206,7 +208,9 @@ class QuestionModel: ObservableObject {
             updateGroupedQuestions()
             return
         }
+        let session = remoteSessionGeneration
         await setupQuestionsListener()
+        guard remoteSessionGeneration == session else { return }
         await setupTrioQuestionsListener()
     }
 
