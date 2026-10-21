@@ -5,14 +5,17 @@
 /// the order in which overlapping calls finish.
 actor FakeQuestionFeedListener: QuestionFeedListening {
     enum Feed: Hashable {
-        case seeded, featuredHome, trio
+        case seeded, featuredHome, trio, userAnswers
     }
+
+    typealias AnswersCompletion = @MainActor @Sendable ([String: UserAnswer]) -> Void
 
     typealias QuestionsCompletion = @MainActor @Sendable ([Question]) -> Void
 
     private let held: Set<Feed>
     private var registrationsByFeed: [Feed: [MockQuestionListListenerRegistration]] = [:]
     private var completionsByFeed: [Feed: [QuestionsCompletion]] = [:]
+    private var answersCompletions: [AnswersCompletion] = []
     private var gates: [Feed: [CheckedContinuation<Void, Never>]] = [:]
     private var heldWaiters: [(feed: Feed, count: Int, continuation: CheckedContinuation<Void, Never>)] = []
 
@@ -22,6 +25,10 @@ actor FakeQuestionFeedListener: QuestionFeedListening {
 
     func registrations(for feed: Feed) -> [MockQuestionListListenerRegistration] {
         registrationsByFeed[feed] ?? []
+    }
+
+    func userAnswersCompletions() -> [AnswersCompletion] {
+        answersCompletions
     }
 
     func completions(for feed: Feed) -> [QuestionsCompletion] {
@@ -62,13 +69,16 @@ actor FakeQuestionFeedListener: QuestionFeedListening {
     func setupUserAnswersListener(
         completion: @escaping @MainActor @Sendable ([String: UserAnswer]) -> Void
     ) async -> FirestoreListenerHandle? {
-        nil
+        answersCompletions.append(completion)
+        return await record(.userAnswers, completion: nil)
     }
 
-    private func record(_ feed: Feed, completion: @escaping QuestionsCompletion) async -> FirestoreListenerHandle {
+    private func record(_ feed: Feed, completion: QuestionsCompletion?) async -> FirestoreListenerHandle {
         let registration = MockQuestionListListenerRegistration()
         registrationsByFeed[feed, default: []].append(registration)
-        completionsByFeed[feed, default: []].append(completion)
+        if let completion {
+            completionsByFeed[feed, default: []].append(completion)
+        }
         if held.contains(feed) {
             await withCheckedContinuation { continuation in
                 gates[feed, default: []].append(continuation)

@@ -46,6 +46,9 @@ class QuestionModel: ObservableObject {
     private var questionsListenerGeneration: UInt = 0
     private var trioListenerGeneration: UInt = 0
     private var userAnswersListenerGeneration: UInt = 0
+    /// Bumped by `clearRemoteState()`. `startRemoteSession()` stops before each next setup step when
+    /// it changed, so a sign-out during setup leaves no listener for the signed-out session (TriQ#52).
+    private var remoteSessionGeneration: UInt = 0
     private var seededQuestions: [Question] = []
     private var featuredHomeQuestions: [Question] = []
     /// `id` -> index into `questions`, so per-card lookups don't scan the whole corpus. Maintained by
@@ -109,10 +112,7 @@ class QuestionModel: ObservableObject {
             guard let self = self else { return }
             Task { @MainActor in
                 if user != nil {
-                    self.logger.debug("Setting up question listeners")
-                    await self.setupQuestionsListener()
-                    await self.setupTrioQuestionsListener()
-                    await self.setupUserAnswersListener()
+                    await self.startRemoteSession()
                 } else {
                     self.clearRemoteState()
                 }
@@ -120,8 +120,25 @@ class QuestionModel: ObservableObject {
         }
     }
 
-    private func clearRemoteState() {
-        // Handles a setup call is still awaiting are not stored yet; #52 bumps the generations here.
+    /// Sets up every listener for a signed-in user. Stops before the next step when a sign-out ran
+    /// `clearRemoteState()` meanwhile, because each setup bumps its own fresh feed generation.
+    func startRemoteSession() async {
+        let session = remoteSessionGeneration
+        logger.debug("Setting up question listeners")
+        await setupQuestionsListener()
+        guard remoteSessionGeneration == session else { return }
+        await setupTrioQuestionsListener()
+        guard remoteSessionGeneration == session else { return }
+        await setupUserAnswersListener()
+    }
+
+    func clearRemoteState() {
+        // Handles a setup call is still awaiting are not stored yet. Bumping the generations makes
+        // that call cancel its handle on resume and makes a queued delivery drop itself.
+        remoteSessionGeneration &+= 1
+        questionsListenerGeneration &+= 1
+        trioListenerGeneration &+= 1
+        userAnswersListenerGeneration &+= 1
         seededQuestionsListener?.cancel()
         seededQuestionsListener = nil
         featuredHomeQuestionsListener?.cancel()

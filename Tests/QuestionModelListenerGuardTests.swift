@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import TTB
 
@@ -54,6 +55,69 @@ struct QuestionModelListenerGuardTests {
 
         completions[1]([makeQuestion(id: "current")])
         #expect(model.questions.map(\.id) == ["current"])
+    }
+
+    @Test func aSignOutDuringSeededSetupLeavesNoListenerAndNoState() async {
+        let fake = FakeQuestionFeedListener(holding: [.seeded])
+        let model = QuestionModel(listenerService: fake)
+
+        let session = Task { await model.startRemoteSession() }
+        await fake.waitUntilHeld(.seeded, count: 1)
+        model.clearRemoteState()
+        await fake.release(.seeded, at: 0)
+        await session.value
+
+        for feed in [Feed.seeded, .featuredHome, .trio, .userAnswers] {
+            #expect(await liveCount(feed, in: fake) == 0)
+        }
+        // The later steps never ran.
+        #expect(await fake.registrations(for: .featuredHome).isEmpty)
+        #expect(await fake.registrations(for: .trio).isEmpty)
+        #expect(await fake.registrations(for: .userAnswers).isEmpty)
+        #expect(model.questions.isEmpty)
+        #expect(model.trioQuestions.isEmpty)
+        #expect(model.currentUserAnswers.isEmpty)
+        #expect(!model.isLoading)
+    }
+
+    @Test func aSignOutDuringUserAnswersSetupCancelsItsHandle() async {
+        let fake = FakeQuestionFeedListener(holding: [.userAnswers])
+        let model = QuestionModel(listenerService: fake)
+
+        let session = Task { await model.startRemoteSession() }
+        await fake.waitUntilHeld(.userAnswers, count: 1)
+        model.clearRemoteState()
+        await fake.release(.userAnswers, at: 0)
+        await session.value
+
+        #expect(await fake.registrations(for: .userAnswers).count == 1)
+        #expect(await liveCount(.userAnswers, in: fake) == 0)
+    }
+
+    @Test func aUserAnswersDeliveryFromBeforeSignOutIsDropped() async {
+        let fake = FakeQuestionFeedListener()
+        let model = QuestionModel(listenerService: fake)
+
+        await model.startRemoteSession()
+        let completions = await fake.userAnswersCompletions()
+        #expect(completions.count == 1)
+        model.clearRemoteState()
+
+        let answer = UserAnswer(questionId: "q1", userId: "a", answers: ["x"], answeredAt: Date())
+        completions[0](["q1": answer])
+        #expect(model.currentUserAnswers.isEmpty)
+    }
+
+    @Test func aSeededDeliveryFromBeforeSignOutIsDropped() async {
+        let fake = FakeQuestionFeedListener()
+        let model = QuestionModel(listenerService: fake)
+
+        await model.startRemoteSession()
+        let completions = await fake.completions(for: .seeded)
+        model.clearRemoteState()
+
+        completions[0]([makeQuestion(id: "stale")])
+        #expect(model.questions.isEmpty)
     }
 
     private func liveCount(_ feed: Feed, in fake: FakeQuestionFeedListener) async -> Int {
