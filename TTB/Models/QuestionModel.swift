@@ -26,6 +26,9 @@ class QuestionModel: ObservableObject {
     @Published private(set) var trioQuestions: [Question] = []
     @Published private(set) var isLoading = false
     @Published var error: String?
+    /// The message the seeded feed put in `error`. A later seeded success clears `error` only while
+    /// it still holds this message, so it never erases an answer-save error from `report(_:)`.
+    private var seededFeedErrorMessage: String?
 
     /// All answers saved by the currently signed-in user, keyed by questionId.
     @Published private(set) var currentUserAnswers: [String: UserAnswer] = [:]
@@ -83,6 +86,7 @@ class QuestionModel: ObservableObject {
         updateGroupedQuestions()
     }
 
+    #if DEBUG
     /// Runs the listener setup against `listenerService` without `Auth.auth()`, so a test can drive it
     /// with a fake. Like `QuestionListStore`'s `observesAuth: false`.
     init(
@@ -93,6 +97,7 @@ class QuestionModel: ObservableObject {
         self.listenerService = listenerService
         self.todaysQuestionSelector = todaysQuestionSelector
     }
+    #endif
 
     /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
     /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
@@ -157,6 +162,7 @@ class QuestionModel: ObservableObject {
         isLoading = false
         // An error from the old session must not carry into the next one.
         error = nil
+        seededFeedErrorMessage = nil
     }
 
     private func setupUserAnswersListener() async {
@@ -228,10 +234,13 @@ class QuestionModel: ObservableObject {
             guard let self, questionsListenerGeneration == generation else { return }
             switch result {
             case .success(let questions):
+                if error == seededFeedErrorMessage { error = nil }
+                seededFeedErrorMessage = nil
                 seededQuestions = questions
                 updatePublicQuestions()
             case .failure(let failure):
                 logger.error("Seeded questions failed to load: \(failure.localizedDescription)")
+                seededFeedErrorMessage = failure.localizedDescription
                 error = failure.localizedDescription
             }
             isLoading = false

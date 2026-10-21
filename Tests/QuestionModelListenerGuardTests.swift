@@ -3,6 +3,7 @@ import Testing
 @testable import TTB
 
 @MainActor
+@Suite(.timeLimit(.minutes(1)))
 struct QuestionModelListenerGuardTests {
     typealias Feed = FakeQuestionFeedListener.Feed
 
@@ -169,6 +170,33 @@ struct QuestionModelListenerGuardTests {
         #expect(!model.isLoading)
         #expect(model.error != nil)
         #expect(model.questions.map(\.id) == ["kept"])
+    }
+
+    @Test func aLaterSeededSuccessClearsTheSeededFeedError() async throws {
+        let fake = FakeQuestionFeedListener()
+        let model = QuestionModel(listenerService: fake)
+
+        await model.refreshQuestions()
+        let seeded = try #require(await fake.completions(for: .seeded).last)
+        seeded(.failure(URLError(.notConnectedToInternet)))
+        #expect(model.error != nil)
+
+        seeded(.success([makeQuestion(id: "back")]))
+        #expect(model.error == nil)
+        #expect(model.questions.map(\.id) == ["back"])
+    }
+
+    @Test func aSeededSuccessKeepsAnAnswerSaveError() async throws {
+        let fake = FakeQuestionFeedListener()
+        let model = QuestionModel(listenerService: fake)
+
+        await model.refreshQuestions()
+        let seeded = try #require(await fake.completions(for: .seeded).last)
+        model.report(.textSaveFailed)
+        let saveError = try #require(model.error)
+
+        seeded(.success([makeQuestion(id: "q")]))
+        #expect(model.error == saveError)
     }
 
     @Test func aSeededFailureAfterSignOutLeavesNoError() async {
