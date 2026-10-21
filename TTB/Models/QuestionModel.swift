@@ -31,12 +31,21 @@ class QuestionModel: ObservableObject {
     @Published private(set) var currentUserAnswers: [String: UserAnswer] = [:]
 
     private let questionService: QuestionService?
+    /// Where the listeners come from: the same `QuestionService` in the app, a fake in tests, nil in local mode.
+    private let listenerService: (any QuestionFeedListening)?
     private let todaysQuestionSelector: TodaysQuestionSelector
     private var seededQuestionsListener: FirestoreListenerHandle?
     private var featuredHomeQuestionsListener: FirestoreListenerHandle?
     private var trioListener: FirestoreListenerHandle?
     private var userAnswersListener: FirestoreListenerHandle?
     private var authStateHandle: AuthStateDidChangeListenerHandle?
+    /// One generation per feed. Each setup call bumps its feed's generation before it awaits; when
+    /// the service returns, a changed generation means a newer call took over, so the old handle is
+    /// cancelled instead of stored (TriQ#50). Delivery closures capture the generation they were
+    /// set up with and drop a delivery from a stale one.
+    private var questionsListenerGeneration: UInt = 0
+    private var trioListenerGeneration: UInt = 0
+    private var userAnswersListenerGeneration: UInt = 0
     private var seededQuestions: [Question] = []
     private var featuredHomeQuestions: [Question] = []
     /// `id` -> index into `questions`, so per-card lookups don't scan the whole corpus. Maintained by
@@ -52,6 +61,7 @@ class QuestionModel: ObservableObject {
         todaysQuestionSelector: TodaysQuestionSelector = TodaysQuestionSelector()
     ) {
         self.questionService = questionService
+        listenerService = questionService
         self.todaysQuestionSelector = todaysQuestionSelector
         logger.debug("QuestionModel initialized")
         setupAuthListener()
@@ -63,10 +73,22 @@ class QuestionModel: ObservableObject {
         todaysQuestionSelector: TodaysQuestionSelector = TodaysQuestionSelector()
     ) {
         questionService = nil
+        listenerService = nil
         self.todaysQuestionSelector = todaysQuestionSelector
         replaceQuestions(localQuestions)
         currentUserAnswers = localUserAnswers
         updateGroupedQuestions()
+    }
+
+    /// Runs the listener setup against `listenerService` without `Auth.auth()`, so a test can drive it
+    /// with a fake. Like `QuestionListStore`'s `observesAuth: false`.
+    init(
+        listenerService: any QuestionFeedListening,
+        todaysQuestionSelector: TodaysQuestionSelector = TodaysQuestionSelector()
+    ) {
+        questionService = nil
+        self.listenerService = listenerService
+        self.todaysQuestionSelector = todaysQuestionSelector
     }
 
     /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
@@ -99,6 +121,7 @@ class QuestionModel: ObservableObject {
     }
 
     private func clearRemoteState() {
+        // Handles a setup call is still awaiting are not stored yet; #52 bumps the generations here.
         seededQuestionsListener?.cancel()
         seededQuestionsListener = nil
         featuredHomeQuestionsListener?.cancel()
@@ -118,11 +141,20 @@ class QuestionModel: ObservableObject {
     }
 
     private func setupUserAnswersListener() async {
-        guard let questionService else { return }
+        guard let listenerService else { return }
+        userAnswersListenerGeneration &+= 1
+        let generation = userAnswersListenerGeneration
         userAnswersListener?.cancel()
-        userAnswersListener = await questionService.setupUserAnswersListener { [weak self] answers in
-            self?.currentUserAnswers = answers
+        userAnswersListener = nil
+        let handle = await listenerService.setupUserAnswersListener { [weak self] answers in
+            guard let self, userAnswersListenerGeneration == generation else { return }
+            currentUserAnswers = answers
         }
+        guard userAnswersListenerGeneration == generation else {
+            handle?.cancel()
+            return
+        }
+        userAnswersListener = handle
     }
 
     /// Returns the current user's saved answers for a specific question, or an empty array.
@@ -153,7 +185,7 @@ class QuestionModel: ObservableObject {
     }
 
     func refreshQuestions() async {
-        guard questionService != nil else {
+        guard listenerService != nil else {
             updateGroupedQuestions()
             return
         }
@@ -162,36 +194,58 @@ class QuestionModel: ObservableObject {
     }
 
     private func setupQuestionsListener() async {
-        guard let questionService else { return }
+        guard let listenerService else { return }
+        questionsListenerGeneration &+= 1
+        let generation = questionsListenerGeneration
         isLoading = true
         seededQuestionsListener?.cancel()
+        seededQuestionsListener = nil
         featuredHomeQuestionsListener?.cancel()
+        featuredHomeQuestionsListener = nil
 
-        seededQuestionsListener = await questionService.setupSeededQuestionsListener { [weak self] questions in
-            guard let self else { return }
+        let seededHandle = await listenerService.setupSeededQuestionsListener { [weak self] questions in
+            guard let self, questionsListenerGeneration == generation else { return }
             seededQuestions = questions
             updatePublicQuestions()
             isLoading = false
         }
+        guard questionsListenerGeneration == generation else {
+            seededHandle.cancel()
+            return
+        }
+        seededQuestionsListener = seededHandle
 
-        featuredHomeQuestionsListener = await questionService.setupFeaturedHomeQuestionsListener { [weak self] questions in
-            guard let self else { return }
+        let featuredHandle = await listenerService.setupFeaturedHomeQuestionsListener { [weak self] questions in
+            guard let self, questionsListenerGeneration == generation else { return }
             featuredHomeQuestions = questions
             updatePublicQuestions()
         }
+        guard questionsListenerGeneration == generation else {
+            featuredHandle.cancel()
+            return
+        }
+        featuredHomeQuestionsListener = featuredHandle
     }
 
     private func setupTrioQuestionsListener() async {
-        guard let questionService else { return }
+        guard let listenerService else { return }
+        trioListenerGeneration &+= 1
+        let generation = trioListenerGeneration
         trioListener?.cancel()
+        trioListener = nil
 
-        trioListener = await questionService.setupTrioQuestionsListener { [weak self] questions in
-            guard let self else { return }
+        let handle = await listenerService.setupTrioQuestionsListener { [weak self] questions in
+            guard let self, trioListenerGeneration == generation else { return }
             trioQuestions = filteredTrioQuestions(
                 questions,
                 selectedLanguageCode: AppLocalization.currentLanguageCode
             )
         }
+        guard trioListenerGeneration == generation else {
+            handle.cancel()
+            return
+        }
+        trioListener = handle
     }
 
     private func updateGroupedQuestions() {

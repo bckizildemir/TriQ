@@ -15,6 +15,12 @@ final class FirestoreListenerHandle: Sendable {
         self.registration = Mutex(registration)
     }
 
+    /// A handle that is overwritten or dropped must still remove its registration, or the
+    /// listener stays live for the rest of the process (TriQ#50).
+    deinit {
+        cancel()
+    }
+
     func cancel() {
         // Take the registration out under the lock and remove it after, so Firebase never runs
         // while the lock is held.
