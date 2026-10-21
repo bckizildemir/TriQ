@@ -23,10 +23,10 @@ struct QuestionSnapshotDeliveryTests {
             logger: logger
         )
 
-        #expect(try #require(questions).map(\.id) == ["q1"])
+        #expect(try questions.get().map(\.id) == ["q1"])
     }
 
-    @Test func aListenerErrorMapsToNothingToDeliver() {
+    @Test func aListenerErrorMapsToAFailure() {
         let questions = QuestionService.questions(
             fromSnapshot: [(id: "q1", data: ["text": "First?", "category": "life"])],
             error: URLError(.notConnectedToInternet),
@@ -34,10 +34,10 @@ struct QuestionSnapshotDeliveryTests {
             logger: logger
         )
 
-        #expect(questions == nil)
+        #expect(throws: URLError.self) { try questions.get() }
     }
 
-    @Test func aMissingSnapshotMapsToNothingToDeliver() {
+    @Test func aMissingSnapshotMapsToAFailure() {
         let questions = QuestionService.questions(
             fromSnapshot: nil,
             error: nil,
@@ -45,24 +45,41 @@ struct QuestionSnapshotDeliveryTests {
             logger: logger
         )
 
-        #expect(questions == nil)
+        #expect(throws: QuestionFeedError.self) { try questions.get() }
     }
 
     @Test(.timeLimit(.minutes(1)))
-    func questionsReachTheCallbackOnTheMainActor() async {
-        let questions: [Question] = await withCheckedContinuation { continuation in
+    func aListenerErrorReachesTheCallbackAsAFailureOnTheMainActor() async {
+        let result: Result<[Question], any Error> = await withCheckedContinuation { continuation in
+            QuestionService.deliverQuestions(
+                documents: nil,
+                error: URLError(.notConnectedToInternet),
+                feed: "Test",
+                logger: logger
+            ) { result in
+                MainActor.assertIsolated()
+                continuation.resume(returning: result)
+            }
+        }
+
+        #expect(throws: URLError.self) { try result.get() }
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func questionsReachTheCallbackOnTheMainActor() async throws {
+        let result: Result<[Question], any Error> = await withCheckedContinuation { continuation in
             QuestionService.deliverQuestions(
                 documents: [(id: "q1", data: ["text": "First?", "category": "life"])],
                 error: nil,
                 feed: "Test",
                 logger: logger
-            ) { questions in
+            ) { result in
                 MainActor.assertIsolated()
-                continuation.resume(returning: questions)
+                continuation.resume(returning: result)
             }
         }
 
-        #expect(questions.map(\.id) == ["q1"])
+        #expect(try result.get().map(\.id) == ["q1"])
     }
 
     // MARK: - User answers

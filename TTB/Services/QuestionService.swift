@@ -459,7 +459,7 @@ actor QuestionService {
     }
 
     func setupSeededQuestionsListener(
-        completion: @escaping @MainActor @Sendable ([Question]) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[Question], any Error>) -> Void
     ) -> FirestoreListenerHandle {
         logger.debug("Setting up seeded questions listener")
         let logger = logger
@@ -478,7 +478,7 @@ actor QuestionService {
     }
 
     func setupFeaturedHomeQuestionsListener(
-        completion: @escaping @MainActor @Sendable ([Question]) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[Question], any Error>) -> Void
     ) -> FirestoreListenerHandle {
         logger.debug("Setting up featured home questions listener")
         let logger = logger
@@ -500,7 +500,7 @@ actor QuestionService {
     }
 
     func setupTrioQuestionsListener(
-        completion: @escaping @MainActor @Sendable ([Question]) -> Void
+        completion: @escaping @MainActor @Sendable (Result<[Question], any Error>) -> Void
     ) -> FirestoreListenerHandle {
         logger.debug("Setting up Trio questions listener")
         let logger = logger
@@ -520,44 +520,42 @@ actor QuestionService {
         return FirestoreListenerHandle(registration: registration)
     }
 
-    /// Delivers one question-feed snapshot callback on the main actor, when it maps to questions.
+    /// Delivers one question-feed snapshot callback on the main actor. A listener error arrives as
+    /// a `.failure`, so the receiver can end its loading state.
     static func deliverQuestions(
         documents: [(id: String, data: [String: Any])]?,
         error: Error?,
         feed: String,
         logger: Logger,
-        to completion: @escaping @MainActor @Sendable ([Question]) -> Void
+        to completion: @escaping @MainActor @Sendable (Result<[Question], any Error>) -> Void
     ) {
-        guard let questions = questions(fromSnapshot: documents, error: error, feed: feed, logger: logger) else {
-            return
-        }
-        Task { @MainActor in completion(questions) }
+        let result = questions(fromSnapshot: documents, error: error, feed: feed, logger: logger)
+        Task { @MainActor in completion(result) }
     }
 
     /// Maps one question-feed snapshot callback to questions. Documents that do not decode are
-    /// dropped. A listener error, or a snapshot with no documents, is logged and maps to nil, so
-    /// the feed keeps what it last showed.
+    /// dropped. A listener error, or a snapshot with no documents, is logged and maps to a failure.
     static func questions(
         fromSnapshot documents: [(id: String, data: [String: Any])]?,
         error: Error?,
         feed: String,
         logger: Logger
-    ) -> [Question]? {
+    ) -> Result<[Question], any Error> {
         if let error {
             logger.error("\(feed, privacy: .public) listener error: \(error.localizedDescription)")
-            return nil
+            return .failure(error)
         }
 
         guard let documents else {
             logger.error("No \(feed, privacy: .public) documents received from Firestore")
-            return nil
+            return .failure(QuestionFeedError.missingSnapshot)
         }
 
         let questions = documents.compactMap { document in
             Question.fromFirestore(document.data, id: document.id)
         }
         logger.debug("\(feed, privacy: .public) listener parsed \(questions.count) of \(documents.count) documents")
-        return questions
+        return .success(questions)
     }
 
     /// Delivers one `userAnswers` snapshot callback on the main actor, when it maps to answers.
