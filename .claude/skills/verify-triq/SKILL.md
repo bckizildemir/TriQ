@@ -52,7 +52,10 @@ to the real backend. There is no offline mode. Every feature file carries one li
 free for now (owner, 2026-10-21). The tracked `functions/.env.ttbp-9d652` sets `AI_PROVIDER=groq`;
 nobody has checked the deployed functions' values. With `AI_PROVIDER=openrouter` the default model
 (`x-ai/grok-4.1-fast`) is not a `:free` model and bills, so treat every AI call as one that can bill. Each also counts against a daily quota per uid
-(`DAILY_LIMITS` in `functions/aiUsageLimit.js`). **Opening a question card is an AI call**: it calls
+(`DAILY_LIMITS` in `functions/aiUsageLimit.js`) and a daily quota for the whole project
+(`PROJECT_DAILY_LIMITS`, one pool for guests and accounts with no verified email, one for verified
+accounts; quick answers: 50 a day in the guest pool). A full pool refuses the call, so a card open
+can show no AI quick answers. **Opening a question card is an AI call**: it calls
 `suggestQuickAnswers` by itself when the question has fewer than 5 stored quick answers
 (`QuestionCardExpandedView.loadQuickAnswerSuggestions`).
 
@@ -115,12 +118,12 @@ read and write. The owner registered one fixed debug token (`verify-triq`) in th
 ## Launch
 
 ```bash
-$V start                       # verify lock, fresh device, English; add --lang tr for Turkish
-$V build                       # Scripts/xcb.sh build against this device; copies TTB.app
-$V hold                        # take the xcb lock for the drive (see "Why hold")
-$V install
-$V launch                      # prints "app.berke.can.kizildemir.ttb: <pid>"
-$V doctor                      # must exit 0
+.claude/skills/verify-triq/scripts/vt.sh start                       # verify lock, fresh device, English; add --lang tr for Turkish
+.claude/skills/verify-triq/scripts/vt.sh build                       # Scripts/xcb.sh build against this device; copies TTB.app
+.claude/skills/verify-triq/scripts/vt.sh hold                        # take the xcb lock for the drive (see "Why hold")
+.claude/skills/verify-triq/scripts/vt.sh install
+.claude/skills/verify-triq/scripts/vt.sh launch                      # prints "app.berke.can.kizildemir.ttb: <pid>"
+.claude/skills/verify-triq/scripts/vt.sh doctor                      # must exit 0
 ```
 
 - `start` creates `verify-triq-<run-id>` (iPhone 12, iOS 27.0; `VT_DEVICE`/`--device` and
@@ -161,9 +164,11 @@ simulators. Exit 0 means worth driving. Run it first whenever anything looks off
 
 - `FAIL device is not booted` → another session shut it down. `$V revive` boots it and relaunches
   the app; the app's data on the device stays. Redo the step that was in flight.
-- `FAIL the app is hung` → the app runs at 90 % CPU or more with fewer than 3 labelled elements (a
-  SwiftUI layout loop, 2026-10-21). `$V revive` ends the app and launches it again in about 5 s.
-  Doctor reads the tree for 15 s at most, because axe waits on a hung app for over a minute.
+- `FAIL the app is hung` → the app shows fewer than 3 labelled elements and runs at 90 % CPU or more
+  in 3 samples 1 s apart (a SwiftUI layout loop, 2026-10-21). `$V revive` ends the app and launches
+  it again in about 5 s. Doctor reads the tree for 15 s at most (then TERM, then KILL after 2 s),
+  because axe waits on a hung app for over a minute.
+- `FAIL the app … exited during doctor` → `$V launch`, then doctor again.
 - Every tap is dead but swipes work, after a system popup → shut down and boot **this run's**
   device only (`xcrun simctl shutdown <UDID>`, `xcrun simctl boot <UDID>`), then `$V launch`.
 - `WARN app is not running` → `$V launch`.
@@ -178,9 +183,9 @@ simulators. Exit 0 means worth driving. Run it first whenever anything looks off
 `axe` is on `PATH` (`/opt/homebrew/bin/axe`, 1.8.0). Read before every action, act, read again:
 
 ```bash
-$V ui                                             # Type | Label | Id | Value | frame [disabled]
-$V tap --once --label 'Continue as Guest' --element-type Button   # writes live: no retap
-$V tap --id onboarding-continue-button
+.claude/skills/verify-triq/scripts/vt.sh ui                                             # Type | Label | Id | Value | frame [disabled]
+.claude/skills/verify-triq/scripts/vt.sh tap --once --label 'Continue as Guest' --element-type Button   # writes live: no retap
+.claude/skills/verify-triq/scripts/vt.sh tap --id onboarding-continue-button
 axe type 'coffee' --udid <UDID>                   # after a tap on the field
 axe tap -x 195 -y 420 --tap-style physical --udid <UDID>   # only when an element has no id or label
 axe swipe --start-x 195 --start-y 600 --end-x 195 --end-y 250 --udid <UDID>   # scroll down
@@ -210,9 +215,9 @@ The recipes are in `features/` — read `features/README.md`, then the feature's
 ## Evidence
 
 ```bash
-$V shot login                   # PNG  -> <evidence>/NN-login.png
-$V tree login                   # JSON -> <evidence>/NN-login.json
-echo "feature=guest-onboarding entry=first-launch result=pass" >> "$(cat /tmp/verify-triq.lock/evidence)/run.txt"
+.claude/skills/verify-triq/scripts/vt.sh shot login                   # PNG  -> <evidence>/NN-login.png
+.claude/skills/verify-triq/scripts/vt.sh tree login                   # JSON -> <evidence>/NN-login.json
+echo "feature=guest-onboarding entry=first-launch result=pass" >> <evidence>/run.txt   # the literal path in /tmp/verify-triq.lock/evidence
 ```
 
 Proof standards:
@@ -232,7 +237,7 @@ Proof standards:
 ## Cleanup
 
 ```bash
-$V cleanup
+.claude/skills/verify-triq/scripts/vt.sh cleanup
 ```
 
 It terminates the app, shuts down and deletes **this run's** device (only a device named
@@ -266,7 +271,7 @@ no longer exists or nobody touched it for 45 minutes (`VT_STALE_MINUTES`), delet
   `BackButton` before you use a tab's root.
 - **Live data changes.** Question text, categories and counts come from the live database and change
   from day to day. Assert on identifiers and structure, not on a question's text.
-- **App Check.** See "Live Firebase": without the registered token nothing loads; with it, paid AI
+- **App Check.** See "Live Firebase": without the registered token nothing loads; with it, AI
   calls succeed. A Firestore "Missing or insufficient permissions" in the device log
   (`xcrun simctl spawn <UDID> log show --last 5m --predicate 'process == "TTB"'`) means first check
   `$V doctor`'s `appcheck` line.

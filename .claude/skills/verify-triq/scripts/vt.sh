@@ -363,6 +363,18 @@ wait_for_tree() {
   say "WARN no accessibility tree after 30s; run vt.sh doctor"
 }
 
+# True when the process uses 90 % CPU or more in 3 samples 1 s apart. One sample is a decayed
+# average and can read high just after launch. Never fails under set -e: a dead PID reads as 0.
+app_cpu_stays_high() {
+  local cpu i
+  for i in 1 2 3; do
+    cpu="$(ps -o %cpu= -p "$1" 2>/dev/null | tr -d ' ' | cut -d. -f1 || true)"
+    [[ "${cpu:-0}" -ge 90 ]] || return 1
+    [[ $i == 3 ]] || sleep 1
+  done
+  return 0
+}
+
 cmd_doctor() {
   [[ -d "$LOCK_DIR" ]] || fail "no run in progress"
   local udid ok=0 dstate; udid="$(state udid)"; dstate="$(device_state "$udid")"
@@ -397,16 +409,21 @@ cmd_doctor() {
   axe describe-ui --udid "$udid" >"$axout" 2>/dev/null &
   axpid=$!
   for i in $(seq 1 30); do kill -0 "$axpid" 2>/dev/null || break; sleep 0.5; done
-  kill "$axpid" 2>/dev/null || true
+  if kill -0 "$axpid" 2>/dev/null; then
+    kill "$axpid" 2>/dev/null || true
+    for i in 1 2 3 4; do kill -0 "$axpid" 2>/dev/null || break; sleep 0.5; done
+    kill -9 "$axpid" 2>/dev/null || true
+  fi
   wait "$axpid" 2>/dev/null || true
   count="$(grep -c '"AXLabel"' "$axout" 2>/dev/null || true)"
   rm -f "$axout"
   printf 'ax tree: %s labelled elements\n' "${count:-0}"
-  local cpu=""
-  [[ -n "$pid" ]] && cpu="$(ps -o %cpu= -p "$pid" 2>/dev/null | tr -d ' ' | cut -d. -f1)"
-  if [[ "${count:-0}" -lt 3 && "${cpu:-0}" -ge 90 ]]; then
+  if [[ -n "$pid" ]] && ! kill -0 "$pid" 2>/dev/null; then
+    echo "FAIL the app (PID $pid) exited during doctor: run vt.sh launch, then doctor again"
+    ok=1
+  elif [[ -n "$pid" && "${count:-0}" -lt 3 ]] && app_cpu_stays_high "$pid"; then
     # A hung app (main thread in a SwiftUI layout loop, 2026-10-21) shows 0-1 elements at 100% CPU.
-    echo "FAIL the app is hung (${cpu}% CPU, ${count:-0} labelled elements): run vt.sh revive"
+    echo "FAIL the app is hung (90% CPU or more in 3 samples, ${count:-0} labelled elements): run vt.sh revive"
     ok=1
   elif [[ "${count:-0}" -eq 0 ]]; then
     echo "WARN empty accessibility tree: call xcodebuildmcp open_sim, then retry"
