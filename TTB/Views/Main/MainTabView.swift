@@ -15,27 +15,21 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView()
-                .tabItem {
-                    Label(String(localized: "main.tabs.home"), systemImage: "lanyardcard.fill")
-                }
-                .tag(TabSelection.home)
-
-            MostAnsweredView {
-                selectedTab = .home
+            Tab(String(localized: "main.tabs.home"), systemImage: "lanyardcard.fill", value: TabSelection.home) {
+                HomeView()
             }
-                .tabItem {
-                    Label(String(localized: "main.tabs.bestOf"), systemImage: "medal.star.fill")
-                }
-                .tag(TabSelection.mostAnswered)
 
-            AIView()
-                .tabItem {
-                    Label(String(localized: "main.tabs.trio"), systemImage: "sparkles")
+            Tab(String(localized: "main.tabs.bestOf"), systemImage: "medal.star.fill", value: TabSelection.mostAnswered) {
+                MostAnsweredView {
+                    selectedTab = .home
                 }
-                .tag(TabSelection.ai)
-            
+            }
+
+            Tab(String(localized: "main.tabs.trio"), systemImage: "sparkles", value: TabSelection.ai) {
+                AIView()
+            }
         }
+        .backport.minimizesTabBarOnScrollDown()
         .background(Color.theme.background)
         .fullScreenCover(isPresented: $isShowingAITabDisclosure) {
             AITabDisclosureView {
@@ -58,13 +52,15 @@ struct MainTabView: View {
             }
         }
         .onAppear {
-            // Set the tab bar appearance
-            let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor.secondarySystemBackground
-            
-            UITabBar.appearance().standardAppearance = appearance
-            UITabBar.appearance().scrollEdgeAppearance = appearance
+            // The opaque bar is for before iOS 26; iOS 26 keeps the Liquid Glass bar.
+            if #unavailable(iOS 26.0) {
+                let appearance = UITabBarAppearance()
+                appearance.configureWithOpaqueBackground()
+                appearance.backgroundColor = UIColor.secondarySystemBackground
+
+                UITabBar.appearance().standardAppearance = appearance
+                UITabBar.appearance().scrollEdgeAppearance = appearance
+            }
         }
         .onChange(of: selectedTab) { _, newValue in
             presentAITabDisclosureIfNeeded(for: newValue)
@@ -73,7 +69,7 @@ struct MainTabView: View {
             guard request != nil else { return }
             selectedTab = .home
         }
-        .accentColor(.accentColor)
+        .tint(.accentColor)
     }
 
     private func presentAITabDisclosureIfNeeded(for tab: TabSelection) {
