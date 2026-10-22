@@ -62,14 +62,30 @@ struct AppRootBehaviourModifier: ViewModifier {
                     onDismissedBySystem: dismissGuestUpgrade
                 )
             }
-            .sheet(item: $deepLinkRouter.sharedQuestion) { deepLink in
+            .fullScreenCover(item: presentedSharedQuestion) { deepLink in
                 SharedQuestionSheetView(questionId: deepLink.questionId)
                     .appEnvironment(environment)
             }
-            .sheet(item: $deepLinkRouter.sharedQuestionList) { deepLink in
+            .sheet(item: presentedSharedQuestionList) { deepLink in
                 SharedQuestionListSheetView(shareCode: deepLink.shareCode)
                     .appEnvironment(environment)
             }
+    }
+
+    /// The two deep-link presentations never stack: a link that arrives while the other one is up
+    /// waits in the router and shows once that one closes.
+    private var presentedSharedQuestion: Binding<SharedQuestionDeepLink?> {
+        Binding(
+            get: { deepLinkRouter.sharedQuestionList == nil ? deepLinkRouter.sharedQuestion : nil },
+            set: { deepLinkRouter.sharedQuestion = $0 }
+        )
+    }
+
+    private var presentedSharedQuestionList: Binding<SharedQuestionListDeepLink?> {
+        Binding(
+            get: { deepLinkRouter.sharedQuestion == nil ? deepLinkRouter.sharedQuestionList : nil },
+            set: { deepLinkRouter.sharedQuestionList = $0 }
+        )
     }
 
     /// The toast host, deep-link handling, and the background tasks that keep favorites, migration,
