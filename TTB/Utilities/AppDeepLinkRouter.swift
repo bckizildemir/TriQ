@@ -26,18 +26,56 @@ struct AcceptedQuestionListShareNavigationRequest: Identifiable, Equatable {
 
 @MainActor
 final class AppDeepLinkRouter: ObservableObject {
-    @Published var sharedQuestion: SharedQuestionDeepLink?
-    @Published var sharedQuestionList: SharedQuestionListDeepLink?
+    /// The link on screen. Presentation binds to these two; only one is ever set at a time.
+    @Published var sharedQuestion: SharedQuestionDeepLink? {
+        didSet { promotePendingLinkIfIdle() }
+    }
+    @Published var sharedQuestionList: SharedQuestionListDeepLink? {
+        didSet { promotePendingLinkIfIdle() }
+    }
     @Published var acceptedQuestionListShareDetail: AcceptedQuestionListShareNavigationRequest?
 
+    private enum PendingLink {
+        case question(SharedQuestionDeepLink)
+        case questionList(SharedQuestionListDeepLink)
+    }
+
+    /// A link that arrived while another one was on screen. The latest one wins.
+    private var pendingLink: PendingLink?
+
+    /// A link that arrives while another is on screen waits here, so the open screen is never torn
+    /// down under the user (its draft guard needs a normal close). It shows when that one closes.
     func handle(_ url: URL) {
         if let shareCode = Self.questionListShareCode(from: url) {
-            sharedQuestionList = SharedQuestionListDeepLink(shareCode: shareCode)
+            present(.questionList(SharedQuestionListDeepLink(shareCode: shareCode)))
             return
         }
 
         guard let questionId = Self.questionId(from: url) else { return }
-        sharedQuestion = SharedQuestionDeepLink(questionId: questionId)
+        present(.question(SharedQuestionDeepLink(questionId: questionId)))
+    }
+
+    private func present(_ link: PendingLink) {
+        if sharedQuestion != nil || sharedQuestionList != nil {
+            pendingLink = link
+            return
+        }
+        show(link)
+    }
+
+    private func show(_ link: PendingLink) {
+        switch link {
+        case .question(let deepLink):
+            sharedQuestion = deepLink
+        case .questionList(let deepLink):
+            sharedQuestionList = deepLink
+        }
+    }
+
+    private func promotePendingLinkIfIdle() {
+        guard sharedQuestion == nil, sharedQuestionList == nil, let link = pendingLink else { return }
+        pendingLink = nil
+        show(link)
     }
 
     func requestAcceptedQuestionListShareDetail(shareId: String) {
