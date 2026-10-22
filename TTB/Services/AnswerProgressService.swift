@@ -51,13 +51,22 @@ actor AnswerProgressService {
             .getDocuments()
 
         for doc in snapshot.documents {
-            let questionId = doc.reference.parent.parent?.documentID ?? ""
+            let questionId = Self.questionId(fromUserAnswerPath: doc.reference.path)
             guard !questionId.isEmpty else { continue }
             if let answers = doc.data()["answers"] as? [String],
                answers.filter({ !$0.isEmpty }).count == 3 {
                 answeredQuestions.insert(questionId)
             }
         }
+    }
+
+    /// The id of the question that owns a `userAnswers` document, read from its path
+    /// (`questions/<id>/userAnswers/<uid>`). Returns "" when the path has no parent document,
+    /// as `reference.parent.parent?.documentID ?? ""` did.
+    nonisolated static func questionId(fromUserAnswerPath path: String) -> String {
+        let components = path.split(separator: "/")
+        guard components.count >= 4 else { return "" }
+        return String(components[components.count - 3])
     }
 }
 

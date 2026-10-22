@@ -117,7 +117,7 @@ actor QuestionListShareService {
             .addSnapshotListener { snapshot, error in
                 Self.deliverAcceptedRecipients(
                     documents: snapshot?.documents.map {
-                        (id: $0.documentID, shareId: $0.reference.parent.parent?.documentID, data: $0.data())
+                        (id: $0.documentID, path: $0.reference.path, data: $0.data())
                     },
                     error: error,
                     to: completion
@@ -144,10 +144,18 @@ actor QuestionListShareService {
         Task { @MainActor in completion(result) }
     }
 
-    /// Same as `deliverOwnedShares` for the accepted-recipient snapshot. `shareId` is the id of
-    /// the recipient document's parent share; a document without one is dropped.
+    /// The id of the share that owns a recipient document, read from its path
+    /// (`questionListShares/<shareId>/recipients/<id>`). Nil when the path has no parent document.
+    static func shareId(fromRecipientPath path: String) -> String? {
+        let components = path.split(separator: "/")
+        guard components.count >= 4 else { return nil }
+        return String(components[components.count - 3])
+    }
+
+    /// Same as `deliverOwnedShares` for the accepted-recipient snapshot. The share id comes from
+    /// the recipient document's path; a document whose path has no parent share is dropped.
     static func deliverAcceptedRecipients(
-        documents: [(id: String, shareId: String?, data: [String: Any])]?,
+        documents: [(id: String, path: String, data: [String: Any])]?,
         error: Error?,
         to completion: @escaping @MainActor @Sendable (Result<[QuestionListShareRecipient], Error>) -> Void
     ) {
@@ -157,7 +165,7 @@ actor QuestionListShareService {
             result = .failure(error)
         } else {
             result = .success((documents ?? []).compactMap { document in
-                guard let shareId = document.shareId else { return nil }
+                guard let shareId = Self.shareId(fromRecipientPath: document.path) else { return nil }
                 return QuestionListShareRecipient.fromFirestore(document.data, id: document.id, shareId: shareId)
             })
         }

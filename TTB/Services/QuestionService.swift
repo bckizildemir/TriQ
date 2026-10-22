@@ -350,7 +350,7 @@ actor QuestionService {
                 .getDocuments()
 
             let completedAnswers: [(questionId: String, answeredAt: Date)] = answersSnapshot.documents.compactMap { document in
-                let questionId = document.reference.parent.parent?.documentID ?? ""
+                let questionId = Self.questionId(fromUserAnswerPath: document.reference.path)
                 let answers = document.data()["answers"] as? [String] ?? []
                 guard !questionId.isEmpty, answers.filter({ !$0.isEmpty }).count == 3 else {
                     return nil
@@ -724,6 +724,14 @@ actor QuestionService {
             parsed.append(nil)
         }
         return Array(parsed.prefix(3))
+    }
+
+    /// The id of the question that owns a `userAnswers` document, read from its path
+    /// (`questions/<id>/userAnswers/<uid>`). Returns "" when the path has no parent document.
+    nonisolated static func questionId(fromUserAnswerPath path: String) -> String {
+        let components = path.split(separator: "/")
+        guard components.count >= 4 else { return "" }
+        return String(components[components.count - 3])
     }
 
     private static func doubleMap(from value: Any?) -> [String: Double] {
