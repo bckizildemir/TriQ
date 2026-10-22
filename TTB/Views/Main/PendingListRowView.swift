@@ -13,7 +13,6 @@ struct PendingListRowView: View {
                 Text(pending.name)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("pending-list-row-\(pending.id)")
 
                 HStack(spacing: 6) {
                     if pending.state == .saving {
@@ -26,6 +25,7 @@ struct PendingListRowView: View {
                 }
             }
             .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("pending-list-row-\(pending.id)")
 
             if pending.state == .failed, let onRetry, let onDelete {
                 Spacer()
