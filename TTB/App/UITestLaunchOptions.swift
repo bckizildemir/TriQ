@@ -42,6 +42,7 @@ enum UITestLaunchOptions {
     static let homeSavedAnswerArgument = "-ui-test-home-saved-answer"
     static let homeLongFeedArgument = "-ui-test-home-long-feed"
     static let profilePhotoHarnessArgument = "-ui-test-profile-photo"
+    static let accountDeletionFailsArgument = "-ui-test-account-deletion-fails"
 
     static var isCategoryQuestionsHarnessEnabled: Bool { Harness.categoryQuestions.isEnabled }
     static var isGuestFavoriteMilestoneHarnessEnabled: Bool { Harness.guestFavoriteMilestone.isEnabled }
@@ -97,6 +98,11 @@ enum UITestLaunchOptions {
     /// Starts the profile harness with a photo and a remover that needs no Firebase (#71).
     static var shouldSeedProfilePhoto: Bool {
         ProcessInfo.processInfo.arguments.contains(profilePhotoHarnessArgument)
+    }
+
+    /// Makes the profile harness's account deletion fail, so a test can see the failure UI (#88).
+    static var shouldFailAccountDeletion: Bool {
+        ProcessInfo.processInfo.arguments.contains(accountDeletionFailsArgument)
     }
 
     /// Every argument that means "this launch is a harness".

@@ -53,6 +53,8 @@ class AuthModel: ObservableObject {
   struct ErrorState {
     var message: String = ""
     var isShowing: Bool = false
+    /// The error came from `deleteAccount`, so the profile screen can offer a retry (TriQ#88).
+    var isAccountDeletionFailure: Bool = false
   }
 
   enum AuthError: LocalizedError {
@@ -205,8 +207,9 @@ class AuthModel: ObservableObject {
   }
 
   @MainActor
-  private func showError(message: String) {
+  private func showError(message: String, isAccountDeletionFailure: Bool = false) {
     errorState.message = message
+    errorState.isAccountDeletionFailure = isAccountDeletionFailure
     errorState.isShowing = true
   }
 
@@ -214,6 +217,7 @@ class AuthModel: ObservableObject {
   func dismissError() {
     errorState.isShowing = false
     errorState.message = ""
+    errorState.isAccountDeletionFailure = false
   }
 
   @MainActor
@@ -315,7 +319,7 @@ class AuthModel: ObservableObject {
       showMainView = false
       clearFields()
     } catch {
-      showError(message: error.localizedDescription)
+      showError(message: error.localizedDescription, isAccountDeletionFailure: true)
     }
   }
 
