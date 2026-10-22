@@ -54,8 +54,8 @@ struct QuestionListShareSnapshotDeliveryTests {
         let result: Result<[QuestionListShareRecipient], Error> = await withCheckedContinuation { continuation in
             QuestionListShareService.deliverAcceptedRecipients(
                 documents: [
-                    (id: "r1", shareId: "s1", data: ["recipientId": "r1", "status": "accepted"]),
-                    (id: "orphan", shareId: nil, data: ["recipientId": "orphan"]),
+                    (id: "r1", path: "questionListShares/s1/recipients/r1", data: ["recipientId": "r1", "status": "accepted"]),
+                    (id: "orphan", path: "recipients/orphan", data: ["recipientId": "orphan"]),
                 ],
                 error: nil
             ) { result in
