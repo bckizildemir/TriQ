@@ -29,6 +29,9 @@ struct AppRootBehaviourModifier: ViewModifier {
     /// from a `.sheet` here, so they still appear over a `fullScreenCover`. See `docs/adr/0010`.
     @State private var upgradePromptPresenter = TopmostSheetPresenter(presenter: WindowTopmostPresenter())
     @State private var guestUpgradePresenter = TopmostSheetPresenter(presenter: WindowTopmostPresenter())
+    @State private var sharedQuestionPresenter = TopmostSheetPresenter(presenter: WindowTopmostPresenter())
+    /// True once the shared-question cover has appeared; see `closeSharedQuestion`.
+    @State private var isSharedQuestionShown = false
 
     init(environment: AppEnvironment) {
         self.environment = environment
@@ -42,9 +45,9 @@ struct AppRootBehaviourModifier: ViewModifier {
         lifecycleBehavior(on: presentationSheets(on: content.appEnvironment(environment)))
     }
 
-    /// The four sheets this modifier owns: the Upgrade Prompt, the guest-upgrade sheet, and the two
-    /// deep-link sheets. The first two present from the topmost controller, because a guest can
-    /// reach the favorite cap from inside a `fullScreenCover`.
+    /// The presentations this modifier owns: the Upgrade Prompt, the guest-upgrade sheet, the shared
+    /// question cover, and the shared list sheet. The first three present from the topmost
+    /// controller, because they must show over a `fullScreenCover` a screen below owns.
     @ViewBuilder
     private func presentationSheets<Content: View>(on content: Content) -> some View {
         content
@@ -62,30 +65,55 @@ struct AppRootBehaviourModifier: ViewModifier {
                     onDismissedBySystem: dismissGuestUpgrade
                 )
             }
-            .fullScreenCover(item: presentedSharedQuestion) { deepLink in
-                SharedQuestionSheetView(questionId: deepLink.questionId)
-                    .appEnvironment(environment)
+            .task(id: deepLinkRouter.sharedQuestion) {
+                await presentSharedQuestionUntilShown()
             }
-            .sheet(item: presentedSharedQuestionList) { deepLink in
+            .sheet(item: $deepLinkRouter.sharedQuestionList) { deepLink in
                 SharedQuestionListSheetView(shareCode: deepLink.shareCode)
                     .appEnvironment(environment)
             }
     }
 
-    /// The two deep-link presentations never stack: a link that arrives while the other one is up
-    /// waits in the router and shows once that one closes.
-    private var presentedSharedQuestion: Binding<SharedQuestionDeepLink?> {
-        Binding(
-            get: { deepLinkRouter.sharedQuestionList == nil ? deepLinkRouter.sharedQuestion : nil },
-            set: { deepLinkRouter.sharedQuestion = $0 }
+    /// The shared question is a full-screen cover presented from the topmost controller, like the
+    /// Upgrade Prompt, because a `fullScreenCover` owned here cannot present over a cover a screen
+    /// below already shows (Home's editor, say) and the link would be lost. `AppDeepLinkRouter`
+    /// keeps a second link waiting while this one is up, so covers never stack.
+    ///
+    /// UIKit refuses a presentation while the scene is not active yet (a cold-start link) or
+    /// mid-transition, and says nothing, so this retries a few times until the cover has appeared.
+    private func presentSharedQuestionUntilShown() async {
+        for _ in 0..<20 {
+            syncSharedQuestionCover()
+            try? await Task.sleep(for: .milliseconds(250))
+            if Task.isCancelled || isSharedQuestionShown || deepLinkRouter.sharedQuestion == nil { return }
+        }
+    }
+
+    private func syncSharedQuestionCover() {
+        let link = deepLinkRouter.sharedQuestion
+        if link == nil { isSharedQuestionShown = false }
+        sharedQuestionPresenter.update(
+            isPresented: link != nil,
+            makeController: { makeSharedQuestionController(for: link) },
+            onDismissedBySystem: closeSharedQuestion
         )
     }
 
-    private var presentedSharedQuestionList: Binding<SharedQuestionListDeepLink?> {
-        Binding(
-            get: { deepLinkRouter.sharedQuestion == nil ? deepLinkRouter.sharedQuestionList : nil },
-            set: { deepLinkRouter.sharedQuestionList = $0 }
+    /// Clears the link only once the cover has really been on screen. A presentation UIKit refused
+    /// reports itself gone at once; the link must survive that so the retry can show it.
+    private func closeSharedQuestion() {
+        guard isSharedQuestionShown else { return }
+        isSharedQuestionShown = false
+        deepLinkRouter.sharedQuestion = nil
+    }
+
+    private func makeSharedQuestionController(for link: SharedQuestionDeepLink?) -> UIViewController {
+        let controller = hosted(
+            SharedQuestionSheetView(questionId: link?.questionId ?? "")
+                .onAppear { isSharedQuestionShown = true }
         )
+        controller.modalPresentationStyle = .fullScreen
+        return controller
     }
 
     /// The toast host, deep-link handling, and the background tasks that keep favorites, migration,

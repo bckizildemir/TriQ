@@ -35,6 +35,26 @@ extension SharedQuestionDeepLinkUITests {
         XCTAssertTrue(app.buttons[fullscreenListID].waitForExistence(timeout: 2))
     }
 
+    func testUnknownSharedQuestionShowsNotFoundAndToolbarCloseDismissesIt() {
+        let app = XCUIApplication()
+        app.launchArguments += [
+            harnessArgument,
+            "-ui-test-shared-question-unknown",
+            "-AppleLanguages",
+            "(en)",
+            "-AppleLocale",
+            "en_US"
+        ]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["Question not found"].waitForExistence(timeout: 5))
+
+        let close = app.navigationBars.buttons["Close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 2))
+        close.tap()
+        XCTAssertTrue(app.staticTexts["Question not found"].waitForNonExistence(timeout: 3))
+    }
+
     func testSharedQuestionCoverIgnoresSwipeDownAndClosesWithCloseButton() {
         let app = XCUIApplication()
         app.launchArguments += [
