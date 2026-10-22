@@ -82,6 +82,15 @@ struct AppRootBehaviourModifier: ViewModifier {
                 guestFavoriteModel: guestFavoriteModel,
                 toastCenter: toastCenter
             )
+            .task {
+                // A background list create reports its failure here, because its sheet is gone.
+                environment.questionListStore.creationFailureHandler = { [toastCenter] failure in
+                    toastCenter.showError(
+                        failure.message,
+                        accessibilityIdentifier: "question-list-create-error-toast"
+                    )
+                }
+            }
             .onOpenURL(perform: deepLinkRouter.handle)
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb, perform: handleUserActivity)
             .task(id: environment.favoriteIdentity) {
