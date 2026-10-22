@@ -117,7 +117,7 @@ struct QuestionListsContentView: View {
         } else if questionListStore.isLoading {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if questionListStore.lists.isEmpty {
+        } else if questionListStore.lists.isEmpty && questionListStore.pendingCreations.isEmpty {
             emptyState
         } else {
             listsView
@@ -148,8 +148,16 @@ struct QuestionListsContentView: View {
 
     private var listsView: some View {
         List {
-            if !questionListStore.lists.isEmpty {
+            if !questionListStore.lists.isEmpty || !questionListStore.pendingCreations.isEmpty {
                 Section("Question Lists") {
+                    ForEach(questionListStore.pendingCreations) { pending in
+                        PendingListRowView(
+                            pending: pending,
+                            onRetry: { questionListStore.retryCreate(pending.id) },
+                            onDelete: { questionListStore.discardCreate(pending.id) }
+                        )
+                    }
+
                     ForEach(questionListStore.lists) { list in
                         NavigationLink {
                             QuestionListDetailView(
@@ -572,22 +580,25 @@ struct QuestionListEditorView: View {
 
     private func save() {
         guard canSave else { return }
-        isSaving = true
 
-        Task {
-            do {
-                switch mode {
-                case .create:
-                    _ = try await questionListStore.createList(named: normalizedName)
-                    dismiss()
-                case .edit(let list):
+        switch mode {
+        case .create:
+            // The store owns the create, so it finishes after this sheet is gone. `isSaving` stays
+            // set so a second tap before the sheet closes cannot start a second create.
+            isSaving = true
+            questionListStore.startCreate(named: normalizedName)
+            dismiss()
+        case .edit(let list):
+            isSaving = true
+            Task {
+                do {
                     try await questionListStore.updateList(list, name: normalizedName)
                     dismiss()
+                } catch {
+                    questionListStore.error = error.localizedDescription
                 }
-            } catch {
-                questionListStore.error = error.localizedDescription
+                isSaving = false
             }
-            isSaving = false
         }
     }
 }
@@ -760,7 +771,10 @@ struct QuestionListSelectionSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                if questionListStore.lists.isEmpty && !isCreatingList {
+                if questionListStore.lists.isEmpty
+                    && questionListStore.pendingCreations.isEmpty
+                    && !isCreatingList
+                {
                     Section {
                         ContentUnavailableView {
                             Label(String(localized: "questionLists.empty.title"), systemImage: "list.bullet.rectangle.portrait")
@@ -779,14 +793,8 @@ struct QuestionListSelectionSheet: View {
                         TextField(String(localized: "questionLists.name.placeholder"), text: $newListName)
                             .textInputAutocapitalization(.sentences)
 
-                        Button(action: createAndAdd) {
-                            if isSaving {
-                                ProgressView()
-                            } else {
-                                Text(String(localized: "questionLists.createAndAdd"))
-                            }
-                        }
-                        .disabled(normalizedNewListName.isEmpty || isSaving)
+                        Button(String(localized: "questionLists.createAndAdd"), action: createAndAdd)
+                            .disabled(normalizedNewListName.isEmpty || isSaving)
                     }
                 } else {
                     Section {
@@ -798,8 +806,13 @@ struct QuestionListSelectionSheet: View {
                     }
                 }
 
-                if !questionListStore.lists.isEmpty {
+                if !questionListStore.lists.isEmpty || !questionListStore.pendingCreations.isEmpty {
                     Section {
+                        // A pending or failed list cannot take questions yet, so its row is inert.
+                        ForEach(questionListStore.pendingCreations) { pending in
+                            PendingListRowView(pending: pending)
+                        }
+
                         ForEach(questionListStore.lists) { list in
                             Button {
                                 toggle(list)
@@ -864,19 +877,11 @@ struct QuestionListSelectionSheet: View {
     }
 
     private func createAndAdd() {
-        guard !normalizedNewListName.isEmpty else { return }
+        guard !normalizedNewListName.isEmpty, !isSaving else { return }
+        // Stays set: the sheet closes next, and a second tap must not start a second create.
         isSaving = true
-        Task {
-            do {
-                let list = try await questionListStore.createList(named: normalizedNewListName)
-                try await questionListStore.setQuestion(question.id, in: list, isIncluded: true)
-                isCreatingList = false
-                newListName = ""
-            } catch {
-                questionListStore.error = error.localizedDescription
-            }
-            isSaving = false
-        }
+        questionListStore.startCreate(named: normalizedNewListName, addingQuestionID: question.id)
+        dismiss()
     }
 
     private func toggle(_ list: QuestionList) {
