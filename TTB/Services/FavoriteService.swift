@@ -8,6 +8,14 @@ actor FavoriteService {
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
         category: "FavoriteService")
     
+    /// Fetches `Firestore` on demand. The provider is stored, the Firebase object is not: every
+    /// method calls it where it needs the object. A test injects a provider that fails.
+    private let firestore: @Sendable () -> Firestore
+
+    init(firestore: @escaping @Sendable () -> Firestore = { Firestore.firestore() }) {
+        self.firestore = firestore
+    }
+
     enum FavoriteError: LocalizedError {
         case invalidUserId
         case documentNotFound
@@ -40,7 +48,7 @@ actor FavoriteService {
     ) -> sending ListenerRegistration? {
         guard Self.acceptsListener(for: userId, reportingTo: completion) else { return nil }
 
-        return Firestore.firestore().collection("questions")
+        return firestore().collection("questions")
             .whereField("favoriteUserIds", arrayContains: userId)
             .addSnapshotListener { snapshot, error in
                 Self.deliverSnapshot(
