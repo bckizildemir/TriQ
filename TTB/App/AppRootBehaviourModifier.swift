@@ -24,6 +24,8 @@ struct AppRootBehaviourModifier: ViewModifier {
     @ObservedObject private var deepLinkRouter: AppDeepLinkRouter
     @ObservedObject private var toastCenter: ToastCenter
 
+    @Environment(\.scenePhase) private var scenePhase
+
     @State private var isMigratingGuestFavorites = false
     /// The Upgrade Prompt and the upgrade sheet it opens present from the topmost controller, not
     /// from a `.sheet` here, so they still appear over a `fullScreenCover`. See `docs/adr/0010`.
@@ -65,7 +67,7 @@ struct AppRootBehaviourModifier: ViewModifier {
                     onDismissedBySystem: dismissGuestUpgrade
                 )
             }
-            .task(id: deepLinkRouter.sharedQuestion) {
+            .task(id: "\(deepLinkRouter.sharedQuestion?.id ?? "none")|\(scenePhase)") {
                 await presentSharedQuestionUntilShown()
             }
             .sheet(item: $deepLinkRouter.sharedQuestionList) { deepLink in
@@ -86,6 +88,12 @@ struct AppRootBehaviourModifier: ViewModifier {
             syncSharedQuestionCover()
             try? await Task.sleep(for: .milliseconds(250))
             if Task.isCancelled || isSharedQuestionShown || deepLinkRouter.sharedQuestion == nil { return }
+        }
+        // Out of tries while the app is active (a system alert on top, say): drop the link, or it
+        // would hold the router and every later link would wait behind it. Out of tries while the
+        // app is inactive keeps the link; returning to `.active` restarts this through the task id.
+        if scenePhase == .active {
+            deepLinkRouter.sharedQuestion = nil
         }
     }
 
