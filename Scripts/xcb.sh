@@ -9,7 +9,8 @@
 #   - One DerivedData and one package checkout per project, outside iCloud and shared
 #     by every worktree, so Firebase compiles once instead of once per worktree.
 #   - Capped compile jobs, no parallel test clones, no indexing, lowered priority.
-#   - One simulator at a time: other booted simulators are shut down before a test.
+#   - One simulator at a time: other booted simulators are shut down before a test,
+#     except devices named verify-* (a verify-<app> skill run drives one; never stop it).
 #   - The full log goes to a file; the terminal gets errors, failures, and the tail.
 
 set -euo pipefail
@@ -21,7 +22,7 @@ Usage:
   Scripts/xcb.sh test  [options] [-- extra xcodebuild args]
 
 Options:
-  --os VERSION        Simulator iOS version (default: $XCB_OS or 26.5)
+  --os VERSION        Simulator iOS version (default: $XCB_OS or 27.0)
   --only IDENTIFIER   Passed as -only-testing:IDENTIFIER (repeatable),
                       e.g. --only TTBTests/FavoriteStoreTests
   --scheme NAME       Scheme (default: $XCB_SCHEME or the project name)
@@ -52,7 +53,7 @@ case "$ACTION" in
   *) usage >&2; exit 2 ;;
 esac
 
-OS_VERSION="${XCB_OS:-26.5}"
+OS_VERSION="${XCB_OS:-27.0}"
 SCHEME="${XCB_SCHEME:-}"
 ONLY_TESTING=()
 EXTRA_ARGS=()
@@ -104,11 +105,13 @@ PY
 
 shut_down_other_simulators() {
   local keep="$1" udid
+  # A verify-<app> skill run (verify-triq-*, verify-purrtine-*) owns its device; leave it booted.
   for udid in $(xcrun simctl list devices booted -j | /usr/bin/python3 -c '
 import json, sys
 for entries in json.load(sys.stdin)["devices"].values():
     for device in entries:
-        print(device["udid"])'); do
+        if not device["name"].startswith("verify-"):
+            print(device["udid"])'); do
     if [[ "$udid" != "$keep" ]]; then
       printf 'xcb: shutting down simulator %s (one simulator at a time)\n' "$udid"
       xcrun simctl shutdown "$udid" || true

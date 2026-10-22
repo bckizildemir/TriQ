@@ -26,17 +26,32 @@ class QuestionModel: ObservableObject {
     @Published private(set) var trioQuestions: [Question] = []
     @Published private(set) var isLoading = false
     @Published var error: String?
+    /// The message the seeded feed put in `error`. A later seeded success clears `error` only while
+    /// it still holds this message, so it never erases an answer-save error from `report(_:)`.
+    private var seededFeedErrorMessage: String?
 
     /// All answers saved by the currently signed-in user, keyed by questionId.
     @Published private(set) var currentUserAnswers: [String: UserAnswer] = [:]
 
     private let questionService: QuestionService?
+    /// Where the listeners come from: the same `QuestionService` in the app, a fake in tests, nil in local mode.
+    private let listenerService: (any QuestionFeedListening)?
     private let todaysQuestionSelector: TodaysQuestionSelector
     private var seededQuestionsListener: FirestoreListenerHandle?
     private var featuredHomeQuestionsListener: FirestoreListenerHandle?
     private var trioListener: FirestoreListenerHandle?
     private var userAnswersListener: FirestoreListenerHandle?
     private var authStateHandle: AuthStateDidChangeListenerHandle?
+    /// One generation per feed. Each setup call bumps its feed's generation before it awaits; when
+    /// the service returns, a changed generation means a newer call took over, so the old handle is
+    /// cancelled instead of stored (TriQ#50). Delivery closures capture the generation they were
+    /// set up with and drop a delivery from a stale one.
+    private var questionsListenerGeneration: UInt = 0
+    private var trioListenerGeneration: UInt = 0
+    private var userAnswersListenerGeneration: UInt = 0
+    /// Bumped by `clearRemoteState()`. `startRemoteSession()` stops before each next setup step when
+    /// it changed, so a sign-out during setup leaves no listener for the signed-out session (TriQ#52).
+    private var remoteSessionGeneration: UInt = 0
     private var seededQuestions: [Question] = []
     private var featuredHomeQuestions: [Question] = []
     /// `id` -> index into `questions`, so per-card lookups don't scan the whole corpus. Maintained by
@@ -52,6 +67,7 @@ class QuestionModel: ObservableObject {
         todaysQuestionSelector: TodaysQuestionSelector = TodaysQuestionSelector()
     ) {
         self.questionService = questionService
+        listenerService = questionService
         self.todaysQuestionSelector = todaysQuestionSelector
         logger.debug("QuestionModel initialized")
         setupAuthListener()
@@ -63,11 +79,25 @@ class QuestionModel: ObservableObject {
         todaysQuestionSelector: TodaysQuestionSelector = TodaysQuestionSelector()
     ) {
         questionService = nil
+        listenerService = nil
         self.todaysQuestionSelector = todaysQuestionSelector
         replaceQuestions(localQuestions)
         currentUserAnswers = localUserAnswers
         updateGroupedQuestions()
     }
+
+    #if DEBUG
+    /// Runs the listener setup against `listenerService` without `Auth.auth()`, so a test can drive it
+    /// with a fake. Like `QuestionListStore`'s `observesAuth: false`.
+    init(
+        listenerService: any QuestionFeedListening,
+        todaysQuestionSelector: TodaysQuestionSelector = TodaysQuestionSelector()
+    ) {
+        questionService = nil
+        self.listenerService = listenerService
+        self.todaysQuestionSelector = todaysQuestionSelector
+    }
+    #endif
 
     /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the
     /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
@@ -87,10 +117,7 @@ class QuestionModel: ObservableObject {
             guard let self = self else { return }
             Task { @MainActor in
                 if user != nil {
-                    self.logger.debug("Setting up question listeners")
-                    await self.setupQuestionsListener()
-                    await self.setupTrioQuestionsListener()
-                    await self.setupUserAnswersListener()
+                    await self.startRemoteSession()
                 } else {
                     self.clearRemoteState()
                 }
@@ -98,7 +125,25 @@ class QuestionModel: ObservableObject {
         }
     }
 
-    private func clearRemoteState() {
+    /// Sets up every listener for a signed-in user. Stops before the next step when a sign-out ran
+    /// `clearRemoteState()` meanwhile, because each setup bumps its own fresh feed generation.
+    func startRemoteSession() async {
+        let session = remoteSessionGeneration
+        logger.debug("Setting up question listeners")
+        await setupQuestionsListener()
+        guard remoteSessionGeneration == session else { return }
+        await setupTrioQuestionsListener()
+        guard remoteSessionGeneration == session else { return }
+        await setupUserAnswersListener()
+    }
+
+    func clearRemoteState() {
+        // Handles a setup call is still awaiting are not stored yet. Bumping the generations makes
+        // that call cancel its handle on resume and makes a queued delivery drop itself.
+        remoteSessionGeneration &+= 1
+        questionsListenerGeneration &+= 1
+        trioListenerGeneration &+= 1
+        userAnswersListenerGeneration &+= 1
         seededQuestionsListener?.cancel()
         seededQuestionsListener = nil
         featuredHomeQuestionsListener?.cancel()
@@ -115,14 +160,26 @@ class QuestionModel: ObservableObject {
         trioQuestions = []
         currentUserAnswers = [:]
         isLoading = false
+        // An error from the old session must not carry into the next one.
+        error = nil
+        seededFeedErrorMessage = nil
     }
 
     private func setupUserAnswersListener() async {
-        guard let questionService else { return }
+        guard let listenerService else { return }
+        userAnswersListenerGeneration &+= 1
+        let generation = userAnswersListenerGeneration
         userAnswersListener?.cancel()
-        userAnswersListener = await questionService.setupUserAnswersListener { [weak self] answers in
-            self?.currentUserAnswers = answers
+        userAnswersListener = nil
+        let handle = await listenerService.setupUserAnswersListener { [weak self] answers in
+            guard let self, userAnswersListenerGeneration == generation else { return }
+            currentUserAnswers = answers
         }
+        guard userAnswersListenerGeneration == generation else {
+            handle?.cancel()
+            return
+        }
+        userAnswersListener = handle
     }
 
     /// Returns the current user's saved answers for a specific question, or an empty array.
@@ -153,45 +210,88 @@ class QuestionModel: ObservableObject {
     }
 
     func refreshQuestions() async {
-        guard questionService != nil else {
+        guard listenerService != nil else {
             updateGroupedQuestions()
             return
         }
+        let session = remoteSessionGeneration
         await setupQuestionsListener()
+        guard remoteSessionGeneration == session else { return }
         await setupTrioQuestionsListener()
     }
 
     private func setupQuestionsListener() async {
-        guard let questionService else { return }
+        guard let listenerService else { return }
+        questionsListenerGeneration &+= 1
+        let generation = questionsListenerGeneration
         isLoading = true
         seededQuestionsListener?.cancel()
+        seededQuestionsListener = nil
         featuredHomeQuestionsListener?.cancel()
+        featuredHomeQuestionsListener = nil
 
-        seededQuestionsListener = await questionService.setupSeededQuestionsListener { [weak self] questions in
-            guard let self else { return }
-            seededQuestions = questions
-            updatePublicQuestions()
+        let seededHandle = await listenerService.setupSeededQuestionsListener { [weak self] result in
+            guard let self, questionsListenerGeneration == generation else { return }
+            switch result {
+            case .success(let questions):
+                if error == seededFeedErrorMessage { error = nil }
+                seededFeedErrorMessage = nil
+                seededQuestions = questions
+                updatePublicQuestions()
+            case .failure(let failure):
+                logger.error("Seeded questions failed to load: \(failure.localizedDescription)")
+                seededFeedErrorMessage = failure.localizedDescription
+                error = failure.localizedDescription
+            }
             isLoading = false
         }
-
-        featuredHomeQuestionsListener = await questionService.setupFeaturedHomeQuestionsListener { [weak self] questions in
-            guard let self else { return }
-            featuredHomeQuestions = questions
-            updatePublicQuestions()
+        guard questionsListenerGeneration == generation else {
+            seededHandle.cancel()
+            return
         }
+        seededQuestionsListener = seededHandle
+
+        let featuredHandle = await listenerService.setupFeaturedHomeQuestionsListener { [weak self] result in
+            guard let self, questionsListenerGeneration == generation else { return }
+            switch result {
+            case .success(let questions):
+                featuredHomeQuestions = questions
+                updatePublicQuestions()
+            case .failure(let failure):
+                logger.error("Featured home questions failed to load: \(failure.localizedDescription)")
+            }
+        }
+        guard questionsListenerGeneration == generation else {
+            featuredHandle.cancel()
+            return
+        }
+        featuredHomeQuestionsListener = featuredHandle
     }
 
     private func setupTrioQuestionsListener() async {
-        guard let questionService else { return }
+        guard let listenerService else { return }
+        trioListenerGeneration &+= 1
+        let generation = trioListenerGeneration
         trioListener?.cancel()
+        trioListener = nil
 
-        trioListener = await questionService.setupTrioQuestionsListener { [weak self] questions in
-            guard let self else { return }
-            trioQuestions = filteredTrioQuestions(
-                questions,
-                selectedLanguageCode: AppLocalization.currentLanguageCode
-            )
+        let handle = await listenerService.setupTrioQuestionsListener { [weak self] result in
+            guard let self, trioListenerGeneration == generation else { return }
+            switch result {
+            case .success(let questions):
+                trioQuestions = filteredTrioQuestions(
+                    questions,
+                    selectedLanguageCode: AppLocalization.currentLanguageCode
+                )
+            case .failure(let failure):
+                logger.error("Trio questions failed to load: \(failure.localizedDescription)")
+            }
         }
+        guard trioListenerGeneration == generation else {
+            handle.cancel()
+            return
+        }
+        trioListener = handle
     }
 
     private func updateGroupedQuestions() {

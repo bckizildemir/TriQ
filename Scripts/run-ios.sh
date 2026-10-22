@@ -5,7 +5,7 @@ PROJECT_PATH="TTB.xcodeproj"
 SCHEME="TTB"
 CONFIGURATION="Debug"
 DEVICE_NAME="iPhone 12"
-RUNTIME_MAJOR="26"
+RUNTIME_MAJOR="27"
 PRODUCT_BUNDLE_IDENTIFIER="app.berke.can.kizildemir.ttb"
 DERIVED_DATA_PATH="${TMPDIR:-/tmp}/ttb-codex-derived-data"
 
@@ -56,7 +56,7 @@ import subprocess
 import sys
 
 device_name = "iPhone 12"
-runtime_major = "26"
+runtime_major = "27"
 
 try:
     runtimes = json.loads(subprocess.check_output(["xcrun", "simctl", "list", "runtimes", "-j"], text=True))

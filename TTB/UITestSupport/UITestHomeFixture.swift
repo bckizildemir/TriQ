@@ -33,5 +33,20 @@ enum UITestHomeFixture {
     static let categories: [Category] = Category.defaultCategories.filter {
         $0.id == "Daily" || $0.id == categoryID
     }
+
+    /// Every default category, for the long-feed harness.
+    static let longFeedCategories: [Category] = Category.defaultCategories
+
+    /// The default questions plus one per default category, so the feed is taller than the
+    /// screen and a test can scroll it under the pinned chip row.
+    static let longFeedQuestions: [Question] = questions + longFeedCategories.map { category in
+        let text = "Which small step would help you with \(category.id) today?"
+        return Question(
+            id: "home-long-feed-\(category.id)",
+            text: text,
+            category: category.id,
+            localizedTexts: ["en": text]
+        )
+    }
 }
 #endif

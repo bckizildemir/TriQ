@@ -39,7 +39,7 @@ Run the narrowest relevant tests first:
 
 ```bash
 npm test --prefix functions -- questionListShares.test.js
-xcodebuild -project TTB.xcodeproj -scheme TTB -destination 'platform=iOS Simulator,name=iPhone 12,OS=26.5' -only-testing:TTBTests/QuestionListShareTests test
+xcodebuild -project TTB.xcodeproj -scheme TTB -destination 'platform=iOS Simulator,name=iPhone 12,OS=27.0' -only-testing:TTBTests/QuestionListShareTests test
 ```
 
 When Hosting or AASA changes, also verify the generated/static files locally and state whether live deploy remains pending. Do not deploy without an explicit user request.
