@@ -583,7 +583,9 @@ struct QuestionListEditorView: View {
 
         switch mode {
         case .create:
-            // The store owns the create, so it finishes after this sheet is gone.
+            // The store owns the create, so it finishes after this sheet is gone. `isSaving` stays
+            // set so a second tap before the sheet closes cannot start a second create.
+            isSaving = true
             questionListStore.startCreate(named: normalizedName)
             dismiss()
         case .edit(let list):
@@ -764,6 +766,7 @@ struct QuestionListSelectionSheet: View {
 
     @State private var isCreatingList = false
     @State private var newListName = ""
+    @State private var isSaving = false
 
     var body: some View {
         NavigationStack {
@@ -791,7 +794,7 @@ struct QuestionListSelectionSheet: View {
                             .textInputAutocapitalization(.sentences)
 
                         Button(String(localized: "questionLists.createAndAdd"), action: createAndAdd)
-                            .disabled(normalizedNewListName.isEmpty)
+                            .disabled(normalizedNewListName.isEmpty || isSaving)
                     }
                 } else {
                     Section {
@@ -874,7 +877,9 @@ struct QuestionListSelectionSheet: View {
     }
 
     private func createAndAdd() {
-        guard !normalizedNewListName.isEmpty else { return }
+        guard !normalizedNewListName.isEmpty, !isSaving else { return }
+        // Stays set: the sheet closes next, and a second tap must not start a second create.
+        isSaving = true
         questionListStore.startCreate(named: normalizedNewListName, addingQuestionID: question.id)
         dismiss()
     }

@@ -158,6 +158,39 @@ struct QuestionListBackgroundCreateTests {
         #expect(failures.values.isEmpty)
     }
 
+    @Test func sessionChangeWhileTheQuestionIsBeingAddedLeavesNoToastAndNoList() async {
+        await service.blockSetQuestion(for: "new-list")
+        await service.blockCreate(for: "user-1", returning: "new-list")
+        let task = store.startCreate(named: "Family", addingQuestionID: "q1")
+        await service.waitUntilCreateStarts(for: "user-1")
+        await service.resumeCreate(for: "user-1")
+        await service.waitUntilSetQuestionCallCount(1, for: "new-list")
+
+        store.transitionToUser(withID: "user-2")
+        await service.resumeSetQuestion(for: "new-list")
+        await task.value
+
+        #expect(store.lists.isEmpty)
+        #expect(store.pendingCreations.isEmpty)
+        #expect(failures.values.isEmpty)
+    }
+
+    @Test func appEnvironmentShowsAToastWhenABackgroundCreateFails() async throws {
+        let environment = AppEnvironment.uiTest(
+            storage: try #require(UserDefaults(suiteName: "QuestionListBackgroundCreateTests")),
+            authModel: UITestAuthModelFactory.permanentUser(uid: "user-1"),
+            questionModel: QuestionModel(localQuestions: []),
+            questionListStore: store
+        )
+        await service.failNextCreate(for: "user-1")
+
+        await store.startCreate(named: "Family").value
+
+        let toast = try #require(environment.toastCenter.currentToast)
+        #expect(toast.accessibilityIdentifier == "question-list-create-error-toast")
+        #expect(toast.title == QuestionListCreationFailure.createFailed.message)
+    }
+
     private func makeList(id: String) -> QuestionList {
         QuestionList(
             id: id,
