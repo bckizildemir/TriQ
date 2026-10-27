@@ -33,8 +33,10 @@ Options:
 Environment:
   XCB_JOBS            Parallel compile jobs (default 4)
   XCB_SIMULATOR       Simulator name. Default: the project's slim test device from
-                      Scripts/slim-sim.sh test-sim (made on first use) when --os is 27.0,
-                      else "iPhone 12" ("iPhone 12 (iOS VERSION)" also matches)
+                      Scripts/slim-sim.sh test-sim (made on first use) when --os is
+                      $SLIM_SIM_OS (default 27.0; SLIM_SIM_DEVICE picks its device type),
+                      else a stock "iPhone 12" with a loud warning ("iPhone 12 (iOS VERSION)"
+                      also matches); it fails when that does not exist
   XCB_CACHE_ROOT      Shared cache root (default ~/Library/Caches/xcb)
   XCB_LOCK_TIMEOUT    Seconds to wait for the build lock (default 3600)
   XCB_DRY_RUN=1       Print the xcodebuild command; take no lock, build nothing
@@ -85,6 +87,19 @@ if [[ -z "${XCB_SIMULATOR:-}" && "$OS_VERSION" == "${SLIM_SIM_OS:-27.0}" && -x "
   USE_SLIM_TEST_SIM=1
 fi
 SIMULATOR_NAME="${XCB_SIMULATOR:-iPhone 12}"
+# Another --os has no slim test device: say so loudly instead of falling back in silence.
+if [[ "$USE_SLIM_TEST_SIM" == 0 && -z "${XCB_SIMULATOR:-}" ]]; then
+  printf 'xcb: WARNING ---------------------------------------------------------------
+' >&2
+  printf 'xcb: WARNING iOS %s is not the slim test device'"'"'s iOS (SLIM_SIM_OS=%s).
+' "$OS_VERSION" "${SLIM_SIM_OS:-27.0}" >&2
+  printf 'xcb: WARNING Using a stock, unslimmed "%s" on iOS %s instead. Set XCB_SIMULATOR to
+' "$SIMULATOR_NAME" "$OS_VERSION" >&2
+  printf 'xcb: WARNING pick a device, or SLIM_SIM_OS=%s to make a slim test device for it.
+' "$OS_VERSION" >&2
+  printf 'xcb: WARNING ---------------------------------------------------------------
+' >&2
+fi
 CACHE_ROOT="${XCB_CACHE_ROOT:-$HOME/Library/Caches/xcb}"
 PROJECT_CACHE="$CACHE_ROOT/$PROJECT_NAME"
 DERIVED_DATA_PATH="$PROJECT_CACHE/DerivedData"
@@ -130,7 +145,7 @@ resolve_simulator() {
     SIMULATOR_NAME="$("$SLIM_SIM" names | sed -n 's/^test *//p')"
   else
     SIMULATOR_ID="$(simulator_udid)" \
-      || fail "no available \"$SIMULATOR_NAME\" simulator on iOS $OS_VERSION (xcrun simctl list devices)"
+      || fail "no available \"$SIMULATOR_NAME\" simulator on iOS $OS_VERSION (xcrun simctl list devices). The slim test device exists only for iOS ${SLIM_SIM_OS:-27.0}; set XCB_SIMULATOR, or SLIM_SIM_OS=$OS_VERSION to make one"
   fi
 }
 
@@ -175,7 +190,9 @@ acquire_lock() {
   printf '%s %s in %s (PID %s, since %s)\n' "$PROJECT_NAME" "$ACTION" "$REPO_ROOT" "$$" \
     "$(date '+%H:%M:%S')" > "$LOCK_DIR/owner"
   trap release_lock EXIT
-  trap 'release_lock; exit 130' INT TERM
+  # An interrupted test still shuts down the slim test device it booted.
+  trap 'shut_down_if_we_booted; release_lock; exit 130' INT
+  trap 'shut_down_if_we_booted; release_lock; exit 143' TERM
 }
 
 if [[ "${XCB_DRY_RUN:-0}" == 1 ]]; then

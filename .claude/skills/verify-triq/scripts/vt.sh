@@ -175,9 +175,15 @@ cmd_start() {
   warn_other_booted
   # A clone of the pristine slim template: no app, no data, the project's SimSlim profile.
   # It waits for a free verify slot (SLIM_SIM_MAX, default 2, shared with Purrtine).
+  # The wait can last up to SLIM_SIM_SLOT_TIMEOUT (3600 s), longer than the stale threshold, so
+  # keep this run's heartbeat fresh meanwhile. The loop ends with this shell or the lock.
   touch "$LOCK_DIR/heartbeat"
+  ( while kill -0 $$ 2>/dev/null && [[ -d "$LOCK_DIR" ]]; do touch "$LOCK_DIR/heartbeat" 2>/dev/null; sleep 60; done ) \
+    </dev/null >/dev/null 2>&1 &
+  local clone_beat=$!
   udid="$(SLIM_SIM_DEVICE="$device" SLIM_SIM_OS="$os" "$SLIM_SIM" clone "$name" "$LOCK_DIR")" \
-    || fail "Scripts/slim-sim.sh clone failed"
+    || { kill "$clone_beat" 2>/dev/null; fail "Scripts/slim-sim.sh clone failed"; }
+  kill "$clone_beat" 2>/dev/null || true
   echo "$udid" > "$LOCK_DIR/udid"
   say "cloned $name ($device, iOS $os, slim) $udid"
   xcrun simctl boot "$udid" || fail "simctl boot failed; run vt.sh cleanup"

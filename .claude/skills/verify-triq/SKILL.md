@@ -299,6 +299,9 @@ deleted) by the next `start` of either project. `Scripts/slim-sim.sh slots` list
 - **iOS 27.0 boot.** On 2026-10-13 a shared iOS 27.0 device's SpringBoard crashed about 11 times in
   2 minutes at boot, then ran stable (Purrtine). If `start` or `launch` hangs or `doctor` shows an
   empty tree, run `$V cleanup` and start again; if it repeats, use `$V start --os 26.5` and say so.
+- **A screenshot with no device names the wrong one.** With several simulators booted (2026-10-27),
+  xcodebuildmcp `screenshot` with no `simulatorId` captured another simulator. Take evidence with
+  `$V shot`, or pass `simulatorId=<UDID>` (the clone's UDID) to every xcodebuildmcp call.
 - **`build` passes the run's OS to xcb** (`XCB_OS`). xcb finds `XCB_SIMULATOR` by name only on that
   runtime; without it an iOS 27 device is not found.
 
