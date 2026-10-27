@@ -6,7 +6,7 @@
 #                                         take the verify lock and a slot, clone the slim template
 #                                         (Scripts/slim-sim.sh), boot the clone (default iOS 27.0)
 #   build                                 Scripts/xcb.sh build against that device, copy TTB.app
-#   hold                                  take the machine-wide xcb lock for the drive (see below)
+#   hold                                  optional: take the machine-wide xcb lock for the drive (see below)
 #   install                               install the copied .app on the device
 #   launch                                launch the app with NO launch arguments
 #   doctor                                read-only: is this run worth driving?
@@ -26,9 +26,9 @@
 # slim simulator. Clones take a machine-wide slot first (SLIM_SIM_MAX, default 2, shared with
 # Purrtine's verify-purrtine), so a Purrtine run and this one can drive at the same time.
 #
-# Why hold: an older checkout of Scripts/xcb.sh shut down other booted simulators before each
-# `test` (today's xcb never shuts down a simulator it did not boot). The hold also keeps other
-# builds off this 16 GB Mac during the drive. While `hold` is in force, xcb
+# Optional hold (off by default; owner decision 2026-10-28): an older checkout of Scripts/xcb.sh
+# shut down other booted simulators before each `test` (today's xcb never does), and slim clones
+# let two runs drive at once. Use `hold` only when the owner asks, or with an old xcb.sh. While `hold` is in force, xcb
 # runs from other sessions wait for the lock, exactly as they wait for a build. A watcher
 # process owns the lock; it lets go when cleanup removes the verify lock, or after
 # VT_HOLD_MAX seconds (default 1800), whichever comes first. The hold depends on xcb's lock
@@ -442,7 +442,7 @@ cmd_doctor() {
     if hold_alive; then echo "hold:    xcb lock watcher alive (PID $(state hold_pid))"
     else echo "WARN the hold watcher (PID $(state hold_pid)) is not running: other sessions' builds and tests are no longer paused; run vt.sh hold"; fi
   else
-    echo "hold:    not taken (run vt.sh hold after build)"
+    echo "hold:    not taken (optional)"
   fi
   warn_other_booted "$udid"
   printf 'evidence: %s\n' "$(state evidence)"

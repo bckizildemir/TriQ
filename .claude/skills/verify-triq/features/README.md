@@ -7,7 +7,7 @@ before you drive the app, then use the matching feature file as the recipe. The 
 
 ## Baseline preconditions
 
-- A run is open: `vt.sh start` → `vt.sh build` → `vt.sh hold` → `vt.sh install` → `vt.sh launch`, and
+- A run is open: `vt.sh start` → `vt.sh build` → `vt.sh install` → `vt.sh launch`, and
   `vt.sh doctor` exits 0. Every command below runs from the repo root; `vt` means
   `.claude/skills/verify-triq/scripts/vt.sh` — type that full path in each command.
 - `<UDID>` is the run's device: the literal value in `/tmp/verify-triq.lock/udid`.
