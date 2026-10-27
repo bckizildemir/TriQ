@@ -83,16 +83,13 @@ actor FavoriteService {
         error: Error?,
         to completion: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
     ) {
-        let result: Result<[Question], Error>
-        if let error = error {
-            result = .failure(FavoriteError.unknown(error))
-        } else {
-            result = .success((documents ?? []).compactMap { document in
-                Question.fromFirestore(document.data, id: document.id)
-            })
-        }
-
-        Task { @MainActor in completion(result) }
+        SnapshotDelivery.deliver(
+            documents: documents,
+            error: error,
+            mapError: { FavoriteError.unknown($0) },
+            decode: { Question.fromFirestore($0.data, id: $0.id) },
+            to: completion
+        )
     }
     
     func toggleFavorite(
