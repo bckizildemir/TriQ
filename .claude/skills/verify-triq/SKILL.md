@@ -123,7 +123,6 @@ read and write. The owner registered one fixed debug token (`verify-triq`) in th
 ```bash
 .claude/skills/verify-triq/scripts/vt.sh start                       # verify lock, fresh device, English; add --lang tr for Turkish
 .claude/skills/verify-triq/scripts/vt.sh build                       # Scripts/xcb.sh build against this device; copies TTB.app
-.claude/skills/verify-triq/scripts/vt.sh hold                        # take the xcb lock for the drive (see "Why hold")
 .claude/skills/verify-triq/scripts/vt.sh install
 .claude/skills/verify-triq/scripts/vt.sh launch                      # prints "app.berke.can.kizildemir.ttb: <pid>"
 .claude/skills/verify-triq/scripts/vt.sh doctor                      # must exit 0
@@ -148,20 +147,20 @@ read and write. The owner registered one fixed debug token (`verify-triq`) in th
   on 2026-10-15 axe read the full tree with no Simulator window.
 - Teardown is `$V cleanup` (see Cleanup).
 
-### Why hold
+### Optional hold
 
-Since 2026-10-27 `Scripts/xcb.sh` never shuts down a simulator it did not boot (it tests on the
-project's own slim test device), but a checkout with an older `xcb.sh` still shuts down other
-booted simulators, and other builds still compete for this 16 GB Mac during a drive. `$V hold` takes the same machine-wide lock that xcb uses (`~/Library/Caches/xcb/build.lock`, its
-`pid` and `owner` files), owned by a watcher process, so other sessions' builds and tests wait while
-you drive. It ends at `$V cleanup`, or after 30 minutes (`VT_HOLD_MAX=<seconds>`). Take it after
-`build` — `build` needs that lock itself — and keep the drive short. A Purrtine verify run can clone
-and boot while you hold, but its `build` waits for your hold to end.
+`$V hold` takes the machine-wide xcb build lock (`~/Library/Caches/xcb/build.lock`, its `pid` and
+`owner` files), owned by a watcher process, so other sessions' builds and tests wait while you
+drive. Skip it by default: `Scripts/xcb.sh` never shuts down a simulator it did not boot, and slim
+clones let a Purrtine run drive at the same time. Use it only when the owner asks, or when a
+checkout with an old `xcb.sh` that shuts down other simulators is in use. Take it after `build` —
+`build` needs that lock itself. It ends at `$V cleanup`, or after 30 minutes
+(`VT_HOLD_MAX=<seconds>`).
 
-**Owner decision (2026-10-14):** a drive may hold the xcb build lock for up to 30 minutes, which
-pauses every build and test on the Mac, Purrtine's too. Accepted. A longer pass re-runs `$V hold`.
-A change to the lock format in `Scripts/xcb.sh` must update `vt.sh` in the same PR. `$V status` and
-`$V doctor` report whether the watcher is alive.
+**Owner decision (2026-10-28):** hold is off by default; slim clones and the new xcb.sh made it
+unnecessary. It replaces the 2026-10-14 decision.
+A change to the lock format in `Scripts/xcb.sh` must update `vt.sh` in the same PR. When a hold was
+taken, `$V status` and `$V doctor` report whether the watcher is alive.
 
 ## Doctor
 
@@ -184,7 +183,7 @@ simulators. Exit 0 means worth driving. Run it first whenever anything looks off
   start again; if it repeats, `Scripts/slim-sim.sh template` repairs the template.
 - `WARN another simulator is booted` → owner decision: warn and continue. The run never shuts down a
   device it did not create.
-- `WARN the hold watcher … is not running` → `$V hold` again (the 30 minutes ran out or it died).
+- `WARN the hold watcher … is not running` → only after you took `$V hold`: the 30 minutes ran out or it died. Take it again only if you still need it.
 - `WARN empty accessibility tree` → call xcodebuildmcp `open_sim`, then retry.
 - `WARN the copied app has no GoogleService-Info.plist` → not the real app; rebuild.
 
@@ -290,7 +289,7 @@ deleted) by the next `start` of either project. `Scripts/slim-sim.sh slots` list
   `$V doctor`'s `appcheck` line.
 - **Labels collide.** The category chip `Home` and the tab `Home` share a label. Tap tabs with
   `--element-type RadioButton`.
-- **The hold blocks every build on the Mac.** Keep a drive short.
+- **An optional hold blocks every build on the Mac.** Keep a held drive short.
 - **Slim services.** The profile keeps `photos`, `store` (apsd: remote push), `web` (swcd:
   universal links) and `telemetry` (devicecheckd: App Attest); keychain, location and local
   notifications are never disabled. A feature that needs another category (Siri, iCloud, Contacts)
@@ -316,10 +315,9 @@ deleted) by the next `start` of either project. `Scripts/slim-sim.sh slots` list
 ## Maintenance pass (`/maintain-verification-skill`)
 
 The owner starts it by typing it; an agent cannot. A pass drives **every** feature on **one**
-device, in one language, in one run: `start`, `build` (background), `hold`, `install`, `launch`,
+device, in one language, in one run: `start`, `build` (background), `install`, `launch`,
 `doctor`, then guest onboarding first and the other features in the order of `features/README.md`.
-Each feature marked writes live or AI call needs the owner's yes before that drive. When the watcher
-is gone, run `$V hold` again. Teardown (`$V cleanup`) happens once, after the last drive. A full pass
+Each feature marked writes live or AI call needs the owner's yes before that drive. Teardown (`$V cleanup`) happens once, after the last drive. A full pass
 took about 45 minutes on 2026-10-21 (the favorites cap alone about 10).
 
 Keep the map honest as the app changes with `/maintain-verification-skill`.
