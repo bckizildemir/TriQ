@@ -1,0 +1,5 @@
+{
+  "name": "TriQ",
+  "except": ["photos", "store", "web", "telemetry"],
+  "keep": []
+}

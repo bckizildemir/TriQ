@@ -64,12 +64,40 @@ struct LiveBadgeStore: BadgeStoring {
         let userRef = db.collection("users").document(userId)
         return try await db.runTransaction { transaction, errorPointer -> Any? in
             let context = FirestoreBadgeUserTransaction(transaction: transaction, userRef: userRef)
-            do {
-                return try updates(context)
-            } catch {
-                errorPointer?.pointee = error as NSError
-                return nil
-            }
+            return Self.runUpdates(updates, in: context, errorPointer: errorPointer)
+        }
+    }
+
+    /// Runs one transaction pass. A thrown error goes to `errorPointer` as an `NSError` and the
+    /// pass returns `nil`, which is how Firestore's transaction block reports a failure.
+    ///
+    /// Kept out of the Firebase closure so a test can run it with a fixture transaction.
+    static func runUpdates(
+        _ updates: @Sendable (BadgeUserTransaction) throws -> Any?,
+        in context: BadgeUserTransaction,
+        errorPointer: NSErrorPointer
+    ) -> Any? {
+        do {
+            return try updates(context)
+        } catch {
+            errorPointer?.pointee = error as NSError
+            return nil
+        }
+    }
+
+    /// Maps one user-document snapshot callback to the observer's result. A missing snapshot is
+    /// a success with no data.
+    ///
+    /// Kept out of the Firebase closure so a test can run the exact path a live snapshot takes.
+    static func deliverUserSnapshot(
+        data: [String: Any]?,
+        error: Error?,
+        to onChange: (Result<[String: Any]?, Error>) -> Void
+    ) {
+        if let error {
+            onChange(.failure(error))
+        } else {
+            onChange(.success(data))
         }
     }
 
@@ -79,11 +107,7 @@ struct LiveBadgeStore: BadgeStoring {
     ) -> BadgeUserListening {
         let registration = Firestore.firestore().collection("users").document(userId)
             .addSnapshotListener { snapshot, error in
-                if let error {
-                    onChange(.failure(error))
-                } else {
-                    onChange(.success(snapshot?.data()))
-                }
+                Self.deliverUserSnapshot(data: snapshot?.data(), error: error, to: onChange)
             }
         return FirestoreBadgeUserListening(registration: registration)
     }
