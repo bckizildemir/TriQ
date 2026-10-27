@@ -181,7 +181,7 @@ final class NotificationService: NSObject, ObservableObject {
     }
 
     /// The flag after the first read of the device document: the stored flag when the document
-    /// exists (or reads without error), else on when the user already allowed notifications.
+    /// exists (the data is non-nil), else on when the user already allowed notifications.
     nonisolated static func initialContentUpdatesEnabled(
         existingData: [String: Any]?,
         installationID: String,

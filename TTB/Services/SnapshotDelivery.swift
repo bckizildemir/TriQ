@@ -5,6 +5,9 @@ import Foundation
 ///
 /// A live adapter's snapshot closure forwards raw values here (or to a thin wrapper that does), so a
 /// test can run the path a live snapshot takes without Firebase.
+///
+/// CategoryService, ContentReleaseService, AIModel, NotificationService and LiveBadgeStore do not use
+/// this helper: their result shape differs, or they call back synchronously with no main-actor hop.
 enum SnapshotDelivery {
     /// Maps one snapshot callback to a result and delivers it on the main actor.
     ///
