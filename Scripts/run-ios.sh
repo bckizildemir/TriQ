@@ -4,7 +4,7 @@ set -euo pipefail
 PROJECT_PATH="TTB.xcodeproj"
 SCHEME="TTB"
 CONFIGURATION="Debug"
-DEVICE_NAME="iPhone 12"
+DEVICE_NAME="iPhone 12 slim test (TriQ)"
 RUNTIME_MAJOR="27"
 PRODUCT_BUNDLE_IDENTIFIER="app.berke.can.kizildemir.ttb"
 DERIVED_DATA_PATH="${TMPDIR:-/tmp}/ttb-codex-derived-data"
@@ -49,45 +49,9 @@ command -v xcrun >/dev/null 2>&1 || fail "xcrun bulunamadi. Xcode command line t
 
 [[ -d "$PROJECT_PATH" ]] || fail "$PROJECT_PATH bulunamadi. Script repo kokunden calistirilmali."
 
-SIMULATOR_ID="$(
-  /usr/bin/python3 - <<'PY'
-import json
-import subprocess
-import sys
-
-device_name = "iPhone 12"
-runtime_major = "27"
-
-try:
-    runtimes = json.loads(subprocess.check_output(["xcrun", "simctl", "list", "runtimes", "-j"], text=True))
-    devices = json.loads(subprocess.check_output(["xcrun", "simctl", "list", "devices", "available", "-j"], text=True))
-except subprocess.CalledProcessError as exc:
-    print(f"simctl sorgusu basarisiz: {exc}", file=sys.stderr)
-    sys.exit(2)
-
-runtime_ids = [
-    runtime["identifier"]
-    for runtime in runtimes.get("runtimes", [])
-    if runtime.get("isAvailable")
-    and runtime.get("platform") == "iOS"
-    and str(runtime.get("version", "")).split(".")[0] == runtime_major
-]
-
-if not runtime_ids:
-    print(f"iOS {runtime_major} Simulator runtime bulunamadi. Xcode > Settings > Platforms altindan iOS {runtime_major} runtime kurun.", file=sys.stderr)
-    sys.exit(3)
-
-for runtime_id in runtime_ids:
-    for device in devices.get("devices", {}).get(runtime_id, []):
-        if device.get("name") == device_name and device.get("isAvailable"):
-            print(device["udid"])
-            sys.exit(0)
-
-runtime_names = ", ".join(runtime_id.rsplit(".", 1)[-1].replace("-", ".") for runtime_id in runtime_ids)
-print(f"{device_name} / iOS {runtime_major} simulator bulunamadi. Mevcut iOS {runtime_major} runtime(lar): {runtime_names}. Xcode Devices and Simulators'da {device_name} olusturun.", file=sys.stderr)
-sys.exit(4)
-PY
-)" || fail "iPhone 12 / iOS ${RUNTIME_MAJOR} simulator secilemedi."
+# The project's slim test device (iPhone 12, iOS 27.0), made from the SimSlim template on first
+# use. The same device Scripts/xcb.sh tests on; never the verify template itself.
+SIMULATOR_ID="$(Scripts/slim-sim.sh test-sim)" || fail "Scripts/slim-sim.sh test-sim basarisiz."
 
 DESTINATION="platform=iOS Simulator,id=${SIMULATOR_ID}"
 
