@@ -327,6 +327,12 @@ actor AIService: AIServiceProtocol {
         key: String
     ) async throws -> [String] {
         let result = try await callDictionary(functionName, payload: payload)
+        return try Self.stringList(from: result, key: key)
+    }
+
+    /// Reads a list of strings from a callable's payload. A missing or non-array `key` is
+    /// `invalidResponse`; array entries that are not strings are dropped.
+    static func stringList(from result: [String: Any], key: String) throws -> [String] {
         guard let values = result[key] as? [Any] else {
             throw AIServiceError.invalidResponse
         }
@@ -339,18 +345,23 @@ actor AIService: AIServiceProtocol {
             // every call must ask for a fresh limited-use token instead of the cached one.
             let options = HTTPSCallableOptions(requireLimitedUseAppCheckTokens: true)
             let result = try await Functions.europeWest1.httpsCallable(functionName, options: options).call(payload)
-            guard let data = result.data as? [String: Any] else {
-                throw AIServiceError.invalidResponse
-            }
-            return data
+            return try Self.dictionary(from: result.data)
         } catch let error as AIServiceError {
             throw error
         } catch {
-            throw mapFunctionsError(error)
+            throw Self.mapFunctionsError(error)
         }
     }
 
-    private func dataLossError(from nsError: NSError) -> AIServiceError {
+    /// A callable's payload must be a dictionary; anything else is `invalidResponse`.
+    static func dictionary(from payload: Any) throws -> [String: Any] {
+        guard let data = payload as? [String: Any] else {
+            throw AIServiceError.invalidResponse
+        }
+        return data
+    }
+
+    static func dataLossError(from nsError: NSError) -> AIServiceError {
         guard let details = nsError.userInfo[FunctionsErrorDetailsKey] as? [String: Any] else {
             return .parsingError
         }
@@ -373,7 +384,7 @@ actor AIService: AIServiceProtocol {
         }
     }
 
-    private func mapFunctionsError(_ error: Error) -> AIServiceError {
+    static func mapFunctionsError(_ error: Error) -> AIServiceError {
         let nsError = error as NSError
         guard nsError.domain == FunctionsErrorDomain else {
             if let urlError = error as? URLError, urlError.code == .timedOut {
@@ -398,7 +409,7 @@ actor AIService: AIServiceProtocol {
         case .unavailable:
             return .serverError(503)
         case .dataLoss:
-            return dataLossError(from: nsError)
+            return Self.dataLossError(from: nsError)
         case .invalidArgument:
             return .invalidResponse
         case .deadlineExceeded:
