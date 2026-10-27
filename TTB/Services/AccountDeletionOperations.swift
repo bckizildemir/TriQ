@@ -50,8 +50,11 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     private let fileManager: LocalFileManager
     private let batchWriteLimit = 400
 
-    init(fileManager: LocalFileManager = .shared) {
+    private let imageService: ImageService
+
+    init(fileManager: LocalFileManager = .shared, imageService: ImageService = .shared) {
         self.fileManager = fileManager
+        self.imageService = imageService
     }
 
     func reauthenticate(user: any AccountDeletionAuthUser, password: String?) async throws {
@@ -95,10 +98,22 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     }
 
     func deleteProfileAssets(userId: String) async throws {
+        // Read before the delete: the cache key is the download URL, which only the user document
+        // holds. A failed read only means the photo stays in memory until the app quits.
+        let snapshot = try? await Firestore.firestore().collection("users").document(userId).getDocument()
+        let downloadURL = snapshot?.data()?["profileImageURL"] as? String
         try await ignoreMissingStorageObject {
-            try await ImageService.shared.deleteProfileImage(userId: userId)
+            try await imageService.deleteProfileImage(userId: userId)
         }
+        await evictCachedProfilePhoto(downloadURL: downloadURL)
         fileManager.deleteImage(name: "profile_\(userId)")
+    }
+
+    /// Drops the profile photo from the in-memory cache once its Storage file is gone (#85).
+    /// Internal, not private, so a test can run it against a fresh `ImageService`.
+    func evictCachedProfilePhoto(downloadURL: String?) async {
+        guard let downloadURL, !downloadURL.isEmpty else { return }
+        await imageService.evictProfileImage(downloadURL: downloadURL)
     }
 
     func deleteUserDocument(userId: String) async throws {
