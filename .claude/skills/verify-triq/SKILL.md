@@ -29,11 +29,14 @@ allow rule matches that path, and a worktree session refuses a command name held
 - Drive with `axe` (or xcodebuildmcp `snapshot_ui`/`tap`/`type_text`/`screenshot` with this run's
   `simulatorId`) and `xcrun simctl`. Never osascript, never scripted mouse clicks: the owner works on
   the same Mac.
-- One fresh simulator per run, one driver. Touch no other simulator — not the shared `iPhone 12`
-  devices that TriQ, Purrtine and other sessions use. Never `xcrun simctl shutdown all`. One verify
-  run at a time across both apps: `$V start` waits for `/tmp/verify-triq.lock` and for any Purrtine
-  verify run with a fresh lock (`/tmp/verify-purrtine.lock`, heartbeat under 45 minutes old). The wait
-  is one-way: Purrtine's `vp.sh` does not check for a TriQ run.
+- One fresh slim simulator per run, one driver (owner, 2026-10-27). `$V start` clones the
+  project's pristine SimSlim template `iPhone 12 slim tmpl (TriQ)` (profile
+  `Scripts/simslim-profile.json`: everything off except `photos`, `store` (push), `web` (universal
+  links) and `telemetry` (App Attest)), so each run starts as a brand-new user: no app, no data.
+  Never boot the template, install on it, or touch any other simulator. Never `xcrun simctl
+  shutdown all`. One run per project at a time (`/tmp/verify-triq.lock`); a Purrtine run can drive
+  at the same time. Machine-wide at most `SLIM_SIM_MAX` verify clones exist (default 2, shared with
+  Purrtine): `$V start` waits for a free slot.
 - Device: **iPhone 12, iOS 27.0** (owner, 2026-10-15; `--os 26.5` for an older runtime).
 
 ## Live Firebase (read before you drive)
@@ -120,15 +123,18 @@ read and write. The owner registered one fixed debug token (`verify-triq`) in th
 ```bash
 .claude/skills/verify-triq/scripts/vt.sh start                       # verify lock, fresh device, English; add --lang tr for Turkish
 .claude/skills/verify-triq/scripts/vt.sh build                       # Scripts/xcb.sh build against this device; copies TTB.app
-.claude/skills/verify-triq/scripts/vt.sh hold                        # take the xcb lock for the drive (see "Why hold")
 .claude/skills/verify-triq/scripts/vt.sh install
 .claude/skills/verify-triq/scripts/vt.sh launch                      # prints "app.berke.can.kizildemir.ttb: <pid>"
 .claude/skills/verify-triq/scripts/vt.sh doctor                      # must exit 0
 ```
 
-- `start` creates `verify-triq-<run-id>` (iPhone 12, iOS 27.0; `VT_DEVICE`/`--device` and
-  `VT_OS`/`--os` to override), boots it, writes its system language, reboots it, and makes the evidence folder
-  `~/verify-evidence/triq/<YYYY-MM-DD>-<run-id>/` with `run.txt` (device, language, git rev).
+- `start` takes a verify slot, clones the template as `verify-triq-<run-id>` with
+  `Scripts/slim-sim.sh clone` (iPhone 12, iOS 27.0; `VT_DEVICE`/`--device` and `VT_OS`/`--os` make a
+  template for that device or runtime on first use), boots it, writes its system language, reboots
+  it, checks it with `simslim verify`, and makes the evidence folder
+  `~/verify-evidence/triq/<YYYY-MM-DD>-<run-id>/` with `run.txt` (device, language, `slim=`, git
+  rev). It takes about 55 s alone and about 1:45 when a Purrtine run starts at the same moment
+  (measured 2026-10-27). A failed `start` cleans up after itself.
 - `build` needs `TTB/Secrets.xcconfig`. A new worktree has none: `cp TTB/Secrets.xcconfig.template
   TTB/Secrets.xcconfig` first, never commit it. `build` stops with that message when it is missing.
 - `build` can wait up to an hour for the xcb build lock. Run it in the background
@@ -141,19 +147,20 @@ read and write. The owner registered one fixed debug token (`verify-triq`) in th
   on 2026-10-15 axe read the full tree with no Simulator window.
 - Teardown is `$V cleanup` (see Cleanup).
 
-### Why hold
+### Optional hold
 
-`Scripts/xcb.sh test` shuts down other booted simulators before it runs (`shut_down_other_simulators`).
-Since 2026-10-15 it skips devices named `verify-*`, but a checkout with an older `xcb.sh` does not, and
-other builds still compete for this 16 GB Mac during a drive. `$V hold` takes the same machine-wide lock that xcb uses (`~/Library/Caches/xcb/build.lock`, its
-`pid` and `owner` files), owned by a watcher process, so other sessions' builds and tests wait while
-you drive. It ends at `$V cleanup`, or after 30 minutes (`VT_HOLD_MAX=<seconds>`). Take it after
-`build` — `build` needs that lock itself — and keep the drive short.
+`$V hold` takes the machine-wide xcb build lock (`~/Library/Caches/xcb/build.lock`, its `pid` and
+`owner` files), owned by a watcher process, so other sessions' builds and tests wait while you
+drive. Skip it by default: `Scripts/xcb.sh` never shuts down a simulator it did not boot, and slim
+clones let a Purrtine run drive at the same time. Use it only when the owner asks, or when a
+checkout with an old `xcb.sh` that shuts down other simulators is in use. Take it after `build` —
+`build` needs that lock itself. It ends at `$V cleanup`, or after 30 minutes
+(`VT_HOLD_MAX=<seconds>`).
 
-**Owner decision (2026-10-14):** a drive may hold the xcb build lock for up to 30 minutes, which
-pauses every build and test on the Mac, Purrtine's too. Accepted. A longer pass re-runs `$V hold`.
-A change to the lock format in `Scripts/xcb.sh` must update `vt.sh` in the same PR. `$V status` and
-`$V doctor` report whether the watcher is alive.
+**Owner decision (2026-10-28):** hold is off by default; slim clones and the new xcb.sh made it
+unnecessary. It replaces the 2026-10-14 decision.
+A change to the lock format in `Scripts/xcb.sh` must update `vt.sh` in the same PR. When a hold was
+taken, `$V status` and `$V doctor` report whether the watcher is alive.
 
 ## Doctor
 
@@ -172,9 +179,11 @@ simulators. Exit 0 means worth driving. Run it first whenever anything looks off
 - Every tap is dead but swipes work, after a system popup → shut down and boot **this run's**
   device only (`xcrun simctl shutdown <UDID>`, `xcrun simctl boot <UDID>`), then `$V launch`.
 - `WARN app is not running` → `$V launch`.
+- `WARN slim: the device does not match` → the clone lost its SimSlim profile. Run `$V cleanup` and
+  start again; if it repeats, `Scripts/slim-sim.sh template` repairs the template.
 - `WARN another simulator is booted` → owner decision: warn and continue. The run never shuts down a
   device it did not create.
-- `WARN the hold watcher … is not running` → `$V hold` again (the 30 minutes ran out or it died).
+- `WARN the hold watcher … is not running` → only after you took `$V hold`: the 30 minutes ran out or it died. Take it again only if you still need it.
 - `WARN empty accessibility tree` → call xcodebuildmcp `open_sim`, then retry.
 - `WARN the copied app has no GoogleService-Info.plist` → not the real app; rebuild.
 
@@ -240,8 +249,9 @@ Proof standards:
 .claude/skills/verify-triq/scripts/vt.sh cleanup
 ```
 
-It terminates the app, shuts down and deletes **this run's** device (only a device named
-`verify-triq-*` that the lock records), releases the xcb hold and the verify lock, keeps the
+It terminates the app, shuts down and deletes **this run's** clone (only a device named
+`verify-triq-*` that the lock records) and frees its verify slot (`Scripts/slim-sim.sh release`),
+releases the xcb hold and the verify lock, keeps the
 evidence folder, and prints `du -sh ~/verify-evidence/triq`. Put that line in your report, so the
 owner knows when to clean the folder. A failed `simctl delete` prints a warning and cleanup goes on.
 Run cleanup after a failed attempt too. Cleanup does not touch the server: a guest user or any data
@@ -250,6 +260,8 @@ the run wrote stays there.
 A crashed run leaves `/tmp/verify-triq.lock`. The next `$V start` treats it as stale when its device
 no longer exists or nobody touched it for 45 minutes (`VT_STALE_MINUTES`), deletes that stale
 `verify-triq-*` device, and goes on. The hold watcher ends by itself when the verify lock goes.
+A slot whose run lock is gone or has a heartbeat older than 45 minutes is freed (and its clone
+deleted) by the next `start` of either project. `Scripts/slim-sim.sh slots` lists the slots.
 
 ## Gotchas
 
@@ -277,15 +289,25 @@ no longer exists or nobody touched it for 45 minutes (`VT_STALE_MINUTES`), delet
   `$V doctor`'s `appcheck` line.
 - **Labels collide.** The category chip `Home` and the tab `Home` share a label. Tap tabs with
   `--element-type RadioButton`.
-- **The hold blocks every build on the Mac.** Keep a drive short.
+- **An optional hold blocks every build on the Mac.** Keep a held drive short.
+- **Slim services.** The profile keeps `photos`, `store` (apsd: remote push), `web` (swcd:
+  universal links) and `telemetry` (devicecheckd: App Attest); keychain, location and local
+  notifications are never disabled. A feature that needs another category (Siri, iCloud, Contacts)
+  fails on the clone: add the category to `Scripts/simslim-profile.json` in a PR (the template is
+  re-slimmed on the next `start`), do not drive it on a stock device.
 - **iOS 27.0 boot.** On 2026-10-13 a shared iOS 27.0 device's SpringBoard crashed about 11 times in
   2 minutes at boot, then ran stable (Purrtine). If `start` or `launch` hangs or `doctor` shows an
   empty tree, run `$V cleanup` and start again; if it repeats, use `$V start --os 26.5` and say so.
+- **A screenshot with no device names the wrong one.** With several simulators booted (2026-10-27),
+  xcodebuildmcp `screenshot` with no `simulatorId` captured another simulator. Take evidence with
+  `$V shot`, or pass `simulatorId=<UDID>` (the clone's UDID) to every xcodebuildmcp call.
 - **`build` passes the run's OS to xcb** (`XCB_OS`). xcb finds `XCB_SIMULATOR` by name only on that
   runtime; without it an iOS 27 device is not found.
 
 ## Helpers
 
+- `Scripts/slim-sim.sh` (repo root, shared with Purrtine) — `template`, `test-sim`, `clone`,
+  `release`, `slots`. `$V start` and `$V cleanup` call it; run `slots` to see who holds the slots.
 - `scripts/vt.sh` — the run: `start [--device NAME] [--lang en|tr]`, `build`, `hold`, `install`,
   `launch`, `doctor`, `ui`, `tap [--once] AXE-TAP-ARGS…`, `shot NAME`, `tree NAME`, `revive` (boot
   the device if needed, end the app, launch it again), `cleanup`, `status`. `$V` alone prints this list.
@@ -293,10 +315,9 @@ no longer exists or nobody touched it for 45 minutes (`VT_STALE_MINUTES`), delet
 ## Maintenance pass (`/maintain-verification-skill`)
 
 The owner starts it by typing it; an agent cannot. A pass drives **every** feature on **one**
-device, in one language, in one run: `start`, `build` (background), `hold`, `install`, `launch`,
+device, in one language, in one run: `start`, `build` (background), `install`, `launch`,
 `doctor`, then guest onboarding first and the other features in the order of `features/README.md`.
-Each feature marked writes live or AI call needs the owner's yes before that drive. When the watcher
-is gone, run `$V hold` again. Teardown (`$V cleanup`) happens once, after the last drive. A full pass
+Each feature marked writes live or AI call needs the owner's yes before that drive. Teardown (`$V cleanup`) happens once, after the last drive. A full pass
 took about 45 minutes on 2026-10-21 (the favorites cap alone about 10).
 
 Keep the map honest as the app changes with `/maintain-verification-skill`.

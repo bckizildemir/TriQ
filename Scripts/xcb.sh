@@ -9,8 +9,10 @@
 #   - One DerivedData and one package checkout per project, outside iCloud and shared
 #     by every worktree, so Firebase compiles once instead of once per worktree.
 #   - Capped compile jobs, no parallel test clones, no indexing, lowered priority.
-#   - One simulator at a time: other booted simulators are shut down before a test,
-#     except devices named verify-* (a verify-<app> skill run drives one; never stop it).
+#   - Its own simulator: by default this project's slim test device, "iPhone 12 slim test
+#     (<name>)", which Scripts/slim-sim.sh makes from the project's SimSlim template. xcb never
+#     shuts down a simulator it did not boot; a test that booted the test device shuts it down
+#     again at the end.
 #   - The full log goes to a file; the terminal gets errors, failures, and the tail.
 
 set -euo pipefail
@@ -30,8 +32,11 @@ Options:
 
 Environment:
   XCB_JOBS            Parallel compile jobs (default 4)
-  XCB_SIMULATOR       Simulator name (default "iPhone 12"; "iPhone 12 (iOS VERSION)"
-                      also matches)
+  XCB_SIMULATOR       Simulator name. Default: the project's slim test device from
+                      Scripts/slim-sim.sh test-sim (made on first use) when --os is
+                      $SLIM_SIM_OS (default 27.0; SLIM_SIM_DEVICE picks its device type),
+                      else a stock "iPhone 12" with a loud warning ("iPhone 12 (iOS VERSION)"
+                      also matches); it fails when that does not exist
   XCB_CACHE_ROOT      Shared cache root (default ~/Library/Caches/xcb)
   XCB_LOCK_TIMEOUT    Seconds to wait for the build lock (default 3600)
   XCB_DRY_RUN=1       Print the xcodebuild command; take no lock, build nothing
@@ -75,7 +80,26 @@ PROJECT_NAME="$(basename "$PROJECT_PATH" .xcodeproj)"
 SCHEME="${SCHEME:-$PROJECT_NAME}"
 
 JOBS="${XCB_JOBS:-4}"
+SLIM_SIM="$REPO_ROOT/Scripts/slim-sim.sh"
+# The slim test device exists for the template's iOS version only (slim-sim.sh, SLIM_SIM_OS).
+USE_SLIM_TEST_SIM=0
+if [[ -z "${XCB_SIMULATOR:-}" && "$OS_VERSION" == "${SLIM_SIM_OS:-27.0}" && -x "$SLIM_SIM" ]]; then
+  USE_SLIM_TEST_SIM=1
+fi
 SIMULATOR_NAME="${XCB_SIMULATOR:-iPhone 12}"
+# Another --os has no slim test device: say so loudly instead of falling back in silence.
+if [[ "$USE_SLIM_TEST_SIM" == 0 && -z "${XCB_SIMULATOR:-}" ]]; then
+  printf 'xcb: WARNING ---------------------------------------------------------------
+' >&2
+  printf 'xcb: WARNING iOS %s is not the slim test device'"'"'s iOS (SLIM_SIM_OS=%s).
+' "$OS_VERSION" "${SLIM_SIM_OS:-27.0}" >&2
+  printf 'xcb: WARNING Using a stock, unslimmed "%s" on iOS %s instead. Set XCB_SIMULATOR to
+' "$SIMULATOR_NAME" "$OS_VERSION" >&2
+  printf 'xcb: WARNING pick a device, or SLIM_SIM_OS=%s to make a slim test device for it.
+' "$OS_VERSION" >&2
+  printf 'xcb: WARNING ---------------------------------------------------------------
+' >&2
+fi
 CACHE_ROOT="${XCB_CACHE_ROOT:-$HOME/Library/Caches/xcb}"
 PROJECT_CACHE="$CACHE_ROOT/$PROJECT_NAME"
 DERIVED_DATA_PATH="$PROJECT_CACHE/DerivedData"
@@ -103,20 +127,33 @@ sys.exit(1)
 PY
 }
 
-shut_down_other_simulators() {
-  local keep="$1" udid
-  # A verify-<app> skill run (verify-triq-*, verify-purrtine-*) owns its device; leave it booted.
-  for udid in $(xcrun simctl list devices booted -j | /usr/bin/python3 -c '
+simulator_state() {
+  xcrun simctl list devices -j | /usr/bin/python3 -c '
 import json, sys
 for entries in json.load(sys.stdin)["devices"].values():
-    for device in entries:
-        if not device["name"].startswith("verify-"):
-            print(device["udid"])'); do
-    if [[ "$udid" != "$keep" ]]; then
-      printf 'xcb: shutting down simulator %s (one simulator at a time)\n' "$udid"
-      xcrun simctl shutdown "$udid" || true
-    fi
-  done
+    for d in entries:
+        if d["udid"] == sys.argv[1]:
+            print(d["state"]); sys.exit(0)
+print("missing")' "$1"
+}
+
+# Picks the device. The slim test device is made (from the template) on first use, which can
+# take a minute; slim-sim.sh serialises that per project.
+resolve_simulator() {
+  if [[ "$USE_SLIM_TEST_SIM" == 1 ]]; then
+    SIMULATOR_ID="$("$SLIM_SIM" test-sim)" || fail "Scripts/slim-sim.sh test-sim failed"
+    SIMULATOR_NAME="$("$SLIM_SIM" names | sed -n 's/^test *//p')"
+  else
+    SIMULATOR_ID="$(simulator_udid)" \
+      || fail "no available \"$SIMULATOR_NAME\" simulator on iOS $OS_VERSION (xcrun simctl list devices). The slim test device exists only for iOS ${SLIM_SIM_OS:-27.0}; set XCB_SIMULATOR, or SLIM_SIM_OS=$OS_VERSION to make one"
+  fi
+}
+
+# A test boots its device. Shut down only the slim test device, and only when this run booted it.
+shut_down_if_we_booted() {
+  if [[ "$USE_SLIM_TEST_SIM" == 1 && "$ACTION" == test && "${SIM_STATE_BEFORE:-}" == Shutdown ]]; then
+    xcrun simctl shutdown "$SIMULATOR_ID" 2>/dev/null || true
+  fi
 }
 
 release_lock() {
@@ -153,11 +190,22 @@ acquire_lock() {
   printf '%s %s in %s (PID %s, since %s)\n' "$PROJECT_NAME" "$ACTION" "$REPO_ROOT" "$$" \
     "$(date '+%H:%M:%S')" > "$LOCK_DIR/owner"
   trap release_lock EXIT
-  trap 'release_lock; exit 130' INT TERM
+  # An interrupted test still shuts down the slim test device it booted.
+  trap 'shut_down_if_we_booted; release_lock; exit 130' INT
+  trap 'shut_down_if_we_booted; release_lock; exit 143' TERM
 }
 
-SIMULATOR_ID="$(simulator_udid)" \
-  || fail "no available \"$SIMULATOR_NAME\" simulator on iOS $OS_VERSION (xcrun simctl list devices)"
+if [[ "${XCB_DRY_RUN:-0}" == 1 ]]; then
+  # A dry run makes no device: name the slim test device without creating it.
+  if [[ "$USE_SLIM_TEST_SIM" == 1 ]]; then
+    SIMULATOR_ID="<$("$SLIM_SIM" names | sed -n 's/^test *//p')>"
+  else
+    resolve_simulator
+  fi
+else
+  acquire_lock
+  resolve_simulator
+fi
 
 XCODEBUILD_ARGS=(
   -project "$PROJECT_PATH"
@@ -187,11 +235,7 @@ if [[ "${XCB_DRY_RUN:-0}" == 1 ]]; then
   exit 0
 fi
 
-acquire_lock
-
-if [[ "$ACTION" == test ]]; then
-  shut_down_other_simulators "$SIMULATOR_ID"
-fi
+SIM_STATE_BEFORE="$(simulator_state "$SIMULATOR_ID")"
 
 mkdir -p "$LOG_DIR"
 # Keep the 20 newest logs.
@@ -205,6 +249,7 @@ started=$SECONDS
 status=0
 nice -n 10 xcodebuild "${XCODEBUILD_ARGS[@]}" > "$LOG_FILE" 2>&1 || status=$?
 elapsed=$((SECONDS - started))
+shut_down_if_we_booted
 
 grep -E 'error:|: failed|failed \(|✘|\*\* (BUILD|TEST) ' "$LOG_FILE" | sort -u | head -60 || true
 if [[ $status -ne 0 ]]; then
