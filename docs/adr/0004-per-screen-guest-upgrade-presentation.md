@@ -1,9 +1,9 @@
 # Guest upgrade is presented per screen, not from the app root
 
-> **Superseded in part by `0010-upgrade-prompt-presents-from-the-topmost-controller.md`.** The two
-> root-owned sheets — the favorite-limit prompt and the guest-upgrade sheet it opens — now present from
-> the topmost controller, so they appear over covers. The three per-screen flags below still stand
-> until they move behind that host.
+> **Superseded in full by `0010-upgrade-prompt-presents-from-the-topmost-controller.md`.** The
+> favorite-limit prompt and the guest-upgrade sheet present from the topmost controller, so they appear
+> over covers. The per-screen flags below are gone (issue #2): every entry point calls
+> `GuestFavoriteModel.requestGuestUpgrade()`. Read this record for history only.
 
 The guest-upgrade sheet and the favorite-limit sheet are presented by the screen that triggers them,
 not by a single root-owned host, even though the root already observes the flags that drive them.

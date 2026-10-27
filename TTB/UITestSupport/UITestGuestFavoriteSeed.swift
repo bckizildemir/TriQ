@@ -17,10 +17,18 @@ enum UITestGuestFavoriteSeed {
     /// this writing where nothing reads, and the harness would start with no favorites at all.
     static let favoritesKey = GuestFavoriteModel.defaultFavoritesKey
 
+    /// The one question `UITestProfileRootView` loads, so a seeded guest favorite resolves to a real card.
+    static let profileQuestionID = "ui-test-profile-question"
+
     /// Seeds the requested count, or clears the key when no seed was asked for — every harness
     /// used to clear it unconditionally, and a harness that starts with somebody else's favorites
     /// is a flaky harness.
     static func apply(to storage: UserDefaults) {
+        if UITestLaunchOptions.shouldSeedGuestFavoriteProfileQuestion {
+            storage.set([profileQuestionID], forKey: favoritesKey)
+            return
+        }
+
         guard UITestLaunchOptions.shouldSeedGuestFavoritesOneBelowCap else {
             storage.removeObject(forKey: favoritesKey)
             return

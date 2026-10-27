@@ -40,6 +40,7 @@ they show above covers. The bridge is confined to one file; the prompt's content
 - When nothing can present — no foreground key window, or UIKit refuses the presentation — the bridge
   reports the sheet gone at once, so the flag drops and that one cap event shows no prompt. The next
   time the guest reaches the cap it is raised again. A stuck flag would lose every later one.
-- The three per-screen `GuestUpgradeView` flags ADR 0004 described (`QuestionCardExpandedView`,
-  `FavoritesView`, `ProfileView`) are untouched here. ADR 0004 said they should move behind a host once
-  one exists; that is follow-up work, not a regression.
+- The per-screen `GuestUpgradeView` flags ADR 0004 described are gone (issue #2). Every entry point
+  (`QuestionCardExpandedView`, `FavoritesView`, `ProfileView`, `AIView`, `SharedQuestionListSheetView`)
+  calls `GuestFavoriteModel.requestGuestUpgrade()` and the app root presents the one sheet. ADR 0004 is
+  fully superseded by this record.
