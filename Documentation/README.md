@@ -16,6 +16,7 @@ This folder contains all project-level documentation that was previously scatter
 - `AI_API_Reference.md`: models, services, and runtime limits.
 - `AI_PROVIDER_MIGRATION.md`: Groq/OpenRouter provider abstraction and migration notes.
 - `AI_Integration_Research.md`: historical research and current recommendation context.
+- `AI_PRIVATE_CLOUD_COMPUTE_RESEARCH.md`: Apple Private Cloud Compute (Foundation Models) as an alternative to Groq/OpenRouter — eligibility, limits, options (2026-10-15).
 - `AI_User_Guide.md`: end-user behavior for the AI tab.
 - `AI_Deployment_Guide.md`: release and backend rollout checklist.
 - `API_KEY_SETUP.md`: local and CI key setup.
