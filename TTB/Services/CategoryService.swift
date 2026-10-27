@@ -13,17 +13,31 @@ final class CategoryService {
         Firestore.firestore().collection("categories")
             .order(by: "sortOrder")
             .addSnapshotListener { snapshot, error in
-                if let error {
-                    completion(.failure(error))
-                    return
-                }
-
-                let categories = snapshot?.documents.map { document in
-                    Category.fromFirestore(document.data(), id: document.documentID)
-                } ?? []
-
-                completion(.success(categories))
+                Self.deliverSnapshot(
+                    documents: snapshot?.documents.map { (id: $0.documentID, data: $0.data()) },
+                    error: error,
+                    to: completion
+                )
             }
+    }
+
+    /// Maps one snapshot callback to the caller's result and calls it on the listener's thread.
+    /// A missing snapshot is no categories.
+    ///
+    /// Kept out of the Firebase closure so a test can run the exact path a live snapshot takes.
+    static func deliverSnapshot(
+        documents: [(id: String, data: [String: Any])]?,
+        error: Error?,
+        to completion: (Result<[Category], Error>) -> Void
+    ) {
+        if let error {
+            completion(.failure(error))
+            return
+        }
+
+        completion(.success((documents ?? []).map { document in
+            Category.fromFirestore(document.data, id: document.id)
+        }))
     }
 
     func fetchCategories() async throws -> [Category] {

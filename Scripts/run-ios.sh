@@ -4,7 +4,7 @@ set -euo pipefail
 PROJECT_PATH="TTB.xcodeproj"
 SCHEME="TTB"
 CONFIGURATION="Debug"
-DEVICE_NAME="iPhone 12"
+DEVICE_NAME="iPhone 12 slim test (TriQ)"
 RUNTIME_MAJOR="27"
 PRODUCT_BUNDLE_IDENTIFIER="app.berke.can.kizildemir.ttb"
 DERIVED_DATA_PATH="${TMPDIR:-/tmp}/ttb-codex-derived-data"
@@ -49,45 +49,47 @@ command -v xcrun >/dev/null 2>&1 || fail "xcrun bulunamadi. Xcode command line t
 
 [[ -d "$PROJECT_PATH" ]] || fail "$PROJECT_PATH bulunamadi. Script repo kokunden calistirilmali."
 
-SIMULATOR_ID="$(
-  /usr/bin/python3 - <<'PY'
-import json
-import subprocess
-import sys
+# The slim test device below is the one Scripts/xcb.sh builds and tests on, so this script takes
+# xcb's machine-wide build lock (same format: a mkdir directory with pid and owner files) for
+# the build, boot, install and launch, and lets go before it streams logs. An `xcb.sh test` that
+# starts while the logs stream reuses the device and may relaunch or replace the app.
+XCB_LOCK_DIR="${XCB_CACHE_ROOT:-$HOME/Library/Caches/xcb}/build.lock"
+XCB_LOCK_TIMEOUT="${XCB_LOCK_TIMEOUT:-3600}"
 
-device_name = "iPhone 12"
-runtime_major = "27"
+release_build_lock() {
+  if [[ "$(cat "$XCB_LOCK_DIR/pid" 2>/dev/null || true)" == "$$" ]]; then
+    rm -rf "$XCB_LOCK_DIR"
+  fi
+}
 
-try:
-    runtimes = json.loads(subprocess.check_output(["xcrun", "simctl", "list", "runtimes", "-j"], text=True))
-    devices = json.loads(subprocess.check_output(["xcrun", "simctl", "list", "devices", "available", "-j"], text=True))
-except subprocess.CalledProcessError as exc:
-    print(f"simctl sorgusu basarisiz: {exc}", file=sys.stderr)
-    sys.exit(2)
+acquire_build_lock() {
+  local waited=0 holder
+  mkdir -p "$(dirname "$XCB_LOCK_DIR")"
+  until mkdir "$XCB_LOCK_DIR" 2>/dev/null; do
+    holder="$(cat "$XCB_LOCK_DIR/pid" 2>/dev/null || true)"
+    if [[ -n "$holder" ]] && ! kill -0 "$holder" 2>/dev/null; then rm -rf "$XCB_LOCK_DIR"; continue; fi
+    if [[ -z "$holder" && -n "$(find "$XCB_LOCK_DIR" -maxdepth 0 -mmin +2 2>/dev/null)" ]]; then
+      rm -rf "$XCB_LOCK_DIR"; continue
+    fi
+    if (( waited % 60 == 0 )); then
+      printf 'Waiting for the xcb build lock (%ss) - held by: %s\n' "$waited" \
+        "$(cat "$XCB_LOCK_DIR/owner" 2>/dev/null || echo unknown)"
+    fi
+    (( waited < XCB_LOCK_TIMEOUT )) || fail "xcb build lock icin ${XCB_LOCK_TIMEOUT}s beklendi, vazgecildi."
+    sleep 5; waited=$((waited + 5))
+  done
+  echo "$$" > "$XCB_LOCK_DIR/pid"
+  printf 'TTB run-ios in %s (PID %s, since %s)\n' "$ROOT_DIR" "$$" "$(date '+%H:%M:%S')" > "$XCB_LOCK_DIR/owner"
+  trap release_build_lock EXIT
+  trap 'release_build_lock; exit 130' INT
+  trap 'release_build_lock; exit 143' TERM
+}
 
-runtime_ids = [
-    runtime["identifier"]
-    for runtime in runtimes.get("runtimes", [])
-    if runtime.get("isAvailable")
-    and runtime.get("platform") == "iOS"
-    and str(runtime.get("version", "")).split(".")[0] == runtime_major
-]
+acquire_build_lock
 
-if not runtime_ids:
-    print(f"iOS {runtime_major} Simulator runtime bulunamadi. Xcode > Settings > Platforms altindan iOS {runtime_major} runtime kurun.", file=sys.stderr)
-    sys.exit(3)
-
-for runtime_id in runtime_ids:
-    for device in devices.get("devices", {}).get(runtime_id, []):
-        if device.get("name") == device_name and device.get("isAvailable"):
-            print(device["udid"])
-            sys.exit(0)
-
-runtime_names = ", ".join(runtime_id.rsplit(".", 1)[-1].replace("-", ".") for runtime_id in runtime_ids)
-print(f"{device_name} / iOS {runtime_major} simulator bulunamadi. Mevcut iOS {runtime_major} runtime(lar): {runtime_names}. Xcode Devices and Simulators'da {device_name} olusturun.", file=sys.stderr)
-sys.exit(4)
-PY
-)" || fail "iPhone 12 / iOS ${RUNTIME_MAJOR} simulator secilemedi."
+# The project's slim test device (iPhone 12, iOS 27.0), made from the SimSlim template on first
+# use. The same device Scripts/xcb.sh tests on; never the verify template itself.
+SIMULATOR_ID="$(Scripts/slim-sim.sh test-sim)" || fail "Scripts/slim-sim.sh test-sim basarisiz."
 
 DESTINATION="platform=iOS Simulator,id=${SIMULATOR_ID}"
 
@@ -117,6 +119,7 @@ printf 'Installing %s...\n' "$APP_PATH"
 xcrun simctl install "$SIMULATOR_ID" "$APP_PATH"
 
 cleanup() {
+  release_build_lock
   if [[ -n "${LOG_STREAM_PID:-}" ]]; then
     kill "$LOG_STREAM_PID" >/dev/null 2>&1 || true
   fi
@@ -132,6 +135,8 @@ LOG_STREAM_PID="$!"
 
 printf 'Launching %s...\n' "$PRODUCT_BUNDLE_IDENTIFIER"
 xcrun simctl launch --terminate-running-process "$SIMULATOR_ID" "$PRODUCT_BUNDLE_IDENTIFIER"
+# Builds and tests from other sessions may run again while the logs stream.
+release_build_lock
 
 printf 'App launched. Streaming logs; press Ctrl+C to stop.\n'
 wait "$LOG_STREAM_PID"

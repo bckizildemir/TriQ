@@ -132,16 +132,13 @@ actor QuestionListShareService {
         error: Error?,
         to completion: @escaping @MainActor @Sendable (Result<[QuestionListShare], Error>) -> Void
     ) {
-        let result: Result<[QuestionListShare], Error>
-        if let error {
-            listenerLogger.error("Owned question list shares listener failed: \(error.localizedDescription)")
-            result = .failure(error)
-        } else {
-            result = .success((documents ?? []).compactMap { document in
-                QuestionListShare.fromFirestore(document.data, id: document.id)
-            })
-        }
-        Task { @MainActor in completion(result) }
+        SnapshotDelivery.deliver(
+            documents: documents,
+            error: error,
+            onError: { listenerLogger.error("Owned question list shares listener failed: \($0.localizedDescription)") },
+            decode: { QuestionListShare.fromFirestore($0.data, id: $0.id) },
+            to: completion
+        )
     }
 
     /// The id of the share that owns a recipient document, read from its path
@@ -159,17 +156,16 @@ actor QuestionListShareService {
         error: Error?,
         to completion: @escaping @MainActor @Sendable (Result<[QuestionListShareRecipient], Error>) -> Void
     ) {
-        let result: Result<[QuestionListShareRecipient], Error>
-        if let error {
-            listenerLogger.error("Accepted question list shares listener failed: \(error.localizedDescription)")
-            result = .failure(error)
-        } else {
-            result = .success((documents ?? []).compactMap { document in
+        SnapshotDelivery.deliver(
+            documents: documents,
+            error: error,
+            onError: { listenerLogger.error("Accepted question list shares listener failed: \($0.localizedDescription)") },
+            decode: { document in
                 guard let shareId = Self.shareId(fromRecipientPath: document.path) else { return nil }
                 return QuestionListShareRecipient.fromFirestore(document.data, id: document.id, shareId: shareId)
-            })
-        }
-        Task { @MainActor in completion(result) }
+            },
+            to: completion
+        )
     }
 
     func fetchShare(shareId: String) async throws -> QuestionListShare {
