@@ -592,28 +592,62 @@ class AIModel: ObservableObject {
             .collection("aiQueries")
             .order(by: "timestamp", descending: true)
             .addSnapshotListener { [weak self] snapshot, error in
-                if let error = error {
-                    Task { @MainActor in
-                        self?.error = String(
-                            format: String(localized: "ai.model.error.syncHistory"),
-                            locale: AppLocalization.currentLocale,
-                            error.localizedDescription
-                        )
-                    }
-                    return
-                }
-                
-                guard let documents = snapshot?.documents else { return }
-                
-                let loadedQueries = documents.compactMap { doc in
-                    AIQuery.fromFirestore(doc.data(), id: doc.documentID)
-                }
-                
-                Task { @MainActor in
-                    self?.queries = loadedQueries
-                    self?.updateRecentQueries()
+                Self.deliverQueriesSnapshot(
+                    documents: snapshot?.documents.map { (id: $0.documentID, data: $0.data()) },
+                    error: error
+                ) { update in
+                    self?.apply(update)
                 }
             }
+    }
+
+    /// What one queries-listener callback asks the model to do.
+    enum QueriesSnapshotUpdate: Sendable {
+        case syncFailed(message: String)
+        case loaded([AIQuery])
+    }
+
+    /// Maps one snapshot callback to an update. A missing snapshot with no error changes nothing.
+    /// Documents that do not decode are dropped.
+    nonisolated static func queriesUpdate(
+        documents: [(id: String, data: [String: Any])]?,
+        error: Error?
+    ) -> QueriesSnapshotUpdate? {
+        if let error {
+            return .syncFailed(message: String(
+                format: String(localized: "ai.model.error.syncHistory"),
+                locale: AppLocalization.currentLocale,
+                error.localizedDescription
+            ))
+        }
+        guard let documents else { return nil }
+
+        return .loaded(documents.compactMap { document in
+            AIQuery.fromFirestore(document.data, id: document.id)
+        })
+    }
+
+    /// Maps one snapshot callback and delivers the update on the main actor.
+    ///
+    /// Kept out of the Firebase closure so a test can run the exact path a live snapshot takes.
+    nonisolated static func deliverQueriesSnapshot(
+        documents: [(id: String, data: [String: Any])]?,
+        error: Error?,
+        to apply: @escaping @MainActor @Sendable (QueriesSnapshotUpdate) -> Void
+    ) {
+        guard let update = queriesUpdate(documents: documents, error: error) else { return }
+
+        Task { @MainActor in apply(update) }
+    }
+
+    private func apply(_ update: QueriesSnapshotUpdate) {
+        switch update {
+        case .syncFailed(let message):
+            error = message
+        case .loaded(let loadedQueries):
+            queries = loadedQueries
+            updateRecentQueries()
+        }
     }
     
     /// `isolated` so the cleanup can read the main-actor listener handles. Below iOS 18.4 the

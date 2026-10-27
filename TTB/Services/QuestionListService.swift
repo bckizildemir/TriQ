@@ -87,7 +87,13 @@ actor QuestionListService: QuestionListServicing {
             "name": name,
         ])
 
-        guard let data = result.data as? [String: Any],
+        return try Self.listId(from: result.data)
+    }
+
+    /// Reads the new list's id from the `createQuestionList` payload. A payload that is not a
+    /// dictionary, or has no non-empty `listId`, is `QuestionListError.invalidResponse`.
+    static func listId(from payload: Any) throws -> String {
+        guard let data = payload as? [String: Any],
               let listId = data["listId"] as? String,
               !listId.isEmpty
         else {

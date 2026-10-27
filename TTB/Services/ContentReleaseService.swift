@@ -82,17 +82,31 @@ final class ContentReleaseService: ContentReleaseServicing {
         Firestore.firestore().collection("contentReleases")
             .order(by: "createdAt", descending: true)
             .addSnapshotListener { snapshot, error in
-                if let error {
-                    completion(.failure(error))
-                    return
-                }
-
-                let releases = snapshot?.documents.map { document in
-                    ContentRelease.fromFirestore(document.data(), id: document.documentID)
-                } ?? []
-
-                completion(.success(releases))
+                Self.deliverSnapshot(
+                    documents: snapshot?.documents.map { (id: $0.documentID, data: $0.data()) },
+                    error: error,
+                    to: completion
+                )
             }
+    }
+
+    /// Maps one snapshot callback to the caller's result and calls it on the listener's thread.
+    /// A missing snapshot is no releases.
+    ///
+    /// Kept out of the Firebase closure so a test can run the exact path a live snapshot takes.
+    static func deliverSnapshot(
+        documents: [(id: String, data: [String: Any])]?,
+        error: Error?,
+        to completion: (Result<[ContentRelease], Error>) -> Void
+    ) {
+        if let error {
+            completion(.failure(error))
+            return
+        }
+
+        completion(.success((documents ?? []).map { document in
+            ContentRelease.fromFirestore(document.data, id: document.id)
+        }))
     }
 
     func fetchRelease(id: String) async throws -> ContentRelease? {
@@ -121,13 +135,32 @@ final class ContentReleaseService: ContentReleaseServicing {
             result = try await Functions.europeWest1.httpsCallable("publishPendingContentRelease")
                 .call(payload)
         } catch {
-            throw mapPublishError(error)
+            throw Self.mapPublishError(error)
         }
 
-        let data = result.data as? [String: Any]
+        return Self.publishResult(from: result.data)
+    }
+
+    /// Reads the publish callable's payload. A payload that is not a dictionary is no publish.
+    static func publishResult(from payload: Any) -> (releaseID: String?, didPublish: Bool) {
+        let data = payload as? [String: Any]
         return (
             releaseID: data?["releaseId"] as? String,
             didPublish: data?["didPublish"] as? Bool ?? false
+        )
+    }
+
+    /// Reads the test-notification callable's payload. A payload that is not a dictionary is `.empty`.
+    static func notificationSendResult(from payload: Any) -> ContentReleaseNotificationSendResult {
+        guard let data = payload as? [String: Any] else {
+            return .empty
+        }
+
+        return ContentReleaseNotificationSendResult(
+            attemptedCount: intValue(data["attemptedCount"]),
+            successCount: intValue(data["successCount"]),
+            failureCount: intValue(data["failureCount"]),
+            prunedCount: intValue(data["prunedCount"])
         )
     }
 
@@ -143,19 +176,10 @@ final class ContentReleaseService: ContentReleaseServicing {
                     "localizedBody": localizedBody,
                 ])
         } catch {
-            throw mapPublishError(error)
+            throw Self.mapPublishError(error)
         }
 
-        guard let data = result.data as? [String: Any] else {
-            return .empty
-        }
-
-        return ContentReleaseNotificationSendResult(
-            attemptedCount: Self.intValue(data["attemptedCount"]),
-            successCount: Self.intValue(data["successCount"]),
-            failureCount: Self.intValue(data["failureCount"]),
-            prunedCount: Self.intValue(data["prunedCount"])
-        )
+        return Self.notificationSendResult(from: result.data)
     }
 
     func fetchPendingCategories() async throws -> [Category] {
@@ -259,7 +283,7 @@ final class ContentReleaseService: ContentReleaseServicing {
         )
     }
 
-    private func mapPublishError(_ error: Error) -> Error {
+    static func mapPublishError(_ error: Error) -> Error {
         let nsError = error as NSError
         guard nsError.domain == FunctionsErrorDomain else {
             return ContentReleaseServiceError.unknown(error)

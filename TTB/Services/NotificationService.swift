@@ -138,21 +138,59 @@ final class NotificationService: NSObject, ObservableObject {
 
         let deviceRef = deviceDocumentReference(userId: userId)
         deviceListener = deviceRef.addSnapshotListener { [weak self] snapshot, _ in
-            guard let data = snapshot?.data() else { return }
-            let device = NotificationDevice.fromFirestore(data, id: snapshot?.documentID ?? "")
-            Task { @MainActor in
-                self?.contentUpdatesEnabled = device.contentUpdatesEnabled
+            Self.deliverDeviceSnapshot(
+                data: snapshot?.data(),
+                documentID: snapshot?.documentID
+            ) { isEnabled in
+                self?.contentUpdatesEnabled = isEnabled
             }
         }
 
-        if let existingData = try? await deviceRef.getDocument().data() {
-            let existingDevice = NotificationDevice.fromFirestore(existingData, id: installationID)
-            contentUpdatesEnabled = existingDevice.contentUpdatesEnabled
-        } else {
-            contentUpdatesEnabled = authorizationStatus == .authorized
-        }
+        let existingData = try? await deviceRef.getDocument().data()
+        contentUpdatesEnabled = Self.initialContentUpdatesEnabled(
+            existingData: existingData,
+            installationID: installationID,
+            authorizationStatus: authorizationStatus
+        )
 
         await syncCurrentDeviceRegistration()
+    }
+
+    /// Reads the device document's content-updates flag. A missing document is no update.
+    nonisolated static func contentUpdatesEnabled(
+        data: [String: Any]?,
+        documentID: String?
+    ) -> Bool? {
+        guard let data else { return nil }
+
+        return NotificationDevice.fromFirestore(data, id: documentID ?? "").contentUpdatesEnabled
+    }
+
+    /// Delivers the flag from one snapshot callback on the main actor. A missing document delivers
+    /// nothing.
+    ///
+    /// Kept out of the Firebase closure so a test can run the exact path a live snapshot takes.
+    nonisolated static func deliverDeviceSnapshot(
+        data: [String: Any]?,
+        documentID: String?,
+        to apply: @escaping @MainActor @Sendable (Bool) -> Void
+    ) {
+        guard let isEnabled = contentUpdatesEnabled(data: data, documentID: documentID) else { return }
+
+        Task { @MainActor in apply(isEnabled) }
+    }
+
+    /// The flag after the first read of the device document: the stored flag when the document
+    /// exists (or reads without error), else on when the user already allowed notifications.
+    nonisolated static func initialContentUpdatesEnabled(
+        existingData: [String: Any]?,
+        installationID: String,
+        authorizationStatus: NotificationAuthorizationState
+    ) -> Bool {
+        if let existingData {
+            return NotificationDevice.fromFirestore(existingData, id: installationID).contentUpdatesEnabled
+        }
+        return authorizationStatus == .authorized
     }
 
     func syncCurrentDeviceRegistration() async {
