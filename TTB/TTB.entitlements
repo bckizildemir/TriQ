@@ -6,6 +6,7 @@
 	<array>
 		<string>applinks:ttbp-9d652.web.app</string>
 		<string>applinks:ttbp-9d652.firebaseapp.com</string>
+		<string>webcredentials:ttbp-9d652.web.app</string>
 	</array>
 	<key>aps-environment</key>
 	<string>$(APS_ENVIRONMENT)</string>
