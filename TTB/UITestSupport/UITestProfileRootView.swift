@@ -31,7 +31,14 @@ struct UITestProfileRootView: View {
                         : nil,
                     photoRemover: UITestProfilePhotoRemover()
                 ),
-                questionListStore: QuestionListStore(localLists: [Self.listFixture])
+                questionListStore: UITestLaunchOptions.shouldFailListCreate
+                    ? QuestionListStore(
+                        questionListService: UITestFailingQuestionListService(),
+                        userId: Self.userId,
+                        observesAuth: false,
+                        startsListener: false
+                    )
+                    : QuestionListStore(localLists: [Self.listFixture])
             )
         )
     }

@@ -42,6 +42,7 @@ enum UITestLaunchOptions {
     static let homeSavedAnswerArgument = "-ui-test-home-saved-answer"
     static let homeLongFeedArgument = "-ui-test-home-long-feed"
     static let profilePhotoHarnessArgument = "-ui-test-profile-photo"
+    static let failingListCreateArgument = "-ui-test-failing-list-create"
 
     static var isCategoryQuestionsHarnessEnabled: Bool { Harness.categoryQuestions.isEnabled }
     static var isGuestFavoriteMilestoneHarnessEnabled: Bool { Harness.guestFavoriteMilestone.isEnabled }
@@ -97,6 +98,11 @@ enum UITestLaunchOptions {
     /// Starts the profile harness with a photo and a remover that needs no Firebase (#71).
     static var shouldSeedProfilePhoto: Bool {
         ProcessInfo.processInfo.arguments.contains(profilePhotoHarnessArgument)
+    }
+
+    /// Starts the profile harness with a list service whose create always fails (#72).
+    static var shouldFailListCreate: Bool {
+        ProcessInfo.processInfo.arguments.contains(failingListCreateArgument)
     }
 
     /// Every argument that means "this launch is a harness".

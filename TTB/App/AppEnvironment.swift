@@ -135,6 +135,13 @@ final class AppEnvironment: ObservableObject {
         self.notificationService = notificationService
         self.deepLinkRouter = deepLinkRouter
         self.toastCenter = toastCenter
+        // A background list create outlives its sheet, so its failure reaches the user as a toast.
+        questionListStore.creationFailureHandler = { [toastCenter] failure in
+            toastCenter.showError(
+                failure.message,
+                accessibilityIdentifier: "question-list-create-error-toast"
+            )
+        }
         self.badgeModel = badgeModel ?? BadgeModel(store: LiveBadgeStore())
         self.initialDeepLinkURL = initialDeepLinkURL
         self.favoriteStore = favoriteStore ?? FavoriteStore(
