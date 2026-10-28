@@ -8,7 +8,6 @@ struct SharedQuestionSheetView: View {
 
     @State private var question: Question?
     @State private var isLoading = true
-    @State private var errorMessage: String?
 
     var body: some View {
         Group {
@@ -23,28 +22,26 @@ struct SharedQuestionSheetView: View {
                 )
             } else {
                 NavigationStack {
-                    VStack(spacing: 16) {
+                    Group {
                         if isLoading {
                             ProgressView(String(localized: "common.loading"))
                         } else {
-                            Image(systemName: "questionmark.circle")
-                                .font(.largeTitle)
-                                .foregroundStyle(.secondary)
-
-                            Text(errorMessage ?? "Soru bulunamadi.")
-                                .font(.headline)
-                                .multilineTextAlignment(.center)
-                                .foregroundStyle(.secondary)
-
+                            ContentUnavailableView(
+                                String(localized: "sharedQuestion.notFound.title"),
+                                systemImage: "questionmark.circle",
+                                description: Text(String(localized: "sharedQuestion.notFound.description"))
+                            )
+                        }
+                    }
+                    .navigationTitle(String(localized: "sharedQuestion.title"))
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
                             Button(String(localized: "common.close")) {
                                 dismiss()
                             }
-                            .buttonStyle(.borderedProminent)
                         }
                     }
-                    .padding(24)
-                    .navigationTitle("TTB")
-                    .navigationBarTitleDisplayMode(.inline)
                 }
             }
         }
@@ -55,7 +52,6 @@ struct SharedQuestionSheetView: View {
 
     private func loadQuestion() async {
         isLoading = true
-        errorMessage = nil
 
         if let existingQuestion = questionModel.question(withID: questionId) {
             question = existingQuestion
@@ -63,11 +59,8 @@ struct SharedQuestionSheetView: View {
             return
         }
 
-        do {
-            question = try await questionModel.fetchSharedQuestion(id: questionId)
-        } catch {
-            errorMessage = "Soru bulunamadi veya artik yayinda degil."
-        }
+        // A failed fetch leaves `question` nil, which shows the not-found state.
+        question = try? await questionModel.fetchSharedQuestion(id: questionId)
 
         isLoading = false
     }

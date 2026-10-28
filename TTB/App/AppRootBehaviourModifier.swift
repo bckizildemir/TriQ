@@ -24,11 +24,19 @@ struct AppRootBehaviourModifier: ViewModifier {
     @ObservedObject private var deepLinkRouter: AppDeepLinkRouter
     @ObservedObject private var toastCenter: ToastCenter
 
+    @Environment(\.scenePhase) private var scenePhase
+
     @State private var isMigratingGuestFavorites = false
     /// The Upgrade Prompt and the upgrade sheet it opens present from the topmost controller, not
     /// from a `.sheet` here, so they still appear over a `fullScreenCover`. See `docs/adr/0010`.
     @State private var upgradePromptPresenter = TopmostSheetPresenter(presenter: WindowTopmostPresenter())
     @State private var guestUpgradePresenter = TopmostSheetPresenter(presenter: WindowTopmostPresenter())
+    @State private var sharedQuestionPresenter = TopmostSheetPresenter(presenter: WindowTopmostPresenter())
+    @State private var sharedQuestionListPresenter = TopmostSheetPresenter(presenter: WindowTopmostPresenter())
+    /// True once the shared-question cover has appeared; see `closeSharedLink`.
+    @State private var isSharedQuestionShown = false
+    /// True once the shared-list sheet has appeared.
+    @State private var isSharedQuestionListShown = false
 
     init(environment: AppEnvironment) {
         self.environment = environment
@@ -42,9 +50,9 @@ struct AppRootBehaviourModifier: ViewModifier {
         lifecycleBehavior(on: presentationSheets(on: content.appEnvironment(environment)))
     }
 
-    /// The four sheets this modifier owns: the Upgrade Prompt, the guest-upgrade sheet, and the two
-    /// deep-link sheets. The first two present from the topmost controller, because a guest can
-    /// reach the favorite cap from inside a `fullScreenCover`.
+    /// The presentations this modifier owns: the Upgrade Prompt, the guest-upgrade sheet, the shared
+    /// question cover, and the shared list sheet. All four present from the topmost controller,
+    /// because they must show over a `fullScreenCover` a screen below owns.
     @ViewBuilder
     private func presentationSheets<Content: View>(on content: Content) -> some View {
         content
@@ -62,14 +70,95 @@ struct AppRootBehaviourModifier: ViewModifier {
                     onDismissedBySystem: dismissGuestUpgrade
                 )
             }
-            .sheet(item: $deepLinkRouter.sharedQuestion) { deepLink in
-                SharedQuestionSheetView(questionId: deepLink.questionId)
-                    .appEnvironment(environment)
+            .task(id: "\(deepLinkRouter.sharedQuestion?.id ?? "none")|\(scenePhase)") {
+                await presentUntilShown(
+                    link: { deepLinkRouter.sharedQuestion },
+                    presenter: sharedQuestionPresenter,
+                    isShown: $isSharedQuestionShown,
+                    makeController: { link in
+                        let controller = hosted(
+                            SharedQuestionSheetView(questionId: link.questionId)
+                                .onAppear { isSharedQuestionShown = true }
+                        )
+                        controller.modalPresentationStyle = .fullScreen
+                        return controller
+                    },
+                    clear: { deepLinkRouter.sharedQuestion = nil }
+                )
             }
-            .sheet(item: $deepLinkRouter.sharedQuestionList) { deepLink in
-                SharedQuestionListSheetView(shareCode: deepLink.shareCode)
-                    .appEnvironment(environment)
+            .task(id: "\(deepLinkRouter.sharedQuestionList?.id ?? "none")|\(scenePhase)") {
+                await presentUntilShown(
+                    link: { deepLinkRouter.sharedQuestionList },
+                    presenter: sharedQuestionListPresenter,
+                    isShown: $isSharedQuestionListShown,
+                    makeController: { link in
+                        hosted(
+                            SharedQuestionListSheetView(shareCode: link.shareCode)
+                                .onAppear { isSharedQuestionListShown = true }
+                        )
+                    },
+                    clear: { deepLinkRouter.sharedQuestionList = nil }
+                )
             }
+    }
+
+    /// A shared link (a question's full-screen cover or a list's sheet) is presented from the
+    /// topmost controller, like the Upgrade Prompt, because a `fullScreenCover` owned here cannot
+    /// present over a cover a screen below already shows (Home's editor, say) and the link would be
+    /// lost. `AppDeepLinkRouter` keeps a second link waiting while this one is up, so they never stack.
+    ///
+    /// UIKit refuses a presentation while the scene is not active yet (a cold-start link) or
+    /// mid-transition, and says nothing, so this retries a few times until the screen has appeared.
+    private func presentUntilShown<Link>(
+        link: @MainActor () -> Link?,
+        presenter: TopmostSheetPresenter,
+        isShown: Binding<Bool>,
+        makeController: @escaping @MainActor (Link) -> UIViewController,
+        clear: @escaping @MainActor () -> Void
+    ) async {
+        for _ in 0..<20 {
+            syncPresentation(
+                link: link(),
+                presenter: presenter,
+                isShown: isShown,
+                makeController: makeController,
+                clear: clear
+            )
+            try? await Task.sleep(for: .milliseconds(250))
+            if Task.isCancelled || isShown.wrappedValue || link() == nil { return }
+        }
+        // Out of tries while the app is active (a system alert on top, say): drop the link, or it
+        // would hold the router and every later link would wait behind it. Out of tries while the
+        // app is inactive keeps the link; returning to `.active` restarts this through the task id.
+        if scenePhase == .active {
+            clear()
+        }
+    }
+
+    private func syncPresentation<Link>(
+        link: Link?,
+        presenter: TopmostSheetPresenter,
+        isShown: Binding<Bool>,
+        makeController: @MainActor (Link) -> UIViewController,
+        clear: @escaping @MainActor () -> Void
+    ) {
+        guard let link else {
+            isShown.wrappedValue = false
+            presenter.dismiss {}
+            return
+        }
+        presenter.update(
+            isPresented: true,
+            makeController: { makeController(link) },
+            // Clears the link only once the screen has really been on screen. A presentation UIKit
+            // refused reports itself gone at once; the link must survive that so the retry can
+            // show it.
+            onDismissedBySystem: {
+                guard isShown.wrappedValue else { return }
+                isShown.wrappedValue = false
+                clear()
+            }
+        )
     }
 
     /// The toast host, deep-link handling, and the background tasks that keep favorites, migration,

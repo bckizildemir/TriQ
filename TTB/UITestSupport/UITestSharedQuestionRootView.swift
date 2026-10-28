@@ -18,7 +18,7 @@ struct UITestSharedQuestionRootView: View {
                 storage: .harnessSuite(named: "UITestSharedQuestionRootView"),
                 authModel: UITestAuthModelFactory.permanentUser(uid: "ui-test-shared-question-user"),
                 questionModel: QuestionModel(localQuestions: [Self.sharedQuestion]),
-                initialDeepLinkURL: Self.sharedQuestionURL
+                initialDeepLinkURL: Self.deepLinkURL
             )
         )
     }
@@ -36,8 +36,12 @@ struct UITestSharedQuestionRootView: View {
         creatorUsername: "tester"
     )
 
-    private static let sharedQuestionURL = URL(
-        string: "https://ttbp-9d652.web.app/q/\(sharedQuestion.id)"
-    )!
+    /// With `-ui-test-shared-question-unknown` the link names a question the model does not hold,
+    /// which is the not-found state.
+    private static var deepLinkURL: URL {
+        let isUnknown = ProcessInfo.processInfo.arguments.contains("-ui-test-shared-question-unknown")
+        let questionId = isUnknown ? "ui-test-unknown-question" : sharedQuestion.id
+        return URL(string: "https://ttbp-9d652.web.app/q/\(questionId)")!
+    }
 }
 #endif
