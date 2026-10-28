@@ -387,8 +387,8 @@ class AuthModel: ObservableObject {
     errorState.isShowing = false
 
     do {
-      let user = try await dependencies.auth.signInAnonymously()
-      await dependencies.userDocumentManager.ensureExists(for: user)
+      // The auth listener creates the user document (handleAuthenticatedUser): one path only.
+      _ = try await dependencies.auth.signInAnonymously()
       showMainView = true
       clearFields()
     } catch {
