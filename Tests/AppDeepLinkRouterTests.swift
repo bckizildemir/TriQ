@@ -60,6 +60,33 @@ struct AppDeepLinkRouterTests {
         #expect(router.sharedQuestionList == nil)
     }
 
+    @Test func sameQuestionLinkWhileOpenIsIgnoredAndDoesNotHoldTheRouter() {
+        let router = AppDeepLinkRouter()
+        let thirdURL = URL(string: "https://ttbp-9d652.web.app/q/question-3")!
+
+        router.handle(questionURL)
+        router.handle(questionURL)
+        router.sharedQuestion = nil
+
+        #expect(router.sharedQuestion == nil)
+        #expect(router.sharedQuestionList == nil)
+
+        router.handle(thirdURL)
+
+        #expect(router.sharedQuestion?.questionId == "question-3")
+    }
+
+    @Test func sameListLinkWhileOpenIsIgnored() {
+        let router = AppDeepLinkRouter()
+
+        router.handle(listURL)
+        router.handle(listURL)
+        router.sharedQuestionList = nil
+
+        #expect(router.sharedQuestion == nil)
+        #expect(router.sharedQuestionList == nil)
+    }
+
     @Test func linkShowsAtOnceWhenNothingIsOpen() {
         let router = AppDeepLinkRouter()
 

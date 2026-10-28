@@ -28,14 +28,18 @@ struct AcceptedQuestionListShareNavigationRequest: Identifiable, Equatable {
 final class AppDeepLinkRouter: ObservableObject {
     /// The link on screen. Presentation binds to these two; only one is ever set at a time.
     @Published var sharedQuestion: SharedQuestionDeepLink? {
-        didSet { promotePendingLinkIfIdle() }
+        didSet {
+            promotePendingLinkIfIdle(closed: oldValue.map(PendingLink.question))
+        }
     }
     @Published var sharedQuestionList: SharedQuestionListDeepLink? {
-        didSet { promotePendingLinkIfIdle() }
+        didSet {
+            promotePendingLinkIfIdle(closed: oldValue.map(PendingLink.questionList))
+        }
     }
     @Published var acceptedQuestionListShareDetail: AcceptedQuestionListShareNavigationRequest?
 
-    private enum PendingLink {
+    private enum PendingLink: Equatable {
         case question(SharedQuestionDeepLink)
         case questionList(SharedQuestionListDeepLink)
     }
@@ -56,6 +60,16 @@ final class AppDeepLinkRouter: ObservableObject {
     }
 
     private func present(_ link: PendingLink) {
+        // The same link again is already on screen. Parking it would re-show it the moment the
+        // user closes it, in the same call, where the presentation cannot restart.
+        switch link {
+        case .question(let deepLink) where deepLink == sharedQuestion:
+            return
+        case .questionList(let deepLink) where deepLink == sharedQuestionList:
+            return
+        default:
+            break
+        }
         if sharedQuestion != nil || sharedQuestionList != nil {
             pendingLink = link
             return
@@ -72,9 +86,12 @@ final class AppDeepLinkRouter: ObservableObject {
         }
     }
 
-    private func promotePendingLinkIfIdle() {
+    private func promotePendingLinkIfIdle(closed: PendingLink?) {
         guard sharedQuestion == nil, sharedQuestionList == nil, let link = pendingLink else { return }
         pendingLink = nil
+        // Never bring back the link that just closed: the property would be set again within the
+        // same call, so the presentation would not restart and the link would hold the router.
+        guard link != closed else { return }
         show(link)
     }
 
