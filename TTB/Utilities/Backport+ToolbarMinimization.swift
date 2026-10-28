@@ -5,6 +5,10 @@ extension Backport where Content: View {
     /// scroll direction reverses. Apply it beside `.navigationChromeTitle(...)` on a
     /// stack root.
     ///
+    /// A screen pushed from such a root must show an inline title. On iOS 27 the push
+    /// transition that expands a large title out of the minimized bar never settles and
+    /// hangs the app in a layout loop (#101).
+    ///
     /// iOS 27+ only: `ToolbarMinimizationBehavior` does not exist earlier, so the shim takes
     /// no parameter and earlier versions keep a full-height bar.
     // `@ViewBuilder`, not `@ContentBuilder`, and the compiler check: CI builds with the
