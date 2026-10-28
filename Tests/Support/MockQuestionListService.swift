@@ -39,6 +39,7 @@ actor MockQuestionListService: QuestionListServicing {
         String: @MainActor @Sendable (Result<[QuestionList], Error>) -> Void
     ] = [:]
     private var startedListenerUserIDs: Set<String> = []
+    private var listenerStartCounts: [String: Int] = [:]
     private var listenerStartedContinuations: [
         String: CheckedContinuation<Void, Never>
     ] = [:]
@@ -63,6 +64,7 @@ actor MockQuestionListService: QuestionListServicing {
         completion: @escaping @MainActor @Sendable (Result<[QuestionList], Error>) -> Void
     ) async -> FirestoreListenerHandle {
         listenerCompletions[userId] = completion
+        listenerStartCounts[userId, default: 0] += 1
         startedListenerUserIDs.insert(userId)
         listenerStartedContinuations.removeValue(forKey: userId)?.resume()
         return FirestoreListenerHandle(registration: MockQuestionListListenerRegistration())
@@ -202,6 +204,10 @@ actor MockQuestionListService: QuestionListServicing {
     }
 
     /// Returns after the store has applied the snapshot on the main actor.
+    func listenerStartCount(for userId: String) -> Int {
+        listenerStartCounts[userId, default: 0]
+    }
+
     func sendSnapshot(_ lists: [QuestionList], for userId: String) async {
         await listenerCompletions[userId]?(.success(lists))
     }

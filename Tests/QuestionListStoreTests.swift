@@ -400,6 +400,78 @@ final class QuestionListStoreTests: XCTestCase {
         XCTFail("Timed out waiting for list IDs \(expectedIDs)")
     }
 
+    // MARK: - Guest upgrade (#119)
+
+    func testCreateListSucceedsAfterGuestUpgradeKeepsTheUid() async throws {
+        let service = MockQuestionListService()
+        let observer = FakePermanentAccountObserver()
+        let model = QuestionListStore(
+            questionListService: service,
+            accountObserver: observer
+        )
+
+        // A guest first: the observer reports "". Linking keeps the uid and fires no state
+        // change, only an ID-token change that now carries the permanent uid.
+        observer.emit("")
+        do {
+            _ = try await model.createList(named: "Family")
+            XCTFail("A guest must not create a list")
+        } catch QuestionListStoreError.permanentAccountRequired {
+            // Expected.
+        }
+
+        observer.emit("uid-1")
+        await service.waitUntilListenerStarts(for: "uid-1")
+
+        let created = try await model.createList(named: "Family")
+        XCTAssertEqual(created.ownerId, "uid-1")
+        XCTAssertEqual(model.lists.map(\.id), [created.id])
+    }
+
+    func testTokenRefreshAtTheSameUidKeepsTheListenerAndTheLists() async {
+        let service = MockQuestionListService()
+        let observer = FakePermanentAccountObserver()
+        let model = QuestionListStore(
+            questionListService: service,
+            accountObserver: observer
+        )
+
+        observer.emit("uid-1")
+        await service.waitUntilListenerStarts(for: "uid-1")
+        await service.sendSnapshot([makeList(id: "kept", ownerId: "uid-1")], for: "uid-1")
+        await waitForListIDs(["kept"], on: model)
+
+        // A token refresh reports the same uid again.
+        observer.emit("uid-1")
+        for _ in 0..<50 {
+            await Task.yield()
+        }
+
+        let startCount = await service.listenerStartCount(for: "uid-1")
+        XCTAssertEqual(startCount, 1)
+        XCTAssertEqual(model.lists.map(\.id), ["kept"])
+    }
+
+    func testDeinitCancelsTheAccountObservation() async {
+        let observer = FakePermanentAccountObserver()
+        var model: QuestionListStore? = QuestionListStore(
+            questionListService: MockQuestionListService(),
+            accountObserver: observer
+        )
+        XCTAssertEqual(observer.activeObservationCount, 1)
+
+        model = nil
+
+        XCTAssertNil(model)
+        XCTAssertEqual(observer.activeObservationCount, 0)
+    }
+
+    func testPermanentUserIDMapsGuestsAndSignedOutToEmpty() {
+        XCTAssertEqual(LivePermanentAccountObserver.permanentUserID(uid: "u", isAnonymous: false), "u")
+        XCTAssertEqual(LivePermanentAccountObserver.permanentUserID(uid: "u", isAnonymous: true), "")
+        XCTAssertEqual(LivePermanentAccountObserver.permanentUserID(uid: nil, isAnonymous: false), "")
+    }
+
     private func assertSessionChanged(
         _ task: Task<Void, Error>,
         file: StaticString = #filePath,

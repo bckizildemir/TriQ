@@ -278,6 +278,43 @@ final class QuestionListShareTests: XCTestCase {
         XCTAssertNil(store.ownedShare(withID: result.shareId))
     }
 
+    func testGuestUpgradeAttachesShareListenersForThePermanentUid() async {
+        let service = FakeLiveQuestionListShareService()
+        let observer = FakePermanentAccountObserver()
+        let store = SharedQuestionListStore(service: service, accountObserver: observer)
+
+        observer.emit("")
+        observer.emit("uid-1")
+
+        for _ in 0..<1000 where service.ownedListenerUserIDs.isEmpty {
+            await Task.yield()
+        }
+        XCTAssertEqual(service.ownedListenerUserIDs, ["uid-1"])
+        XCTAssertEqual(observer.activeObservationCount, 1)
+        _ = store
+    }
+
+    func testTokenRefreshAtTheSameUidKeepsTheShareListenersAndShares() async {
+        let service = FakeLiveQuestionListShareService()
+        let observer = FakePermanentAccountObserver()
+        let store = SharedQuestionListStore(service: service, accountObserver: observer)
+
+        observer.emit("uid-1")
+        for _ in 0..<1000 where service.ownedListenerUserIDs.isEmpty {
+            await Task.yield()
+        }
+        store.applyOwnedSharesSnapshotForTesting([makeShare(id: "kept")])
+
+        // A token refresh reports the same uid again.
+        observer.emit("uid-1")
+        for _ in 0..<50 {
+            await Task.yield()
+        }
+
+        XCTAssertEqual(service.ownedListenerUserIDs, ["uid-1"])
+        XCTAssertEqual(store.ownedShares.map(\.id), ["kept"])
+    }
+
     func testAcceptShareDoesNotPermanentlyRebindAdapterIdentity() async throws {
         let share = makeShare(id: "share-1", shareCode: "code-1")
         let service = InMemoryQuestionListShareService(ownedShares: [share], currentUserId: "local-user")
@@ -436,11 +473,14 @@ final class QuestionListShareTests: XCTestCase {
 /// non-fixture initializer path without a real Firebase backend.
 @MainActor
 private final class FakeLiveQuestionListShareService: QuestionListShareServicing {
+    private(set) var ownedListenerUserIDs: [String] = []
+
     func ownedSharesListener(
         userId: String,
         completion: @escaping @MainActor @Sendable (Result<[QuestionListShare], Error>) -> Void
     ) async -> QuestionListShareListenerHandle {
-        FakeQuestionListShareListenerHandle()
+        ownedListenerUserIDs.append(userId)
+        return FakeQuestionListShareListenerHandle()
     }
 
     func acceptedRecipientsListener(
