@@ -166,6 +166,23 @@ final class AuthModelTests: XCTestCase {
         XCTAssertEqual(auth.signInCalls.first?.email, "user@example.com")
     }
 
+    func testGuestSignIn_ensuresUserDocumentOnce() async {
+        let auth = MockAuthProvider()
+        let documentManager = MockUserDocumentManager()
+        let (model, _, _, _) = makeAuthModelForTesting(
+            auth: auth,
+            userDocumentManager: documentManager,
+            registersAuthListener: true
+        )
+
+        await model.signInAnonymously()
+        auth.emitAuthState(MockAuthUser(uid: "anon-user", isAnonymous: true))
+        await waitForAuthState(.authenticated, on: model)
+        await model.waitForAuthStateTasksToFinishForTesting()
+
+        XCTAssertEqual(documentManager.ensuredUserIDs, ["anon-user"])
+    }
+
     func testAuthListenerIgnoresStaleBootstrapAfterSignOut() async {
         let auth = MockAuthProvider()
         let documentManager = MockUserDocumentManager()
