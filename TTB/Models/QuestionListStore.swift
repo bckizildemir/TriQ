@@ -36,7 +36,7 @@ class QuestionListStore: ObservableObject {
     }
     private var listener: FirestoreListenerHandle?
     private var listenerGeneration: UInt = 0
-    private var authListener: AuthStateDidChangeListenerHandle?
+    private var accountObservation: PermanentAccountObservation?
     private var mutationVersions: [String: UInt] = [:]
     private var mutationSequence: UInt = 0
     private var sessionGeneration: UInt = 0
@@ -59,14 +59,15 @@ class QuestionListStore: ObservableObject {
         questionListService: (any QuestionListServicing)? = QuestionListService(),
         userId: String = "",
         observesAuth: Bool = true,
-        startsListener: Bool = true
+        startsListener: Bool = true,
+        accountObserver: any PermanentAccountObserving = LivePermanentAccountObserver()
     ) {
         self.questionListService = questionListService
         self.userId = userId
         self.observesAuth = observesAuth
 
         if observesAuth {
-            setupAuthListener()
+            setupAuthListener(observer: accountObserver)
         }
 
         if startsListener, !userId.isEmpty {
@@ -85,9 +86,7 @@ class QuestionListStore: ObservableObject {
     /// compiler links a main-actor back-deploy shim, so this needs no deployment-target change.
     isolated deinit {
         listener?.cancel()
-        if observesAuth, let authListener {
-            Auth.auth().removeStateDidChangeListener(authListener)
-        }
+        accountObservation?.cancel()
     }
 
     func listsContaining(questionId: String) -> [QuestionList] {
@@ -249,13 +248,9 @@ class QuestionListStore: ObservableObject {
     }
     #endif
 
-    private func setupAuthListener() {
-        authListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
-            guard let self else { return }
-            Task { @MainActor in
-                let newUserId = user?.isAnonymous == true ? "" : user?.uid ?? ""
-                self.transitionToUser(withID: newUserId)
-            }
+    private func setupAuthListener(observer: any PermanentAccountObserving) {
+        accountObservation = observer.observe { [weak self] newUserId in
+            self?.transitionToUser(withID: newUserId)
         }
     }
 

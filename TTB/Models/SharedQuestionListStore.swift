@@ -29,7 +29,7 @@ final class SharedQuestionListStore: ObservableObject {
     private let startsListeners: Bool
     private var ownedSharesListener: QuestionListShareListenerHandle?
     private var acceptedRecipientsListener: QuestionListShareListenerHandle?
-    private var authListener: AuthStateDidChangeListenerHandle?
+    private var accountObservation: PermanentAccountObservation?
     private var listenerResetTask: Task<Void, Never>?
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
@@ -39,7 +39,8 @@ final class SharedQuestionListStore: ObservableObject {
         service: QuestionListShareServicing = QuestionListShareService(),
         userId: String = "",
         observesAuth: Bool = true,
-        startsListeners: Bool = true
+        startsListeners: Bool = true,
+        accountObserver: any PermanentAccountObserving = LivePermanentAccountObserver()
     ) {
         self.service = service
         self.userId = userId
@@ -47,7 +48,7 @@ final class SharedQuestionListStore: ObservableObject {
         self.startsListeners = startsListeners
 
         if observesAuth {
-            setupAuthListener()
+            setupAuthListener(observer: accountObserver)
         }
 
         if startsListeners, !userId.isEmpty {
@@ -99,9 +100,7 @@ final class SharedQuestionListStore: ObservableObject {
         listenerResetTask?.cancel()
         ownedSharesListener?.remove()
         acceptedRecipientsListener?.remove()
-        if observesAuth, let authListener {
-            Auth.auth().removeStateDidChangeListener(authListener)
-        }
+        accountObservation?.cancel()
     }
 
     func ownedShare(withID shareId: String) -> QuestionListShare? {
@@ -312,20 +311,17 @@ final class SharedQuestionListStore: ObservableObject {
     }
     #endif
 
-    private func setupAuthListener() {
-        authListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+    private func setupAuthListener(observer: any PermanentAccountObserving) {
+        accountObservation = observer.observe { [weak self] newUserId in
             guard let self else { return }
-            Task { @MainActor in
-                let newUserId = user?.isAnonymous == true ? "" : user?.uid ?? ""
-                if newUserId != self.userId {
-                    self.ownedShares = []
-                    self.acceptedShares = []
-                    self.recipientsByShareID = [:]
-                    self.error = nil
-                    self.isLoading = false
-                }
-                self.userId = newUserId
+            if newUserId != self.userId {
+                self.ownedShares = []
+                self.acceptedShares = []
+                self.recipientsByShareID = [:]
+                self.error = nil
+                self.isLoading = false
             }
+            self.userId = newUserId
         }
     }
 
