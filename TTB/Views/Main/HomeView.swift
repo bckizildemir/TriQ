@@ -107,8 +107,9 @@ struct HomeView: View {
                     titleFont: .system(size: 20, weight: .semibold),
                     subtitleFont: .system(size: 13, weight: .semibold)
                 )
-                // No minimizing nav bar here: with the pinned chip row it hangs in a layout loop
-                // on iOS 27 when a chip is tapped (#101).
+                // The fold is back (#101). Safe only with an inline-title destination: a
+                // large-title screen pushed from this minimized bar loops the layout.
+                .backport.minimizesNavigationBarOnScrollDown()
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(action: {

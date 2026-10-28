@@ -36,7 +36,7 @@ the file was written from source and nobody has driven it yet.
 | Feature | Live-data class | Status |
 | --- | --- | --- |
 | [Guest onboarding](./guest-onboarding.md) | writes live (one anonymous Auth user + `users/<uid>`; free; standing yes) | proved 2026-10-21 |
-| [Home feed](./home-feed.md) | reads live | proved 2026-10-21; scroll then chip tap hangs the app (product gap) |
+| [Home feed](./home-feed.md) | reads live | proved 2026-10-21; the fold and the scrolled chip tap proved 2026-10-28 |
 | [Guest favorites](./guest-favorites.md) | local only for a guest | proved 2026-10-21, cap included |
 | [Question card](./question-card.md) | AI call on open (`suggestQuickAnswers`); writes live to save (`saveQuestionAnswers`) | proved 2026-10-21, save included |
 | [Profile and guest upgrade](./profile.md) | reads live; the upgrade writes live (a permanent account) | proved 2026-10-21 |
