@@ -60,7 +60,6 @@ struct QuestionCardExpandedView: View {
     @State private var isConfirmingClose = false
 
     @State private var presentedAnswerImage: PresentedAnswerImage?
-    @State private var showingGuestUpgradeSheet = false
     @State private var isShowingQuestionLists = false
     @State private var dismissedGuestWarningQuestionID: String?
 
@@ -103,7 +102,7 @@ struct QuestionCardExpandedView: View {
     private var questionListButton: some View {
         Button {
             if authModel.isAnonymous {
-                showingGuestUpgradeSheet = true
+                guestFavoriteModel.requestGuestUpgrade()
             } else {
                 isShowingQuestionLists = true
             }
@@ -267,10 +266,6 @@ struct QuestionCardExpandedView: View {
                 )
             )
         }
-        .sheet(isPresented: $showingGuestUpgradeSheet) {
-            GuestUpgradeView()
-                .environmentObject(authModel)
-        }
         .sheet(isPresented: $isShowingQuestionLists) {
             QuestionListSelectionSheet(question: currentQuestion)
         }
@@ -292,11 +287,6 @@ struct QuestionCardExpandedView: View {
         }
         // Light impact, not `.success`: nothing is saved yet.
         .sensoryFeedback(.impact(weight: .light), trigger: saveTickReplayCount)
-        .onChange(of: authModel.isAnonymous) { _, isAnonymous in
-            if !isAnonymous {
-                showingGuestUpgradeSheet = false
-            }
-        }
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
@@ -426,7 +416,7 @@ struct QuestionCardExpandedView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             Button(String(localized: "question.guestWarning.cta")) {
-                showingGuestUpgradeSheet = true
+                guestFavoriteModel.requestGuestUpgrade()
             }
             .buttonStyle(.bordered)
             .tint(Color(uiColor: .systemOrange))

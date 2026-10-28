@@ -402,6 +402,7 @@ struct ContentSectionView: View {
           .padding(.horizontal, 20)
         }
         .buttonStyle(ScaleButtonStyle())
+        .accessibilityIdentifier("profile-content-favorites")
 
         Divider()
           .padding(.leading, 76)
@@ -564,7 +565,6 @@ struct AdminReleaseSectionView: View {
 }
 
 private enum ProfileSheet: Identifiable {
-  case guestUpgrade
   case profilePhoto(UIImage?)
   case editProfile
   case statistics(ProfileModel.Statistics)
@@ -576,8 +576,6 @@ private enum ProfileSheet: Identifiable {
 
   var id: String {
     switch self {
-    case .guestUpgrade:
-      return "guestUpgrade"
     case .profilePhoto:
       return "profilePhoto"
     case .editProfile:
@@ -708,7 +706,7 @@ struct ProfileView: View {
   private var profileHeaderSection: some View {
     if authModel.isAnonymous {
       GuestProfileHeaderView {
-        activeSheet = .guestUpgrade
+        guestFavoriteModel.requestGuestUpgrade()
       }
     } else {
       ProfileHeaderView(
@@ -726,7 +724,7 @@ struct ProfileView: View {
   private var guestUpgradeSection: some View {
     if authModel.isAnonymous {
       GuestUpgradeBannerView(favoriteCount: guestFavoriteModel.getFavoriteCount()) {
-        activeSheet = .guestUpgrade
+        guestFavoriteModel.requestGuestUpgrade()
       }
       .padding(.horizontal, 20)
 
@@ -833,11 +831,6 @@ struct ProfileView: View {
   @ViewBuilder
   private func profileSheetContent(for sheet: ProfileSheet) -> some View {
     switch sheet {
-    case .guestUpgrade:
-      GuestUpgradeView()
-        .environmentObject(authModel)
-        .accessibilityIdentifier("profile-guest-upgrade-sheet")
-
     case .profilePhoto(let image):
       FullProfilePhotoView(image: image)
         .accessibilityIdentifier("profile-photo-sheet")

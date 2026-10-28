@@ -19,6 +19,8 @@ actor MockQuestionListService: QuestionListServicing {
     enum MockError: Error {
         case updateFailed
         case deleteFailed
+        case createFailed
+        case setQuestionFailed
     }
 
     private var blockedUpdateListIDs: Set<String> = []
@@ -67,7 +69,7 @@ actor MockQuestionListService: QuestionListServicing {
     }
 
     func createList(named name: String, ownerId: String) async throws -> String {
-        _ = name
+        createdNames.append(name)
         createStartedOwnerIDs.insert(ownerId)
         createStartedContinuations.removeValue(forKey: ownerId)?.resume()
         if blockedCreateOwnerIDs.contains(ownerId) {
@@ -75,7 +77,24 @@ actor MockQuestionListService: QuestionListServicing {
                 createContinuations[ownerId] = continuation
             }
         }
+        if failingCreateOwnerIDs.remove(ownerId) != nil {
+            throw MockError.createFailed
+        }
         return createResultsByOwnerID[ownerId] ?? UUID().uuidString
+    }
+
+    /// The names of every `createList` call, in order.
+    private(set) var createdNames: [String] = []
+    private var failingCreateOwnerIDs: Set<String> = []
+    private var failingSetQuestionListIDs: Set<String> = []
+
+    /// Makes the next create for this owner throw, after any block resumes.
+    func failNextCreate(for ownerID: String) {
+        failingCreateOwnerIDs.insert(ownerID)
+    }
+
+    func failSetQuestion(for listID: String) {
+        failingSetQuestionListIDs.insert(listID)
     }
 
     func updateList(listId: String, name: String) async throws {
@@ -128,6 +147,9 @@ actor MockQuestionListService: QuestionListServicing {
             await withCheckedContinuation { continuation in
                 setQuestionContinuations[listId, default: []].append(continuation)
             }
+        }
+        if failingSetQuestionListIDs.contains(listId) {
+            throw MockError.setQuestionFailed
         }
     }
 

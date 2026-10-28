@@ -3,8 +3,8 @@ import SwiftUI
 struct AIView: View {
     @EnvironmentObject private var questionModel: QuestionModel
     @EnvironmentObject private var authModel: AuthModel
+    @EnvironmentObject private var guestFavoriteModel: GuestFavoriteModel
     @StateObject private var trioModel: TrioPromptModel
-    @State private var showingGuestUpgrade = false
     @State private var showingCreateQuestion = false
     @State private var presentedQuestion: ExpandedQuestionState?
 
@@ -37,6 +37,7 @@ struct AIView: View {
                 semanticTitle: title,
                 visualTitle: Text(title)
             )
+            .backport.pageColoredNavigationBar(Color.theme.background)
             .backport.minimizesNavigationBarOnScrollDown()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -49,11 +50,6 @@ struct AIView: View {
                     .accessibilityLabel(String(localized: "ai.trio.createQuestion"))
                 }
             }
-        }
-        .sheet(isPresented: $showingGuestUpgrade) {
-            GuestUpgradeView()
-                .environmentObject(authModel)
-                .accessibilityIdentifier("guest-upgrade-sheet")
         }
         .sheet(isPresented: $showingCreateQuestion) {
             TrioPromptComposerView(
@@ -125,7 +121,7 @@ struct AIView: View {
 
     private func presentCreateQuestion() {
         guard canCreateQuestion else {
-            showingGuestUpgrade = true
+            guestFavoriteModel.requestGuestUpgrade()
             return
         }
 

@@ -85,7 +85,7 @@ extension ProfileSheetPresentationUITests {
         XCTAssertTrue(waitUntil(timeout: 5) { upgradeButton.isHittable })
         upgradeButton.tap()
 
-        let upgradeSheet = app.descendants(matching: .any)["profile-guest-upgrade-sheet"]
+        let upgradeSheet = app.descendants(matching: .any)["guest-upgrade-sheet"]
         XCTAssertTrue(upgradeSheet.waitForExistence(timeout: 5))
         waitForSheetStability()
         XCTAssertTrue(upgradeSheet.exists)

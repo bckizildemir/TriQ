@@ -9,10 +9,6 @@ struct FavoritesContentView: View {
     @EnvironmentObject private var questionModel: QuestionModel
 
     @State private var presentedQuestion: ExpandedQuestionState?
-    // Presented locally rather than through the model's global flag: this screen is
-    // pushed inside ProfileView, which is itself reachable as a fullScreenCover from
-    // Home, so a root-owned sheet would be asked to present from underneath a cover.
-    @State private var isShowingGuestUpgrade = false
 
     private let expansionSourceID = "favorites"
 
@@ -51,10 +47,6 @@ struct FavoritesContentView: View {
                 expandedState: expandedState,
                 model: questionModel
             )
-        }
-        .sheet(isPresented: $isShowingGuestUpgrade) {
-            GuestUpgradeView()
-                .environmentObject(authModel)
         }
     }
 
@@ -96,7 +88,7 @@ struct FavoritesContentView: View {
                     GuestFavoriteStatusStrip(
                         count: guestFavoriteModel.getFavoriteCount(),
                         limit: GuestFavoriteModel.maxGuestFavorites,
-                        onUpgrade: { isShowingGuestUpgrade = true }
+                        onUpgrade: { guestFavoriteModel.requestGuestUpgrade() }
                     )
                     .padding(.horizontal)
                 }

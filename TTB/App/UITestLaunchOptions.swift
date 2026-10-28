@@ -38,10 +38,13 @@ enum UITestLaunchOptions {
     static let aiAnonymousHarnessArgument = "-ui-test-ai-anonymous"
     static let aiAtDailyLimitHarnessArgument = "-ui-test-ai-at-daily-limit"
     static let aiSeedDraftHarnessArgument = "-ui-test-ai-seed-draft"
+    static let aiLongFeedArgument = "-ui-test-ai-long-feed"
     static let guestFavoritesOneBelowCapArgument = "-ui-test-guest-favorites-one-below-cap"
+    static let guestFavoriteProfileQuestionArgument = "-ui-test-guest-favorite-profile-question"
     static let homeSavedAnswerArgument = "-ui-test-home-saved-answer"
     static let homeLongFeedArgument = "-ui-test-home-long-feed"
     static let profilePhotoHarnessArgument = "-ui-test-profile-photo"
+    static let failingListCreateArgument = "-ui-test-failing-list-create"
     static let accountDeletionFailsArgument = "-ui-test-account-deletion-fails"
 
     static var isCategoryQuestionsHarnessEnabled: Bool { Harness.categoryQuestions.isEnabled }
@@ -77,10 +80,22 @@ enum UITestLaunchOptions {
         ProcessInfo.processInfo.arguments.contains(aiSeedDraftHarnessArgument)
     }
 
+    /// Starts the AI harness with a feed taller than the screen, so the Trio list can scroll
+    /// under the top chrome.
+    static var shouldUseAILongFeed: Bool {
+        ProcessInfo.processInfo.arguments.contains(aiLongFeedArgument)
+    }
+
     /// The guest favorite cap is ten and the category fixture holds three questions, so a UI test
     /// cannot tap its way to the cap. This asks the harness to start one favorite below it.
     static var shouldSeedGuestFavoritesOneBelowCap: Bool {
         ProcessInfo.processInfo.arguments.contains(guestFavoritesOneBelowCapArgument)
+    }
+
+    /// Starts the anonymous profile harness with its one fixture question saved as a guest favorite,
+    /// so the Favorites screen has a list to show and therefore the guest strip.
+    static var shouldSeedGuestFavoriteProfileQuestion: Bool {
+        ProcessInfo.processInfo.arguments.contains(guestFavoriteProfileQuestionArgument)
     }
 
     /// Starts the home harness with a saved answer on its first question, so a test can tell a
@@ -98,6 +113,11 @@ enum UITestLaunchOptions {
     /// Starts the profile harness with a photo and a remover that needs no Firebase (#71).
     static var shouldSeedProfilePhoto: Bool {
         ProcessInfo.processInfo.arguments.contains(profilePhotoHarnessArgument)
+    }
+
+    /// Starts the profile harness with a list service whose create always fails (#72).
+    static var shouldFailListCreate: Bool {
+        ProcessInfo.processInfo.arguments.contains(failingListCreateArgument)
     }
 
     /// Makes the profile harness's account deletion fail, so a test can see the failure UI (#88).
