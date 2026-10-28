@@ -24,6 +24,7 @@ This folder contains all project-level documentation that was previously scatter
 - `BADGE_SYSTEM_IMPLEMENTATION_SUMMARY.md`: delivered badge system scope.
 - `FIXES_APPLIED.md`: important bug fixes and cleanup history.
 - `QUESTION_LIST_SHARING_AUDIT.md`: read-only audit of the sharing feature — rules/privacy findings, listener race, and service-seam design assessment.
+- `ADMIN_BOOTSTRAP.md`: how the first admin (`users/{uid}.isAdmin`) is set, outside the rules.
 - `ARCHITECTURE_DEEPENING_AUDIT.md`: open architecture backlog (`AD-1`…`AD-7`, `FIX-1`…`FIX-5`) — friction, deletion-test verdicts, and how to pick a candidate up. Start here for refactor work.
 
 ## Onboarding

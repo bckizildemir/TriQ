@@ -52,7 +52,7 @@ TTB is an iOS app for capturing, saving, and sharing life in short three-part en
 - User can edit profile fields and upload profile photo.
 - User sees daily/weekly/total answer stats.
 - User sees badge progress and unlocked badges.
-- Admin mode can be toggled from profile (hidden activation flow currently supported in app).
+- Admin tools show in the profile only for a user whose `users/{uid}.isAdmin` is `true`. The app cannot set this field; see `ADMIN_BOOTSTRAP.md`.
 
 ### 5) AI Assistant Tab
 - User can ask categorized AI questions from a dedicated AI tab.
