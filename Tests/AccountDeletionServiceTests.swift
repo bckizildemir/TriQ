@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 @testable import TTB
 
@@ -96,6 +97,84 @@ final class AccountDeletionServiceTests: XCTestCase {
                 "signOut",
             ]
         )
+    }
+
+    func testDelete_retryAfterAccountDeletedOnTheCallablePathSignsOut() async throws {
+        let operations = MockAccountDeletionOperations()
+        operations.failures["deleteAccountData"] = AccountDeletionError.accountAlreadyDeleted
+        let auth = MockAccountDeletionAuth(
+            currentUserValue: MockAccountDeletionUser(uid: "anon-1", isAnonymous: true, email: nil)
+        )
+        let service = AccountDeletionService(operations: operations, auth: auth)
+
+        try await service.deleteCurrentAccount(password: nil)
+
+        XCTAssertEqual(
+            operations.callLog,
+            ["deleteAccountData", "deleteLocalProfileImage", "signOut"]
+        )
+    }
+
+    func testDelete_retryAfterAccountDeletedOnTheReauthPathSignsOut() async throws {
+        let operations = MockAccountDeletionOperations()
+        operations.failures["reauthenticate"] = AccountDeletionError.accountAlreadyDeleted
+        let auth = MockAccountDeletionAuth(
+            currentUserValue: MockAccountDeletionUser(
+                uid: "user-1",
+                isAnonymous: false,
+                email: "user@example.com"
+            )
+        )
+        let service = AccountDeletionService(operations: operations, auth: auth)
+
+        try await service.deleteCurrentAccount(password: "secret")
+
+        XCTAssertEqual(
+            operations.callLog,
+            ["reauthenticate", "deleteLocalProfileImage", "signOut"]
+        )
+    }
+
+    func testDelete_differentUserUnauthenticatedStillThrowsAndKeepsTheSession() async {
+        let operations = MockAccountDeletionOperations()
+        operations.failures["reauthenticate"] = AccountDeletionError.unauthenticated
+        let auth = MockAccountDeletionAuth(
+            currentUserValue: MockAccountDeletionUser(
+                uid: "user-1",
+                isAnonymous: false,
+                email: "user@example.com"
+            )
+        )
+        let service = AccountDeletionService(operations: operations, auth: auth)
+
+        do {
+            try await service.deleteCurrentAccount(password: "secret")
+            XCTFail("Expected unauthenticated error")
+        } catch let error as AccountDeletionError {
+            XCTAssertEqual(error, .unauthenticated)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+
+        XCTAssertFalse(operations.callLog.contains("signOut"))
+        XCTAssertFalse(operations.callLog.contains("deleteLocalProfileImage"))
+    }
+
+    func testDelete_evictsTheCachedProfilePhotoTheServerReported() async throws {
+        let url = "https://firebasestorage.googleapis.com/v0/b/test/o/profiles%2Fu%2Fp.jpg?alt=media&token=t"
+        let imageService = ImageService()
+        await imageService.cacheImage(UIImage(), for: url)
+        let operations = MockAccountDeletionOperations()
+        operations.summary = AccountDeletionSummary(profileImageURL: url)
+        let auth = MockAccountDeletionAuth(
+            currentUserValue: MockAccountDeletionUser(uid: "anon-1", isAnonymous: true, email: nil)
+        )
+        let service = AccountDeletionService(operations: operations, auth: auth, imageService: imageService)
+
+        try await service.deleteCurrentAccount(password: nil)
+
+        let cached = await imageService.cachedImage(for: url)
+        XCTAssertNil(cached)
     }
 
     func testDelete_stopsOnFirstFailure() async {

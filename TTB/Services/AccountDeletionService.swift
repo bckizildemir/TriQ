@@ -8,6 +8,10 @@ enum AccountDeletionError: LocalizedError, Equatable {
     /// The `deleteOwnAccountData` callable failed or answered without `success: true`. The Auth
     /// account is kept, so the user can retry.
     case dataDeletionFailed
+    /// The server no longer knows this Auth user: a retry after the callable deleted the user but
+    /// the response was lost. Distinct from `.unauthenticated`, which also means "a different user
+    /// is signed in" and must never sign anybody out. `AccountDeletionService` swallows this case.
+    case accountAlreadyDeleted
 
     var errorDescription: String? {
         switch self {
@@ -25,6 +29,10 @@ enum AccountDeletionError: LocalizedError, Equatable {
                 : "Bu hesabı yeniden doğrulamak için bir e-posta adresi bulunamadı."
         case .dataDeletionFailed:
             return String(localized: "profile.deleteAccount.failed.message")
+        case .accountAlreadyDeleted:
+            return AppLocalization.prefersEnglish
+                ? "This account was already deleted."
+                : "Bu hesap zaten silinmiş."
         }
     }
 }
@@ -47,17 +55,28 @@ actor AccountDeletionService {
     /// Reauthenticates a permanent user, then the server deletes all of the user's data and the
     /// Auth user last (TriQ#88); the client only signs out locally. If the server step fails, the
     /// account stays, and a retry runs the whole server step again; it is idempotent.
+    ///
+    /// If an earlier attempt deleted the Auth user but the response was lost, the retry fails with
+    /// `.accountAlreadyDeleted` from the reauthentication or the callable. That counts as done:
+    /// the service removes the local photo, signs out, and returns normally. There is no photo URL
+    /// to evict in that case.
     func deleteCurrentAccount(password: String?) async throws {
         guard let currentUser = auth.currentUser() else {
             throw AccountDeletionError.unauthenticated
         }
 
-        if !currentUser.isAnonymous {
-            try Self.validatePermanentUserReauthentication(user: currentUser, password: password)
-            try await operations.reauthenticate(user: currentUser, password: password)
+        let summary: AccountDeletionSummary
+        do {
+            if !currentUser.isAnonymous {
+                try Self.validatePermanentUserReauthentication(user: currentUser, password: password)
+                try await operations.reauthenticate(user: currentUser, password: password)
+            }
+            summary = try await operations.deleteAccountData()
+        } catch AccountDeletionError.accountAlreadyDeleted {
+            await operations.deleteLocalProfileImage(userId: currentUser.uid)
+            await operations.signOut()
+            return
         }
-
-        let summary = try await operations.deleteAccountData()
 
         // The server deleted the photo from Storage; drop the copies this device still holds.
         if let profileImageURL = summary.profileImageURL {

@@ -2,13 +2,20 @@ import Foundation
 import FirebaseFirestore
 import FirebaseFunctions
 import os
-import Synchronization
 
 actor FavoriteService {
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
         category: "FavoriteService")
     
+    /// Fetches `Firestore` on demand. The provider is stored, the Firebase object is not: every
+    /// method calls it where it needs the object. A test injects a provider that fails.
+    private let firestore: @Sendable () -> Firestore
+
+    init(firestore: @escaping @Sendable () -> Firestore = { Firestore.firestore() }) {
+        self.firestore = firestore
+    }
+
     enum FavoriteError: LocalizedError {
         case invalidUserId
         case documentNotFound
@@ -41,7 +48,7 @@ actor FavoriteService {
     ) -> sending ListenerRegistration? {
         guard Self.acceptsListener(for: userId, reportingTo: completion) else { return nil }
 
-        return Firestore.firestore().collection("questions")
+        return firestore().collection("questions")
             .whereField("favoriteUserIds", arrayContains: userId)
             .addSnapshotListener { snapshot, error in
                 Self.deliverSnapshot(
@@ -76,16 +83,13 @@ actor FavoriteService {
         error: Error?,
         to completion: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
     ) {
-        let result: Result<[Question], Error>
-        if let error = error {
-            result = .failure(FavoriteError.unknown(error))
-        } else {
-            result = .success((documents ?? []).compactMap { document in
-                Question.fromFirestore(document.data, id: document.id)
-            })
-        }
-
-        Task { @MainActor in completion(result) }
+        SnapshotDelivery.deliver(
+            documents: documents,
+            error: error,
+            mapError: { FavoriteError.unknown($0) },
+            decode: { Question.fromFirestore($0.data, id: $0.id) },
+            to: completion
+        )
     }
     
     func toggleFavorite(
@@ -149,7 +153,7 @@ extension FavoriteService: FavoriteServicing {
         userId: String,
         onChange: @escaping @MainActor @Sendable (Result<[Question], Error>) -> Void
     ) -> FavoriteListenerHandle {
-        FirestoreFavoriteListenerHandle(
+        FirestoreListenerHandle(
             registration: setupFavoritesListener(userId: userId, completion: onChange)
         )
     }
@@ -160,24 +164,5 @@ extension FavoriteService: FavoriteServicing {
             userId: userId,
             currentFavoriteState: currentState
         )
-    }
-}
-
-/// Owns the Firebase registration, which is not `Sendable`, behind a lock, so the handle can
-/// cross from this actor to the main-actor store. The first `cancel()` removes the registration;
-/// later calls do nothing. With a `nil` registration (the empty-`userId` case) every `cancel()`
-/// does nothing.
-final class FirestoreFavoriteListenerHandle: FavoriteListenerHandle {
-    private let registration: Mutex<ListenerRegistration?>
-
-    init(registration: sending ListenerRegistration?) {
-        self.registration = Mutex(registration)
-    }
-
-    func cancel() {
-        // Take the registration out under the lock and remove it after, so Firebase never runs
-        // while the lock is held.
-        let removed = registration.withLock { $0.take() }
-        removed?.remove()
     }
 }

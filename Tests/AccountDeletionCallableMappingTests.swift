@@ -1,3 +1,4 @@
+import FirebaseAuth
 import FirebaseFunctions
 import Foundation
 import Testing
@@ -32,12 +33,53 @@ struct AccountDeletionCallableMappingTests {
         #expect(error.localizedDescription != "Raw server text.")
     }
 
-    @Test func unauthenticatedCallableMapsToTheSessionError() {
+    @Test func unauthenticatedCallableMeansTheAccountIsAlreadyDeleted() {
         let error = LiveAccountDeletionOperations.deletionError(
             forCallableError: Self.functionsError(.unauthenticated)
         )
 
-        #expect(error == .unauthenticated)
+        #expect(error == .accountAlreadyDeleted)
+    }
+
+    @Test func callableWaitsLongerThanTheServerTimeout() {
+        // The server sets timeoutSeconds 300 for deleteOwnAccountData.
+        #expect(LiveAccountDeletionOperations.callableTimeout > 300)
+    }
+
+    // Raw codes, because AuthErrorCode is not Sendable and test arguments must be.
+    @Test(arguments: [
+        AuthErrorCode.userNotFound.rawValue,
+        AuthErrorCode.userTokenExpired.rawValue,
+        AuthErrorCode.invalidUserToken.rawValue,
+    ])
+    func reauthenticationFailureForAMissingUserMeansAlreadyDeleted(code: Int) {
+        let authError = NSError(domain: AuthErrorDomain, code: code)
+
+        let mapped = LiveAccountDeletionOperations.deletionError(forReauthenticationError: authError)
+
+        #expect(mapped as? AccountDeletionError == .accountAlreadyDeleted)
+    }
+
+    @Test func wrongPasswordReauthenticationErrorPassesThrough() {
+        let authError = NSError(domain: AuthErrorDomain, code: AuthErrorCode.wrongPassword.rawValue)
+
+        let mapped = LiveAccountDeletionOperations.deletionError(forReauthenticationError: authError)
+
+        #expect((mapped as NSError) == authError)
+    }
+
+    @Test func nonAuthReauthenticationErrorPassesThrough() {
+        let mapped = LiveAccountDeletionOperations.deletionError(
+            forReauthenticationError: URLError(.notConnectedToInternet)
+        )
+
+        #expect(mapped is URLError)
+    }
+
+    @Test func differentUserStaysUnauthenticatedNotAlreadyDeleted() {
+        #expect(throws: AccountDeletionError.unauthenticated) {
+            try LiveAccountDeletionOperations.requireSameUser(currentUserID: "u2", expectedUserID: "u1")
+        }
     }
 
     @Test func networkErrorMapsToTheRetryMessage() {

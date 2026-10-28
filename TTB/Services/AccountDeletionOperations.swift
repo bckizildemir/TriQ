@@ -59,17 +59,28 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
 
     func reauthenticate(user: any AccountDeletionAuthUser, password: String?) async throws {
         let firebaseUser = try currentFirebaseUser(matching: user)
-        try await AccountDeletionService.reauthenticatePermanentUser(
-            user: firebaseUser,
-            password: password
-        )
+        do {
+            try await AccountDeletionService.reauthenticatePermanentUser(
+                user: firebaseUser,
+                password: password
+            )
+        } catch {
+            throw Self.deletionError(forReauthenticationError: error)
+        }
     }
+
+    /// The server deletes data and the Auth user in one callable and may take up to 300 s
+    /// (`timeoutSeconds` in `functions/index.js`). The SDK default is 70 s, so the client waits a
+    /// little longer than the server, or a slow success would show as a failure.
+    static let callableTimeout: TimeInterval = 310
 
     func deleteAccountData() async throws -> AccountDeletionSummary {
         let data: Any
         do {
             // The one line no test reaches: it needs the live callable.
-            data = try await Functions.europeWest1.httpsCallable("deleteOwnAccountData").call().data
+            let callable = Functions.europeWest1.httpsCallable("deleteOwnAccountData")
+            callable.timeoutInterval = Self.callableTimeout
+            data = try await callable.call().data
         } catch {
             throw Self.deletionError(forCallableError: error)
         }
@@ -108,9 +119,25 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
         let nsError = error as NSError
         if nsError.domain == FunctionsErrorDomain,
            nsError.code == FunctionsErrorCode.unauthenticated.rawValue {
-            return .unauthenticated
+            // The user passed reauthentication a moment ago, so the Auth user is gone: an earlier
+            // call deleted it and its response was lost.
+            return .accountAlreadyDeleted
         }
         return .dataDeletionFailed
+    }
+
+    /// Maps a reauthentication failure. An Auth error that says the user no longer exists means an
+    /// earlier attempt already deleted the account; every other error (wrong password, network)
+    /// passes through unchanged. Pure, so a test needs no Firebase.
+    static func deletionError(forReauthenticationError error: any Error) -> any Error {
+        let nsError = error as NSError
+        guard nsError.domain == AuthErrorDomain else { return error }
+        switch AuthErrorCode(rawValue: nsError.code) {
+        case .userNotFound, .userTokenExpired, .invalidUserToken:
+            return AccountDeletionError.accountAlreadyDeleted
+        default:
+            return error
+        }
     }
 
     /// Checks the callable's response. Anything but `success: true` counts as a failure, so the

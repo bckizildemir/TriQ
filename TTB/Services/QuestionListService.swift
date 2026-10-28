@@ -69,17 +69,13 @@ actor QuestionListService: QuestionListServicing {
         logger: Logger,
         to completion: @escaping @MainActor @Sendable (Result<[QuestionList], Error>) -> Void
     ) {
-        let result: Result<[QuestionList], Error>
-        if let error {
-            logger.error("Question lists listener error: \(error.localizedDescription)")
-            result = .failure(error)
-        } else {
-            result = .success((documents ?? []).compactMap { document in
-                QuestionList.fromFirestore(document.data, id: document.id)
-            })
-        }
-
-        Task { @MainActor in completion(result) }
+        SnapshotDelivery.deliver(
+            documents: documents,
+            error: error,
+            onError: { logger.error("Question lists listener error: \($0.localizedDescription)") },
+            decode: { QuestionList.fromFirestore($0.data, id: $0.id) },
+            to: completion
+        )
     }
 
     func createList(named name: String, ownerId: String) async throws -> String {
@@ -87,7 +83,13 @@ actor QuestionListService: QuestionListServicing {
             "name": name,
         ])
 
-        guard let data = result.data as? [String: Any],
+        return try Self.listId(from: result.data)
+    }
+
+    /// Reads the new list's id from the `createQuestionList` payload. A payload that is not a
+    /// dictionary, or has no non-empty `listId`, is `QuestionListError.invalidResponse`.
+    static func listId(from payload: Any) throws -> String {
+        guard let data = payload as? [String: Any],
               let listId = data["listId"] as? String,
               !listId.isEmpty
         else {
