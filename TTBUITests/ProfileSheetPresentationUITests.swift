@@ -116,9 +116,69 @@ extension ProfileSheetPresentationUITests {
         XCTAssertFalse(app.buttons["profile-edit-remove-photo-button"].exists)
     }
 
-    private func launchProfileHarness(extraArguments: [String]) -> XCUIApplication {
+    /// A guest whose deletion fails gets "Couldn't Delete Account" with Try Again and Cancel (#88).
+    func testGuestDeletionFailureOffersTryAgain() {
+        let app = launchProfileHarness(
+            extraArguments: ["-ui-test-account-deletion-fails"],
+            harnessArgument: profileAnonymousHarnessArgument
+        )
+
+        let deleteRow = app.buttons["Delete Account"]
+        XCTAssertTrue(scrollUntilHittable(deleteRow, in: app))
+        deleteRow.tap()
+
+        let confirmButton = app.buttons["Delete Guest Account"]
+        XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
+        confirmButton.tap()
+
+        let alert = app.alerts["Couldn't Delete Account"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        XCTAssertTrue(alert.staticTexts["Couldn't delete your account. Try again."].exists)
+
+        // Try Again runs the deletion again; it fails again, so the alert comes back.
+        alert.buttons["Try Again"].tap()
+        XCTAssertTrue(waitUntil(timeout: 5) { !alert.exists })
+        XCTAssertTrue(app.alerts["Couldn't Delete Account"].waitForExistence(timeout: 5))
+
+        app.alerts["Couldn't Delete Account"].buttons["Cancel"].tap()
+        XCTAssertTrue(waitUntil(timeout: 5) { !app.alerts.firstMatch.exists })
+    }
+
+    /// An email user whose deletion fails sees the error inside the password sheet (#88).
+    func testEmailDeletionFailureShowsTheErrorInThePasswordSheet() {
+        let app = launchProfileHarness(extraArguments: ["-ui-test-account-deletion-fails"])
+        openEditProfile(in: app)
+
+        let deleteButton = app.buttons["Delete Account"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5))
+        deleteButton.tap()
+
+        let confirmButton = app.buttons["Delete My Account Permanently"]
+        XCTAssertTrue(confirmButton.waitForExistence(timeout: 5))
+        confirmButton.tap()
+
+        let passwordSheet = app.descendants(matching: .any)["profile-delete-password-sheet"]
+        XCTAssertTrue(passwordSheet.waitForExistence(timeout: 5))
+        waitForSheetStability()
+
+        let passwordField = app.secureTextFields.firstMatch
+        XCTAssertTrue(passwordField.waitForExistence(timeout: 5))
+        passwordField.tap()
+        passwordField.typeText("secret")
+
+        app.buttons["Delete My Account Permanently"].tap()
+
+        XCTAssertTrue(app.staticTexts["Couldn't delete your account. Try again."].waitForExistence(timeout: 5))
+        XCTAssertTrue(passwordSheet.exists)
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+    }
+
+    private func launchProfileHarness(
+        extraArguments: [String],
+        harnessArgument: String? = nil
+    ) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments += [profileHarnessArgument] + extraArguments + [
+        app.launchArguments += [harnessArgument ?? profileHarnessArgument] + extraArguments + [
             "-AppleLanguages",
             "(en)",
             "-AppleLocale",

@@ -45,6 +45,7 @@ enum UITestLaunchOptions {
     static let homeLongFeedArgument = "-ui-test-home-long-feed"
     static let profilePhotoHarnessArgument = "-ui-test-profile-photo"
     static let failingListCreateArgument = "-ui-test-failing-list-create"
+    static let accountDeletionFailsArgument = "-ui-test-account-deletion-fails"
 
     static var isCategoryQuestionsHarnessEnabled: Bool { Harness.categoryQuestions.isEnabled }
     static var isGuestFavoriteMilestoneHarnessEnabled: Bool { Harness.guestFavoriteMilestone.isEnabled }
@@ -117,6 +118,11 @@ enum UITestLaunchOptions {
     /// Starts the profile harness with a list service whose create always fails (#72).
     static var shouldFailListCreate: Bool {
         ProcessInfo.processInfo.arguments.contains(failingListCreateArgument)
+    }
+
+    /// Makes the profile harness's account deletion fail, so a test can see the failure UI (#88).
+    static var shouldFailAccountDeletion: Bool {
+        ProcessInfo.processInfo.arguments.contains(accountDeletionFailsArgument)
     }
 
     /// Every argument that means "this launch is a harness".

@@ -312,6 +312,44 @@ describe("AI spend and config", () => {
   });
 });
 
+// Account deletion (TriQ#88) runs in the deleteOwnAccountData callable because a client cannot
+// delete these, even its own. If one of these starts to pass, the rules changed: recheck the
+// callable and whether the client should delete it instead.
+describe("account deletion: the owner's client cannot delete server-owned data", () => {
+  beforeEach(async () => {
+    await seed(async (firestore) => {
+      await firestore.doc("questionLists/list-1").set({ ownerId: "alice", name: "Mine", questionIds: [] });
+      await firestore.doc("questionListShares/share-1").set({
+        ownerId: "alice", sourceListId: "list-1", shareCode: "ALICE1", status: "active", isLinkEnabled: true,
+      });
+      await firestore.doc("questionListShares/share-1/recipients/bob").set({ recipientId: "bob", status: "accepted" });
+      await firestore.doc("questionListShares/share-2").set({ ownerId: "bob", status: "active", isLinkEnabled: true });
+      await firestore.doc("questionListShares/share-2/recipients/alice").set({ recipientId: "alice", status: "accepted" });
+      await firestore.doc("usernames/alice").set({ uid: "alice", username: "Alice" });
+    });
+  });
+
+  test("the owner cannot delete their question list", async () => {
+    await assertFails(db("alice").doc("questionLists/list-1").delete());
+  });
+
+  test("the owner cannot delete their share", async () => {
+    await assertFails(db("alice").doc("questionListShares/share-1").delete());
+  });
+
+  test("the owner cannot delete a recipient of their share", async () => {
+    await assertFails(db("alice").doc("questionListShares/share-1/recipients/bob").delete());
+  });
+
+  test("a recipient cannot delete their own recipient entry", async () => {
+    await assertFails(db("alice").doc("questionListShares/share-2/recipients/alice").delete());
+  });
+
+  test("the owner cannot delete their username reservation", async () => {
+    await assertFails(db("alice").doc("usernames/alice").delete());
+  });
+});
+
 describe("storage", () => {
   const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
 

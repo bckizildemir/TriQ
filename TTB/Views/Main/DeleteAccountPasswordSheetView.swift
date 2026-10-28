@@ -52,6 +52,9 @@ struct DeleteAccountPasswordSheetView: View {
                 }
             }
         }
+        // Like the disabled Cancel: a swipe during the delete would move a failure out of the
+        // sheet and into a generic alert (#88).
+        .interactiveDismissDisabled(isDeleting)
     }
 
     private var warningCard: some View {

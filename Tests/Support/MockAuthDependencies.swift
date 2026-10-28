@@ -206,6 +206,10 @@ actor MockAccountDeletionPerforming: AccountDeletionPerforming {
         resumeGate = nil
     }
 
+    func setShouldFail(_ value: Bool) {
+        shouldFail = value
+    }
+
     func setBlocksUntilResume(_ value: Bool) {
         blocksUntilResume = value
     }

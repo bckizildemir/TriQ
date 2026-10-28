@@ -1,7 +1,5 @@
 import FirebaseAuth
-import FirebaseFirestore
 import FirebaseFunctions
-import FirebaseStorage
 import Foundation
 
 protocol AccountDeletionAuthUser: Sendable {
@@ -35,94 +33,72 @@ struct LiveAccountDeletionAuth: AccountDeletionAuthProviding {
     }
 }
 
+/// What the `deleteOwnAccountData` callable reports back that the client uses.
+struct AccountDeletionSummary: Equatable, Sendable {
+    /// The profile photo's download URL the server read before it deleted the user document, so
+    /// the client can drop the in-memory copy cached under it (#85).
+    let profileImageURL: String?
+}
+
 protocol AccountDeletionOperations: Sendable {
     func reauthenticate(user: any AccountDeletionAuthUser, password: String?) async throws
-    func purgeAnswers() async throws
-    func favoriteQuestionReferences(for userId: String) async throws -> [String]
-    func removeFavorites(userId: String, questionIds: [String]) async throws
-    func deleteAIDocuments(userId: String) async throws
-    func deleteProfileAssets(userId: String) async throws
-    func deleteUserDocument(userId: String) async throws
-    func deleteAuthUser(_ user: any AccountDeletionAuthUser) async throws
+    /// Deletes all of the user's data and then the Firebase Auth user on the server, in one
+    /// callable (TriQ#88). Safe to call again.
+    func deleteAccountData() async throws -> AccountDeletionSummary
+    func deleteLocalProfileImage(userId: String) async
+    /// Ends the local session after the server deleted the account.
+    func signOut() async
 }
 
 actor LiveAccountDeletionOperations: AccountDeletionOperations {
     private let fileManager: LocalFileManager
-    private let batchWriteLimit = 400
 
-    private let imageService: ImageService
-
-    init(fileManager: LocalFileManager = .shared, imageService: ImageService = .shared) {
+    init(fileManager: LocalFileManager = .shared) {
         self.fileManager = fileManager
-        self.imageService = imageService
     }
 
     func reauthenticate(user: any AccountDeletionAuthUser, password: String?) async throws {
         let firebaseUser = try currentFirebaseUser(matching: user)
-        try await AccountDeletionService.reauthenticatePermanentUser(
-            user: firebaseUser,
-            password: password
-        )
-    }
-
-    func purgeAnswers() async throws {
-        _ = try await Functions.europeWest1.httpsCallable("purgeOwnAnswersForAccountDeletion").call()
-    }
-
-    func favoriteQuestionReferences(for userId: String) async throws -> [String] {
-        let snapshot = try await Firestore.firestore().collection("questions")
-            .whereField("favoriteUserIds", arrayContains: userId)
-            .getDocuments()
-        return snapshot.documents.map(\.documentID)
-    }
-
-    func removeFavorites(userId: String, questionIds: [String]) async throws {
-        guard !questionIds.isEmpty else { return }
-
-        let questions = Firestore.firestore().collection("questions")
-        let references = questionIds.map { questions.document($0) }
-        try await updateDocumentBatches(references) { batch, reference in
-            batch.updateData([
-                "favoriteUserIds": FieldValue.arrayRemove([userId])
-            ], forDocument: reference)
+        do {
+            // With email enumeration protection, reauthenticating a deleted email user returns
+            // `invalidCredential`, which looks like a wrong password. `reload()` reports
+            // `userNotFound` for a deleted account, so a retry after a lost response ends cleanly.
+            try await firebaseUser.reloadAsync()
+            try await AccountDeletionService.reauthenticatePermanentUser(
+                user: firebaseUser,
+                password: password
+            )
+        } catch {
+            throw Self.deletionError(forReauthenticationError: error)
         }
     }
 
-    func deleteAIDocuments(userId: String) async throws {
-        let userRef = Firestore.firestore().collection("users").document(userId)
+    /// The server deletes data and the Auth user in one callable and may take up to 300 s
+    /// (`timeoutSeconds` in `functions/index.js`). The SDK default is 70 s, so the client waits a
+    /// little longer than the server, or a slow success would show as a failure.
+    static let callableTimeout: TimeInterval = 310
 
-        let aiQueries = try await userRef.collection("aiQueries").getDocuments()
-        try await deleteDocumentBatches(aiQueries.documents.map(\.reference))
-
-        try await userRef.collection("aiUsage").document("stats").delete()
+    func deleteAccountData() async throws -> AccountDeletionSummary {
+        let data: Any
+        do {
+            // The one line no test reaches: it needs the live callable.
+            let callable = Functions.europeWest1.httpsCallable("deleteOwnAccountData")
+            callable.timeoutInterval = Self.callableTimeout
+            data = try await callable.call().data
+        } catch {
+            throw Self.deletionError(forCallableError: error)
+        }
+        return try Self.summary(fromCallableData: data)
     }
 
-    func deleteProfileAssets(userId: String) async throws {
-        // Read before the delete: the cache key is the download URL, which only the user document
-        // holds. A failed read only means the photo stays in memory until the app quits.
-        let snapshot = try? await Firestore.firestore().collection("users").document(userId).getDocument()
-        let downloadURL = snapshot?.data()?["profileImageURL"] as? String
-        try await ignoreMissingStorageObject {
-            try await imageService.deleteProfileImage(userId: userId)
-        }
-        await evictCachedProfilePhoto(downloadURL: downloadURL)
+    func deleteLocalProfileImage(userId: String) async {
         fileManager.deleteImage(name: "profile_\(userId)")
     }
 
-    /// Drops the profile photo from the in-memory cache once its Storage file is gone (#85).
-    /// Internal, not private, so a test can run it against a fresh `ImageService`.
-    func evictCachedProfilePhoto(downloadURL: String?) async {
-        guard let downloadURL, !downloadURL.isEmpty else { return }
-        await imageService.evictProfileImage(downloadURL: downloadURL)
-    }
-
-    func deleteUserDocument(userId: String) async throws {
-        try await Firestore.firestore().collection("users").document(userId).delete()
-    }
-
-    func deleteAuthUser(_ user: any AccountDeletionAuthUser) async throws {
-        let firebaseUser = try currentFirebaseUser(matching: user)
-        try await firebaseUser.deleteAsync()
+    func signOut() async {
+        // The account no longer exists on the server, so a failed local sign-out has nothing to
+        // retry: the next token refresh fails and the auth listener signs the user out then.
+        try? Auth.auth().signOut()
     }
 
     private func currentFirebaseUser(matching snapshot: any AccountDeletionAuthUser) throws -> User {
@@ -141,38 +117,51 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
         }
     }
 
-    private func updateDocumentBatches(
-        _ references: [DocumentReference],
-        operation: (WriteBatch, DocumentReference) -> Void
-    ) async throws {
-        guard !references.isEmpty else { return }
+    /// Maps a `deleteOwnAccountData` failure to an error with a localized message, so the user never
+    /// sees the raw SDK text. Pure, so a test needs no Firebase.
+    static func deletionError(forCallableError error: any Error) -> AccountDeletionError {
+        let nsError = error as NSError
+        if nsError.domain == FunctionsErrorDomain,
+           nsError.code == FunctionsErrorCode.unauthenticated.rawValue {
+            // The user passed reauthentication a moment ago, so the Auth user is gone: an earlier
+            // call deleted it and its response was lost.
+            return .accountAlreadyDeleted
+        }
+        // After the cached token expires, the SDK fails to refresh it for a deleted user and
+        // throws the Auth error unwrapped, then signs the user out.
+        if isMissingAuthUser(nsError) {
+            return .accountAlreadyDeleted
+        }
+        return .dataDeletionFailed
+    }
 
-        for range in FirestoreBatchPlanner.ranges(
-            itemCount: references.count,
-            limit: batchWriteLimit
-        ) {
-            let batch = Firestore.firestore().batch()
-
-            for reference in references[range] {
-                operation(batch, reference)
-            }
-
-            try await batch.commit()
+    /// True for an Auth error that says the user no longer exists on the server.
+    private static func isMissingAuthUser(_ nsError: NSError) -> Bool {
+        guard nsError.domain == AuthErrorDomain else { return false }
+        switch AuthErrorCode(rawValue: nsError.code) {
+        case .userNotFound, .userTokenExpired, .invalidUserToken:
+            return true
+        default:
+            return false
         }
     }
 
-    private func deleteDocumentBatches(_ references: [DocumentReference]) async throws {
-        try await updateDocumentBatches(references) { batch, reference in
-            batch.deleteDocument(reference)
-        }
+    /// Maps a reauthentication failure. An Auth error that says the user no longer exists means an
+    /// earlier attempt already deleted the account; every other error (wrong password, network)
+    /// passes through unchanged. Pure, so a test needs no Firebase.
+    static func deletionError(forReauthenticationError error: any Error) -> any Error {
+        let nsError = error as NSError
+        return isMissingAuthUser(nsError) ?AccountDeletionError.accountAlreadyDeleted : error
     }
 
-    private func ignoreMissingStorageObject(_ operation: () async throws -> Void) async throws {
-        do {
-            try await operation()
-        } catch where ImageService.isMissingStorageObject(error) {
-            return
+    /// Checks the callable's response. Anything but `success: true` counts as a failure, so the
+    /// app keeps the session and offers a retry while the account may still exist. Pure, so a test needs no Firebase.
+    static func summary(fromCallableData data: Any) throws -> AccountDeletionSummary {
+        guard let payload = data as? [String: Any], payload["success"] as? Bool == true else {
+            throw AccountDeletionError.dataDeletionFailed
         }
+        let url = (payload["profileImageURL"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        return AccountDeletionSummary(profileImageURL: url)
     }
 }
 

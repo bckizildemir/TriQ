@@ -31,6 +31,19 @@ extension User {
         }
     }
 
+    /// Used by `LiveAccountDeletionOperations` to find out whether the account still exists.
+    nonisolated(nonsending) func reloadAsync() async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            reload { error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: ())
+                }
+            }
+        }
+    }
+
     /// Satisfies `AuthModelUser.forceRefreshIDToken()`.
     nonisolated(nonsending) func forceRefreshIDToken() async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in

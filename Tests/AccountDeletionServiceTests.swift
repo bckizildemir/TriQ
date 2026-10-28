@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 @testable import TTB
 
@@ -29,7 +30,7 @@ final class AccountDeletionServiceTests: XCTestCase {
         try await service.deleteCurrentAccount(password: nil)
 
         XCTAssertFalse(operations.callLog.contains("reauthenticate"))
-        XCTAssertEqual(operations.callLog.first, "purgeAnswers")
+        XCTAssertEqual(operations.callLog.first, "deleteAccountData")
     }
 
     func testDelete_requiresPasswordForPermanentUser() async {
@@ -91,20 +92,94 @@ final class AccountDeletionServiceTests: XCTestCase {
             operations.callLog,
             [
                 "reauthenticate",
-                "purgeAnswers",
-                "favoriteQuestionReferences",
-                "removeFavorites",
-                "deleteAI",
-                "deleteProfileAssets",
-                "deleteUserDocument",
-                "deleteAuthUser",
+                "deleteAccountData",
+                "deleteLocalProfileImage",
+                "signOut",
             ]
         )
     }
 
+    func testDelete_retryAfterAccountDeletedOnTheCallablePathSignsOut() async throws {
+        let operations = MockAccountDeletionOperations()
+        operations.failures["deleteAccountData"] = AccountDeletionError.accountAlreadyDeleted
+        let auth = MockAccountDeletionAuth(
+            currentUserValue: MockAccountDeletionUser(uid: "anon-1", isAnonymous: true, email: nil)
+        )
+        let service = AccountDeletionService(operations: operations, auth: auth)
+
+        try await service.deleteCurrentAccount(password: nil)
+
+        XCTAssertEqual(
+            operations.callLog,
+            ["deleteAccountData", "deleteLocalProfileImage", "signOut"]
+        )
+    }
+
+    func testDelete_retryAfterAccountDeletedOnTheReauthPathSignsOut() async throws {
+        let operations = MockAccountDeletionOperations()
+        operations.failures["reauthenticate"] = AccountDeletionError.accountAlreadyDeleted
+        let auth = MockAccountDeletionAuth(
+            currentUserValue: MockAccountDeletionUser(
+                uid: "user-1",
+                isAnonymous: false,
+                email: "user@example.com"
+            )
+        )
+        let service = AccountDeletionService(operations: operations, auth: auth)
+
+        try await service.deleteCurrentAccount(password: "secret")
+
+        XCTAssertEqual(
+            operations.callLog,
+            ["reauthenticate", "deleteLocalProfileImage", "signOut"]
+        )
+    }
+
+    func testDelete_differentUserUnauthenticatedStillThrowsAndKeepsTheSession() async {
+        let operations = MockAccountDeletionOperations()
+        operations.failures["reauthenticate"] = AccountDeletionError.unauthenticated
+        let auth = MockAccountDeletionAuth(
+            currentUserValue: MockAccountDeletionUser(
+                uid: "user-1",
+                isAnonymous: false,
+                email: "user@example.com"
+            )
+        )
+        let service = AccountDeletionService(operations: operations, auth: auth)
+
+        do {
+            try await service.deleteCurrentAccount(password: "secret")
+            XCTFail("Expected unauthenticated error")
+        } catch let error as AccountDeletionError {
+            XCTAssertEqual(error, .unauthenticated)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+
+        XCTAssertFalse(operations.callLog.contains("signOut"))
+        XCTAssertFalse(operations.callLog.contains("deleteLocalProfileImage"))
+    }
+
+    func testDelete_evictsTheCachedProfilePhotoTheServerReported() async throws {
+        let url = "https://firebasestorage.googleapis.com/v0/b/test/o/profiles%2Fu%2Fp.jpg?alt=media&token=t"
+        let imageService = ImageService()
+        await imageService.cacheImage(UIImage(), for: url)
+        let operations = MockAccountDeletionOperations()
+        operations.summary = AccountDeletionSummary(profileImageURL: url)
+        let auth = MockAccountDeletionAuth(
+            currentUserValue: MockAccountDeletionUser(uid: "anon-1", isAnonymous: true, email: nil)
+        )
+        let service = AccountDeletionService(operations: operations, auth: auth, imageService: imageService)
+
+        try await service.deleteCurrentAccount(password: nil)
+
+        let cached = await imageService.cachedImage(for: url)
+        XCTAssertNil(cached)
+    }
+
     func testDelete_stopsOnFirstFailure() async {
         let operations = MockAccountDeletionOperations()
-        operations.failures["purgeAnswers"] = NSError(domain: "test", code: 1)
+        operations.failures["deleteAccountData"] = NSError(domain: "test", code: 1)
         let auth = MockAccountDeletionAuth(
             currentUserValue: MockAccountDeletionUser(uid: "anon-1", isAnonymous: true, email: nil)
         )
@@ -112,7 +187,7 @@ final class AccountDeletionServiceTests: XCTestCase {
 
         do {
             try await service.deleteCurrentAccount(password: nil)
-            XCTFail("Expected purgeAnswers failure")
+            XCTFail("Expected deleteAccountData failure")
         } catch let error as NSError {
             XCTAssertEqual(error.domain, "test")
             XCTAssertEqual(error.code, 1)
@@ -120,28 +195,6 @@ final class AccountDeletionServiceTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
 
-        XCTAssertFalse(operations.callLog.contains("removeFavorites"))
-    }
-
-    func testFirestoreBatchPlannerCoversBoundaryCountsWithoutOversizedBatches() {
-        let cases: [(itemCount: Int, expectedSizes: [Int])] = [
-            (0, []),
-            (399, [399]),
-            (400, [400]),
-            (401, [400, 1]),
-            (800, [400, 400]),
-            (801, [400, 400, 1]),
-        ]
-
-        for testCase in cases {
-            let ranges = FirestoreBatchPlanner.ranges(
-                itemCount: testCase.itemCount,
-                limit: 400
-            )
-
-            XCTAssertEqual(ranges.map(\.count), testCase.expectedSizes)
-            XCTAssertEqual(ranges.flatMap(Array.init), Array(0..<testCase.itemCount))
-            XCTAssertTrue(ranges.allSatisfy { !$0.isEmpty && $0.count <= 400 })
-        }
+        XCTAssertFalse(operations.callLog.contains("signOut"))
     }
 }
