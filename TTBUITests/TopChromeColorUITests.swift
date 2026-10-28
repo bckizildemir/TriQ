@@ -43,6 +43,23 @@ extension TopChromeColorUITests {
         )
     }
 
+    /// The status bar and navigation bar show the page color on Trio, at rest and after the
+    /// feed has scrolled under the bar (#92).
+    func testTrioTopChromeHasNoGreyBand() {
+        let app = launch(harness: "-ui-test-ai-harness", "-ui-test-ai-long-feed")
+        let card = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question-card-trio.feed-")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+
+        assertTopChromeIsPageColor(
+            screen: "trio",
+            in: app,
+            bandBottom: app.navigationBars.firstMatch.frame.maxY + 6,
+            // Pin the card by its identifier so the scrolled check reads the same card.
+            scrollProbe: app.buttons[card.identifier]
+        )
+    }
+
     private func launch(harness arguments: String...) -> XCUIApplication {
         // The scan expects the light page color (white); the dark variant would fail at rest.
         // `XCUIDevice` is main-actor isolated, so the switch and its restore stay in this
@@ -83,7 +100,12 @@ extension TopChromeColorUITests {
             "\(screen): the content did not scroll; the scrolled check would test the rest state again"
         )
 
-        assertColumnIsPageColor(state: "\(screen)-scrolled", bandBottom: bandBottom)
+        // From iOS 26 the system blurs the content that scrolls under the bar (the scroll-edge
+        // effect), so a pixel column there is never the pure page color. The grey band this test
+        // guards against only exists before iOS 26.
+        if #unavailable(iOS 26.0) {
+            assertColumnIsPageColor(state: "\(screen)-scrolled", bandBottom: bandBottom)
+        }
     }
 
     /// Scans the pixel column 4 pt from the leading edge, left of every title, button and chip.

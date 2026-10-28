@@ -38,6 +38,7 @@ enum UITestLaunchOptions {
     static let aiAnonymousHarnessArgument = "-ui-test-ai-anonymous"
     static let aiAtDailyLimitHarnessArgument = "-ui-test-ai-at-daily-limit"
     static let aiSeedDraftHarnessArgument = "-ui-test-ai-seed-draft"
+    static let aiLongFeedArgument = "-ui-test-ai-long-feed"
     static let guestFavoritesOneBelowCapArgument = "-ui-test-guest-favorites-one-below-cap"
     static let homeSavedAnswerArgument = "-ui-test-home-saved-answer"
     static let homeLongFeedArgument = "-ui-test-home-long-feed"
@@ -74,6 +75,12 @@ enum UITestLaunchOptions {
 
     static var isAISeedDraftHarnessEnabled: Bool {
         ProcessInfo.processInfo.arguments.contains(aiSeedDraftHarnessArgument)
+    }
+
+    /// Starts the AI harness with a feed taller than the screen, so the Trio list can scroll
+    /// under the top chrome.
+    static var shouldUseAILongFeed: Bool {
+        ProcessInfo.processInfo.arguments.contains(aiLongFeedArgument)
     }
 
     /// The guest favorite cap is ten and the category fixture holds three questions, so a UI test

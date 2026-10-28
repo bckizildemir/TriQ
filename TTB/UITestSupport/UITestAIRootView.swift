@@ -13,13 +13,18 @@ struct UITestAIRootView: View {
     init() {
         let isAnonymous = UITestLaunchOptions.isAIAnonymousHarnessEnabled
 
+        let questionModel = QuestionModel(localQuestions: [])
+        if UITestLaunchOptions.shouldUseAILongFeed {
+            questionModel.replaceTrioQuestionsForTesting(Self.longFeed, selectedLanguageCode: "en")
+        }
+
         _environment = StateObject(
             wrappedValue: .uiTest(
                 storage: .harnessSuite(named: "UITestAIRootView"),
                 authModel: isAnonymous
                     ? UITestAuthModelFactory.anonymousUser()
                     : UITestAuthModelFactory.permanentUser(uid: "ui-test-ai-user"),
-                questionModel: QuestionModel(localQuestions: [])
+                questionModel: questionModel
             )
         )
 
@@ -38,6 +43,16 @@ struct UITestAIRootView: View {
         AIView(trioModel: trioModel)
             .appRoot(environment)
             .onAppear(perform: seedDraftIfNeeded)
+    }
+
+    /// Six English Trio questions: more than one iPhone 12 screen of cards.
+    private static let longFeed = (1...6).map { index in
+        Question(
+            id: "ui-test-trio-\(index)",
+            text: "Which three things made day \(index) feel worth remembering?",
+            category: "Daily",
+            languageCode: "en"
+        )
     }
 
     private func seedDraftIfNeeded() {
