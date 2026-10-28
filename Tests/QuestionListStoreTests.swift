@@ -428,6 +428,30 @@ final class QuestionListStoreTests: XCTestCase {
         XCTAssertEqual(model.lists.map(\.id), [created.id])
     }
 
+    func testTokenRefreshAtTheSameUidKeepsTheListenerAndTheLists() async {
+        let service = MockQuestionListService()
+        let observer = FakePermanentAccountObserver()
+        let model = QuestionListStore(
+            questionListService: service,
+            accountObserver: observer
+        )
+
+        observer.emit("uid-1")
+        await service.waitUntilListenerStarts(for: "uid-1")
+        await service.sendSnapshot([makeList(id: "kept", ownerId: "uid-1")], for: "uid-1")
+        await waitForListIDs(["kept"], on: model)
+
+        // A token refresh reports the same uid again.
+        observer.emit("uid-1")
+        for _ in 0..<50 {
+            await Task.yield()
+        }
+
+        let startCount = await service.listenerStartCount(for: "uid-1")
+        XCTAssertEqual(startCount, 1)
+        XCTAssertEqual(model.lists.map(\.id), ["kept"])
+    }
+
     func testDeinitCancelsTheAccountObservation() async {
         let observer = FakePermanentAccountObserver()
         var model: QuestionListStore? = QuestionListStore(

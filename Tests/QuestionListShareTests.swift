@@ -294,6 +294,27 @@ final class QuestionListShareTests: XCTestCase {
         _ = store
     }
 
+    func testTokenRefreshAtTheSameUidKeepsTheShareListenersAndShares() async {
+        let service = FakeLiveQuestionListShareService()
+        let observer = FakePermanentAccountObserver()
+        let store = SharedQuestionListStore(service: service, accountObserver: observer)
+
+        observer.emit("uid-1")
+        for _ in 0..<1000 where service.ownedListenerUserIDs.isEmpty {
+            await Task.yield()
+        }
+        store.applyOwnedSharesSnapshotForTesting([makeShare(id: "kept")])
+
+        // A token refresh reports the same uid again.
+        observer.emit("uid-1")
+        for _ in 0..<50 {
+            await Task.yield()
+        }
+
+        XCTAssertEqual(service.ownedListenerUserIDs, ["uid-1"])
+        XCTAssertEqual(store.ownedShares.map(\.id), ["kept"])
+    }
+
     func testAcceptShareDoesNotPermanentlyRebindAdapterIdentity() async throws {
         let share = makeShare(id: "share-1", shareCode: "code-1")
         let service = InMemoryQuestionListShareService(ownedShares: [share], currentUserId: "local-user")
