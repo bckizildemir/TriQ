@@ -62,6 +62,12 @@ can show no AI quick answers. **Opening a question card is an AI call**: it call
 `suggestQuickAnswers` by itself when the question has fewer than 5 stored quick answers
 (`QuestionCardExpandedView.loadQuickAnswerSuggestions`).
 
+**Standing yes for live writes (owner, 2026-10-28), until the App Store release:** a run may write to
+the live Firebase project without asking: sign-in, guest and permanent test accounts, lists, questions,
+answers, account deletion. Write each thing it creates in a `live=` line in `run.txt`; the owner cleans
+the project before the release. AI calls, deploys, Hosting changes and anything that can bill still
+need a yes per action. This replaces the per-write questions below until the release.
+
 Owner rule (2026-10-15): a run may read; each write or AI call needs a yes, and a yes covers one
 action, not the next one (`~/.claude/CLAUDE.md`, "Cloud spend needs the user's yes"). Ask in plain
 words: what the run taps, what it leaves on the server, what it may cost. The QA account

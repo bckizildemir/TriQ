@@ -43,7 +43,7 @@ enum ImageServiceError: LocalizedError {
 actor ImageService {
     static let shared = ImageService()
 
-    // In-memory cache keyed by download URL
+    // In-memory cache keyed by download URL; holds profile photos only (#85)
     private let cache = NSCache<NSString, UIImage>()
     // Deduplicate concurrent uploads targeting the same storage path.
     private var inFlightUploads: [String: Task<String, Error>] = [:]
@@ -68,7 +68,8 @@ actor ImageService {
         }
 
         let path = storagePath(userId: userId, questionId: questionId, slotIndex: slotIndex)
-        return try await uploadImage(image, to: path)
+        // No reader loads answer images from the cache; they show through `AsyncImage` (#85).
+        return try await uploadImage(image, to: path, cachesResult: false)
     }
 
     // MARK: - Delete
@@ -80,7 +81,6 @@ actor ImageService {
         }
         let path = storagePath(userId: userId, questionId: questionId, slotIndex: slotIndex)
         let ref = Storage.storage().reference().child(path)
-        cache.removeObject(forKey: path as NSString)
         do {
             try await ref.delete()
         } catch {
@@ -107,7 +107,7 @@ actor ImageService {
         }
 
         let path = profileImagePath(userId: userId)
-        return try await uploadImage(image, to: path)
+        return try await uploadImage(image, to: path, cachesResult: true)
     }
 
     /// Deletes `userId`'s profile image from Firebase Storage.
@@ -214,7 +214,7 @@ actor ImageService {
         "answers/\(userId)/\(questionId)/slot_\(slotIndex).jpg"
     }
 
-    private func uploadImage(_ image: UIImage, to path: String) async throws -> String {
+    private func uploadImage(_ image: UIImage, to path: String, cachesResult: Bool) async throws -> String {
         if let existingTask = inFlightUploads[path] {
             return try await existingTask.value
         }
@@ -238,8 +238,15 @@ actor ImageService {
         defer { inFlightUploads.removeValue(forKey: path) }
 
         let url = try await uploadTask.value
-        storeUploadedImage(image, downloadURL: url)
+        finishUpload(of: image, downloadURL: url, cachesResult: cachesResult)
         return url
+    }
+
+    /// The cache step of an upload. Internal, not private, so a Firebase-free test can prove that
+    /// an upload with `cachesResult: false` (answer images) leaves the cache untouched (#85).
+    func finishUpload(of image: UIImage, downloadURL: String, cachesResult: Bool) {
+        guard cachesResult else { return }
+        storeUploadedImage(image, downloadURL: downloadURL)
     }
 
     /// Caches what was actually uploaded, not the larger original the caller handed in.
