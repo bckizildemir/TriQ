@@ -25,7 +25,13 @@ class QuestionListStore: ObservableObject {
     @Published private(set) var lists: [QuestionList] = []
     @Published private(set) var isLoading = false
     @Published var error: String?
+    /// Creates the user asked for that the server has not confirmed. Kept apart from `lists` so a
+    /// snapshot never touches them; the view merges the two.
+    @Published private(set) var pendingCreations: [PendingListCreation] = []
+    /// Called when a background create fails after its sheet is gone. The app root shows a toast.
+    var creationFailureHandler: (@MainActor (QuestionListCreationFailure) -> Void)?
 
+    private var creationTasks: [UUID: Task<Void, Never>] = [:]
     private let questionListService: (any QuestionListServicing)?
     private var userId: String {
         didSet {
@@ -154,6 +160,85 @@ class QuestionListStore: ObservableObject {
         return list
     }
 
+    /// Starts a create that outlives the view that asked for it. Returns at once; the pending row
+    /// shows until the server answers. The task handle lets a test wait for the outcome.
+    @discardableResult
+    func startCreate(named name: String, addingQuestionID: String? = nil) -> Task<Void, Never> {
+        let pending = PendingListCreation(
+            id: UUID(),
+            name: Self.normalizedName(name),
+            questionIDToAdd: addingQuestionID
+        )
+        pendingCreations.append(pending)
+        return runCreation(pending.id)
+    }
+
+    /// Runs a failed create again with the same name. Only a failed row can retry; a list that
+    /// exists is never in `pendingCreations`, so a retry cannot create a duplicate of it.
+    @discardableResult
+    func retryCreate(_ id: UUID) -> Task<Void, Never>? {
+        guard let index = pendingCreations.firstIndex(where: { $0.id == id }),
+            pendingCreations[index].state == .failed
+        else {
+            return nil
+        }
+        pendingCreations[index].state = .saving
+        return runCreation(id)
+    }
+
+    func discardCreate(_ id: UUID) {
+        guard pendingCreations.first(where: { $0.id == id })?.state == .failed else { return }
+        pendingCreations.removeAll { $0.id == id }
+    }
+
+    private func runCreation(_ id: UUID) -> Task<Void, Never> {
+        let task = Task { [weak self] in
+            await self?.performCreation(id)
+            self?.creationTasks[id] = nil
+        }
+        creationTasks[id] = task
+        return task
+    }
+
+    private func performCreation(_ id: UUID) async {
+        guard let pending = pendingCreations.first(where: { $0.id == id }) else { return }
+        let list: QuestionList
+        do {
+            list = try await createList(named: pending.name)
+        } catch {
+            // A session change already dropped the row; it is not a user error.
+            guard !(error is CancellationError),
+                !Self.isSessionChange(error),
+                let index = pendingCreations.firstIndex(where: { $0.id == id })
+            else {
+                pendingCreations.removeAll { $0.id == id }
+                return
+            }
+            pendingCreations[index].state = .failed
+            logger.error("Question list create failed: \(error.localizedDescription)")
+            creationFailureHandler?(.createFailed)
+            return
+        }
+        // No suspension since `createList` returned, so the row and the list never show together.
+        guard pendingCreations.contains(where: { $0.id == id }) else { return }
+        pendingCreations.removeAll { $0.id == id }
+
+        guard let questionID = pending.questionIDToAdd else { return }
+        do {
+            try await setQuestion(questionID, in: list, isIncluded: true)
+        } catch {
+            guard !(error is CancellationError), !Self.isSessionChange(error) else { return }
+            self.error = nil
+            logger.error("Adding a question to a new list failed: \(error.localizedDescription)")
+            creationFailureHandler?(.addQuestionFailed)
+        }
+    }
+
+    private static func isSessionChange(_ error: Error) -> Bool {
+        if case QuestionListStoreError.sessionChanged = error { return true }
+        return false
+    }
+
     func updateList(_ list: QuestionList, name: String) async throws {
         let normalizedName = Self.normalizedName(name)
         guard lists.contains(where: { $0.id == list.id }) else {
@@ -266,6 +351,9 @@ class QuestionListStore: ObservableObject {
         mutationSequence &+= 1
         mutationVersions.removeAll()
         lists = []
+        creationTasks.values.forEach { $0.cancel() }
+        creationTasks.removeAll()
+        pendingCreations = []
         error = nil
         isLoading = false
         userId = newUserId

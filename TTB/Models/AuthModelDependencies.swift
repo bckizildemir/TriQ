@@ -1,6 +1,7 @@
 import FirebaseAuth
 import FirebaseFirestore
 import Foundation
+import os
 
 struct UserProfileSnapshot {
     let username: String?
@@ -147,40 +148,88 @@ final class LiveAuthModelAuthProvider: AuthModelAuthProviding {
 }
 
 final class LiveAuthUserDocumentManager: AuthUserDocumentManaging {
+    /// What `ensureExists` writes for a user document, decided from the stored data alone.
+    nonisolated enum UserDocumentWrite {
+        case create
+        case patch([String: Any])
+    }
+
+    private let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
+        category: "LiveAuthUserDocumentManager")
+
+    /// Pure decision: an absent document is created; a present one gets its missing fields.
+    /// `updatedAt` is a server timestamp in every patch; `createdAt` is never in a patch.
+    nonisolated static func writePlan(existing data: [String: Any]?, isAnonymous: Bool) -> UserDocumentWrite {
+        guard let data else { return .create }
+        var patch: [String: Any] = [:]
+        if data["dailyAnswers"] == nil { patch["dailyAnswers"] = 0 }
+        if data["weeklyAnswers"] == nil { patch["weeklyAnswers"] = 0 }
+        if data["totalAnswered"] == nil { patch["totalAnswered"] = 0 }
+        if data["completedQuestionIds"] == nil { patch["completedQuestionIds"] = [String]() }
+        if data["categoryAnswers"] == nil { patch["categoryAnswers"] = [String: Int]() }
+        if data["currentStreak"] == nil { patch["currentStreak"] = 0 }
+        if data["unlockedBadges"] == nil { patch["unlockedBadges"] = [String]() }
+        if data["badgeProgress"] == nil { patch["badgeProgress"] = [String: Double]() }
+        if data["isAnonymous"] == nil { patch["isAnonymous"] = isAnonymous }
+        if data["usernameNormalized"] == nil,
+            let existingUsername = data["username"] as? String
+        {
+            patch["usernameNormalized"] = AuthModel.normalizedUsername(existingUsername)
+        }
+        patch["updatedAt"] = FieldValue.serverTimestamp()
+        return .patch(patch)
+    }
+
     func ensureExists(for user: AuthModelUser) async {
-        let db = Firestore.firestore()
-        let userRef = db.collection("users").document(user.uid)
+        let defaultData = defaultUserData(for: user)
+        let isAnonymous = user.isAnonymous
+        let userId = user.uid
         do {
-            let snapshot = try await userRef.getDocument()
-            if !snapshot.exists {
-                try await userRef.setData(defaultUserData(for: user), merge: true)
-                return
-            }
-
-            var patch: [String: Any] = [:]
-            let data = snapshot.data() ?? [:]
-            if data["dailyAnswers"] == nil { patch["dailyAnswers"] = 0 }
-            if data["weeklyAnswers"] == nil { patch["weeklyAnswers"] = 0 }
-            if data["totalAnswered"] == nil { patch["totalAnswered"] = 0 }
-            if data["completedQuestionIds"] == nil { patch["completedQuestionIds"] = [String]() }
-            if data["categoryAnswers"] == nil { patch["categoryAnswers"] = [String: Int]() }
-            if data["currentStreak"] == nil { patch["currentStreak"] = 0 }
-            if data["unlockedBadges"] == nil { patch["unlockedBadges"] = [String]() }
-            if data["badgeProgress"] == nil { patch["badgeProgress"] = [String: Double]() }
-            if data["isAnonymous"] == nil { patch["isAnonymous"] = user.isAnonymous }
-            if data["usernameNormalized"] == nil,
-                let existingUsername = data["username"] as? String
-            {
-                patch["usernameNormalized"] = AuthModel.normalizedUsername(existingUsername)
-            }
-            patch["updatedAt"] = FieldValue.serverTimestamp()
-
-            if !patch.isEmpty {
-                try await userRef.setData(patch, merge: true)
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                Self.runEnsureTransaction(
+                    userId: userId, defaultData: defaultData, isAnonymous: isAnonymous
+                ) { error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume(returning: ())
+                    }
+                }
             }
         } catch {
-            // AuthModel logs failures at call site when needed.
+            logger.error(
+                "ensureExists failed for \(user.uid, privacy: .private): \(error.localizedDescription)")
         }
+    }
+
+    /// Read and write in one transaction: two racing callers cannot both create. Nonisolated
+    /// because Firestore runs the update block on its own queue, not on the main actor.
+    private nonisolated static func runEnsureTransaction(
+        userId: String,
+        defaultData: [String: Any],
+        isAnonymous: Bool,
+        completion: @escaping (Error?) -> Void
+    ) {
+        let db = Firestore.firestore()
+        let userRef = db.collection("users").document(userId)
+        db.runTransaction(
+            { transaction, errorPointer in
+                do {
+                    let snapshot = try transaction.getDocument(userRef)
+                    let existing: [String: Any]? = snapshot.exists ? (snapshot.data() ?? [:]) : nil
+                    switch writePlan(existing: existing, isAnonymous: isAnonymous) {
+                    case .create:
+                        transaction.setData(defaultData, forDocument: userRef)
+                    case .patch(let patch):
+                        transaction.setData(patch, forDocument: userRef, merge: true)
+                    }
+                } catch {
+                    errorPointer?.pointee = error as NSError
+                }
+                return nil
+            },
+            completion: { _, error in completion(error) })
     }
 
     func profileSnapshot(userId: String) async throws -> UserProfileSnapshot? {

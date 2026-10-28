@@ -107,7 +107,8 @@ struct HomeView: View {
                     titleFont: .system(size: 20, weight: .semibold),
                     subtitleFont: .system(size: 13, weight: .semibold)
                 )
-                .backport.minimizesNavigationBarOnScrollDown()
+                // No minimizing nav bar here: with the pinned chip row it hangs in a layout loop
+                // on iOS 27 when a chip is tapped (#101).
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(action: {
