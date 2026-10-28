@@ -22,5 +22,10 @@
         ]
       }
     ]
+  },
+  "webcredentials": {
+    "apps": [
+      "A355549DDD.app.berke.can.kizildemir.ttb"
+    ]
   }
 }
