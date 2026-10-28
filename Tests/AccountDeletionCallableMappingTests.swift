@@ -41,6 +41,28 @@ struct AccountDeletionCallableMappingTests {
         #expect(error == .accountAlreadyDeleted)
     }
 
+    // After the cached token expires, the callable throws the SDK's Auth refresh error unwrapped.
+    @Test(arguments: [
+        AuthErrorCode.userNotFound.rawValue,
+        AuthErrorCode.userTokenExpired.rawValue,
+        AuthErrorCode.invalidUserToken.rawValue,
+    ])
+    func authRefreshErrorOutOfTheCallableMeansTheAccountIsAlreadyDeleted(code: Int) {
+        let authError = NSError(domain: AuthErrorDomain, code: code)
+
+        let error = LiveAccountDeletionOperations.deletionError(forCallableError: authError)
+
+        #expect(error == .accountAlreadyDeleted)
+    }
+
+    @Test func otherAuthErrorOutOfTheCallableMapsToTheRetryMessage() {
+        let authError = NSError(domain: AuthErrorDomain, code: AuthErrorCode.networkError.rawValue)
+
+        let error = LiveAccountDeletionOperations.deletionError(forCallableError: authError)
+
+        #expect(error == .dataDeletionFailed)
+    }
+
     @Test func callableWaitsLongerThanTheServerTimeout() {
         // The server sets timeoutSeconds 300 for deleteOwnAccountData.
         #expect(LiveAccountDeletionOperations.callableTimeout > 300)

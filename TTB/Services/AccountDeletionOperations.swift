@@ -60,6 +60,10 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     func reauthenticate(user: any AccountDeletionAuthUser, password: String?) async throws {
         let firebaseUser = try currentFirebaseUser(matching: user)
         do {
+            // With email enumeration protection, reauthenticating a deleted email user returns
+            // `invalidCredential`, which looks like a wrong password. `reload()` reports
+            // `userNotFound` for a deleted account, so a retry after a lost response ends cleanly.
+            try await firebaseUser.reloadAsync()
             try await AccountDeletionService.reauthenticatePermanentUser(
                 user: firebaseUser,
                 password: password
@@ -123,7 +127,23 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
             // call deleted it and its response was lost.
             return .accountAlreadyDeleted
         }
+        // After the cached token expires, the SDK fails to refresh it for a deleted user and
+        // throws the Auth error unwrapped, then signs the user out.
+        if isMissingAuthUser(nsError) {
+            return .accountAlreadyDeleted
+        }
         return .dataDeletionFailed
+    }
+
+    /// True for an Auth error that says the user no longer exists on the server.
+    private static func isMissingAuthUser(_ nsError: NSError) -> Bool {
+        guard nsError.domain == AuthErrorDomain else { return false }
+        switch AuthErrorCode(rawValue: nsError.code) {
+        case .userNotFound, .userTokenExpired, .invalidUserToken:
+            return true
+        default:
+            return false
+        }
     }
 
     /// Maps a reauthentication failure. An Auth error that says the user no longer exists means an
@@ -131,13 +151,7 @@ actor LiveAccountDeletionOperations: AccountDeletionOperations {
     /// passes through unchanged. Pure, so a test needs no Firebase.
     static func deletionError(forReauthenticationError error: any Error) -> any Error {
         let nsError = error as NSError
-        guard nsError.domain == AuthErrorDomain else { return error }
-        switch AuthErrorCode(rawValue: nsError.code) {
-        case .userNotFound, .userTokenExpired, .invalidUserToken:
-            return AccountDeletionError.accountAlreadyDeleted
-        default:
-            return error
-        }
+        return isMissingAuthUser(nsError) ?AccountDeletionError.accountAlreadyDeleted : error
     }
 
     /// Checks the callable's response. Anything but `success: true` counts as a failure, so the
