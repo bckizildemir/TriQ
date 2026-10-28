@@ -18,8 +18,8 @@ English), Best Of and the scroll included.
   A chip tap pushes the category list: `Heading` = category name, the back button (identifier
   `BackButton`, label = the previous screen's title, which changes with the time of day), cards
   `question-card-category.<CategoryId>-<questionId>`.
-- `scroll` on iOS 27 a scroll down minimizes the navigation bar (the greeting and the Profile button
-  go away) and the chip row stays pinned at the top (y = 58 on iPhone 12).
+- `scroll` the navigation bar does not minimize on Home (#101): the greeting and the Profile button stay
+  and the chip row stays pinned below them (y = 112 on iPhone 12 after a scroll).
 - `card-buttons` each card has `question-card-share-…`, `question-card-list-…` and
   `question-card-favorite-…` buttons (labels "Share", "Add to question list", "Add to favorites";
   the list and favorite labels change when the question is already saved).
@@ -47,18 +47,17 @@ Preconditions: guest onboarding done; Home on screen, scrolled to the top.
   `vt tree chip-personal`.
 - `vt tap --id BackButton`. Expect the Home feed and the chip row again.
 - Scroll: `axe swipe --start-x 195 --start-y 600 --end-x 195 --end-y 250 --udid <UDID>`. Expect the chip
-  row still on screen and no greeting `Heading`. `vt shot home-scrolled`. Then `vt revive` before the
-  next tap: a chip tap in this state hangs the app (Gotchas).
+  row and the greeting still on screen. `vt shot home-scrolled`. A chip tap in this state opens the
+  category list (fixed in #101).
 - `vt tap --label 'Best Of' --element-type RadioButton`. Expect `Most Answered`. `vt shot best-of`.
   Back with `vt tap --label Home --element-type RadioButton`.
 - Record: `feature=home-feed entry=home-tab+chip-<CategoryId> result=pass`.
 
 ## Gotchas
 
-- **Product gap (2026-10-21, reproduced twice):** a chip tap after a scroll down (navigation bar
-  minimized) hangs the app — 100 % CPU, a SwiftUI layout loop, an empty tree. `vt doctor` then
-  fails with "the app is hung"; `vt revive` recovers. Until it is fixed, tap chips with the feed at
-  the top.
+- **Fixed (#101, 2026-10-28):** a chip tap after a scroll hung the app (100 % CPU, a SwiftUI layout
+  loop) while Home minimized the navigation bar on iOS 27. Home no longer minimizes it. If the hang
+  returns, `vt doctor` fails with "the app is hung" and `vt revive` recovers.
 - The chip `Home` (`home-category-chip-Home`) and the tab "Home" share a label; tap the tab with
   `--element-type RadioButton`.
 - Chips far right have x beyond 390; axe taps by id still work for those seen. Scroll the row if a
