@@ -119,7 +119,8 @@ now reaches the UI through the outcome `toggle` returns, not a flag the guest st
 > `TopmostSheetPresenter` per flag, which presents over the topmost controller, so both appear over
 > the expanded-card cover. Found while fixing it: the upgrade sheet was root-bound too, so the
 > prompt's "Create Free Account" would have done nothing over a cover. The three per-screen
-> `GuestUpgradeView` flags ADR 0004 describes are not moved yet.
+> `GuestUpgradeView` flags ADR 0004 described are moved too (#2): every entry point calls
+> `GuestFavoriteModel.requestGuestUpgrade()`, and ADR 0004 is superseded by ADR 0010.
 
 **Files**
 

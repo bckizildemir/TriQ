@@ -5,6 +5,7 @@ struct SharedQuestionListSheetView: View {
     let shareCode: String
 
     @EnvironmentObject private var authModel: AuthModel
+    @EnvironmentObject private var guestFavoriteModel: GuestFavoriteModel
     @EnvironmentObject private var deepLinkRouter: AppDeepLinkRouter
     @EnvironmentObject private var sharedQuestionListStore: SharedQuestionListStore
     @Environment(\.dismiss) private var dismiss
@@ -13,16 +14,11 @@ struct SharedQuestionListSheetView: View {
     @State private var isLoading = true
     @State private var isAccepting = false
     @State private var errorMessage: String?
-    @State private var showingGuestUpgrade = false
 
     var body: some View {
         previewContent
         .task(id: shareCode) {
             await loadPreview()
-        }
-        .sheet(isPresented: $showingGuestUpgrade) {
-            GuestUpgradeView()
-                .environmentObject(authModel)
         }
     }
 
@@ -84,7 +80,7 @@ struct SharedQuestionListSheetView: View {
 
                         if authModel.isAnonymous {
                             Button("Create Account") {
-                                showingGuestUpgrade = true
+                                guestFavoriteModel.requestGuestUpgrade()
                             }
                         }
                     }

@@ -9,7 +9,7 @@ import SwiftUI
 struct UITestProfileRootView: View {
     private static let userId = "ui-test-profile-user"
     private static let listId = "ui-test-profile-list"
-    private static let questionId = "ui-test-profile-question"
+    private static let questionId = UITestGuestFavoriteSeed.profileQuestionID
 
     @StateObject private var environment: AppEnvironment
     @State private var churnCounter = 0

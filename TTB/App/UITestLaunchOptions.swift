@@ -40,6 +40,7 @@ enum UITestLaunchOptions {
     static let aiSeedDraftHarnessArgument = "-ui-test-ai-seed-draft"
     static let aiLongFeedArgument = "-ui-test-ai-long-feed"
     static let guestFavoritesOneBelowCapArgument = "-ui-test-guest-favorites-one-below-cap"
+    static let guestFavoriteProfileQuestionArgument = "-ui-test-guest-favorite-profile-question"
     static let homeSavedAnswerArgument = "-ui-test-home-saved-answer"
     static let homeLongFeedArgument = "-ui-test-home-long-feed"
     static let profilePhotoHarnessArgument = "-ui-test-profile-photo"
@@ -88,6 +89,12 @@ enum UITestLaunchOptions {
     /// cannot tap its way to the cap. This asks the harness to start one favorite below it.
     static var shouldSeedGuestFavoritesOneBelowCap: Bool {
         ProcessInfo.processInfo.arguments.contains(guestFavoritesOneBelowCapArgument)
+    }
+
+    /// Starts the anonymous profile harness with its one fixture question saved as a guest favorite,
+    /// so the Favorites screen has a list to show and therefore the guest strip.
+    static var shouldSeedGuestFavoriteProfileQuestion: Bool {
+        ProcessInfo.processInfo.arguments.contains(guestFavoriteProfileQuestionArgument)
     }
 
     /// Starts the home harness with a saved answer on its first question, so a test can tell a
