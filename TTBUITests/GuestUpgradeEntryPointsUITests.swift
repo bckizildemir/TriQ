@@ -24,7 +24,7 @@ extension GuestUpgradeEntryPointsUITests {
             "-ui-test-guest-favorite-profile-question"
         ])
 
-        let favoritesRow = app.buttons["Favorites"]
+        let favoritesRow = app.buttons["profile-content-favorites"]
         XCTAssertTrue(scrollUntilHittable(favoritesRow, in: app), "Profile should offer Favorites")
         favoritesRow.tap()
 

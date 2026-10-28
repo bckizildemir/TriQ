@@ -402,6 +402,7 @@ struct ContentSectionView: View {
           .padding(.horizontal, 20)
         }
         .buttonStyle(ScaleButtonStyle())
+        .accessibilityIdentifier("profile-content-favorites")
 
         Divider()
           .padding(.leading, 76)
