@@ -29,9 +29,14 @@ final class NotificationService: NSObject, ObservableObject {
     private override init() {
         super.init()
         notificationCenter.delegate = self
-        authListener = Auth.auth().addStateDidChangeListener { [weak self] _, _ in
-            Task { @MainActor in
-                await self?.handleAuthStateChanged()
+        // A unit-test host must not read or rewrite the signed-in user's device document (#112): with
+        // a cached user this listener opens a live Firestore listener and then syncs a device
+        // registration against the live project.
+        if !UnitTestHost.isHostingUnitTests {
+            authListener = Auth.auth().addStateDidChangeListener { [weak self] _, _ in
+                Task { @MainActor in
+                    await self?.handleAuthStateChanged()
+                }
             }
         }
         Task {

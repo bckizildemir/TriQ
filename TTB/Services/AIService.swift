@@ -400,10 +400,11 @@ actor AIService: AIServiceProtocol {
         case .resourceExhausted:
             return .rateLimitExceeded
         case .unauthenticated:
-            if (nsError.localizedDescription.lowercased()).contains("provider key") {
-                return .apiKeyInvalid
-            }
-            return .networkError(error)
+            // `CallableRefusal` above claims every `unauthenticated` error except the provider-key
+            // fault, which is a server configuration fault rather than an App Check refusal, so this
+            // case is only ever that fault (#112). There is no second `unauthenticated` shape left
+            // to map; a new one belongs in `CallableRefusal`, not in a fallback here.
+            return .apiKeyInvalid
         case .failedPrecondition:
             return .noAPIKey
         case .unavailable:
