@@ -203,11 +203,11 @@ actor MockQuestionListService: QuestionListServicing {
         }
     }
 
-    /// Returns after the store has applied the snapshot on the main actor.
     func listenerStartCount(for userId: String) -> Int {
         listenerStartCounts[userId, default: 0]
     }
 
+    /// Returns after the store has applied the snapshot on the main actor.
     func sendSnapshot(_ lists: [QuestionList], for userId: String) async {
         await listenerCompletions[userId]?(.success(lists))
     }
