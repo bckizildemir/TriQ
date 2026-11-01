@@ -160,17 +160,16 @@ final class LiveAuthUserDocumentManager: AuthUserDocumentManaging {
 
     /// Pure decision: an absent document is created; a present one gets its missing fields.
     /// `updatedAt` is a server timestamp in every patch; `createdAt` is never in a patch.
+    ///
+    /// A patch may only name fields the `users/{userId}` update rule allows, or the server refuses
+    /// the whole write and `updatedAt` goes with it. The stats fields (`dailyAnswers`,
+    /// `totalAnswered`, `unlockedBadges` and the rest) are therefore never patched here: they are
+    /// server-owned, and every reader already treats an absent one as its starting value.
+    /// `saveAnswer` merges them on the user's next answer, so an old document fills in on its own.
+    /// See #116.
     nonisolated static func writePlan(existing data: [String: Any]?, isAnonymous: Bool) -> UserDocumentWrite {
         guard let data else { return .create }
         var patch: [String: Any] = [:]
-        if data["dailyAnswers"] == nil { patch["dailyAnswers"] = 0 }
-        if data["weeklyAnswers"] == nil { patch["weeklyAnswers"] = 0 }
-        if data["totalAnswered"] == nil { patch["totalAnswered"] = 0 }
-        if data["completedQuestionIds"] == nil { patch["completedQuestionIds"] = [String]() }
-        if data["categoryAnswers"] == nil { patch["categoryAnswers"] = [String: Int]() }
-        if data["currentStreak"] == nil { patch["currentStreak"] = 0 }
-        if data["unlockedBadges"] == nil { patch["unlockedBadges"] = [String]() }
-        if data["badgeProgress"] == nil { patch["badgeProgress"] = [String: Double]() }
         if data["isAnonymous"] == nil { patch["isAnonymous"] = isAnonymous }
         if data["usernameNormalized"] == nil,
             let existingUsername = data["username"] as? String
