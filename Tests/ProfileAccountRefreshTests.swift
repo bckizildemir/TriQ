@@ -4,22 +4,25 @@ import Testing
 /// A guest upgrade keeps the uid, so nothing else in the app notices it: Profile runs the reloads
 /// itself. The badge section used to be left out of that list, so it stayed empty until Profile
 /// reappeared (#121).
+@MainActor
 struct ProfileAccountRefreshTests {
-    @Test func aGuestUpgradeReloadsTheBadges() {
-        #expect(ProfileAccountRefresh.onGuestUpgrade.contains(.badges))
+    @Test func aGuestUpgradeRunsTheProfileStatisticsAndBadgeReloadsInOrder() async {
+        var performed: [ProfileAccountRefresh] = []
+
+        await ProfileAccountRefresh.run(isAnonymous: false) { reload in
+            performed.append(reload)
+        }
+
+        #expect(performed == [.profile, .statistics, .badges])
     }
 
-    @Test func aGuestUpgradeReloadsTheProfileAndItsStatistics() {
-        #expect(ProfileAccountRefresh.onGuestUpgrade.contains(.profile))
-        #expect(ProfileAccountRefresh.onGuestUpgrade.contains(.statistics))
-    }
+    @Test func aGuestRunsNoReloads() async {
+        var performed: [ProfileAccountRefresh] = []
 
-    /// A reload added later has to be a deliberate decision: the upgrade plan covers every reload
-    /// Profile knows about, so a new one cannot be dropped from the upgrade path by accident.
-    @Test func theUpgradePlanCoversEveryReload() {
-        let plan = Set(ProfileAccountRefresh.onGuestUpgrade)
-        let everyReload = Set(ProfileAccountRefresh.allCases)
+        await ProfileAccountRefresh.run(isAnonymous: true) { reload in
+            performed.append(reload)
+        }
 
-        #expect(plan == everyReload)
+        #expect(performed.isEmpty)
     }
 }

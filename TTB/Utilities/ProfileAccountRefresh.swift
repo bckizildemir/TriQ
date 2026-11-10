@@ -17,4 +17,17 @@ enum ProfileAccountRefresh: CaseIterable, Hashable {
 
   /// Everything a guest→permanent upgrade has to reload.
   static let onGuestUpgrade: [ProfileAccountRefresh] = [.profile, .statistics, .badges]
+
+  /// Runs `perform` for each reload in `onGuestUpgrade`, in order, once the account is permanent.
+  /// A guest (`isAnonymous`) has nothing to reload, so it returns at once.
+  @MainActor
+  static func run(
+    isAnonymous: Bool,
+    perform: @MainActor (ProfileAccountRefresh) async -> Void
+  ) async {
+    guard !isAnonymous else { return }
+    for reload in onGuestUpgrade {
+      await perform(reload)
+    }
+  }
 }
