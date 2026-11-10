@@ -29,7 +29,7 @@ Last session:
 
 ## Waits for the owner
 
-- #128 (re2js bump in `functions/`): merge or not.
+- #128 (re2js bump in `functions/`): merge or not. It fixes the high Dependabot alert 55 (re2js denial of service, fixed in 2.8.7).
 - #95 (draft, Private Cloud Compute research): finish or close.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): labelled `ready-for-human`.
 - #68 (run the UI tests in CI): needs a grilling round.
