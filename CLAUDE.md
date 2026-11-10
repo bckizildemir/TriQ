@@ -25,6 +25,10 @@ edit. `ios-memory-perf` is the one exception to
 pass, or a review of image loading or body-read computed properties. `swiftdata-pro` does not
 apply: this app persists through Firestore, not SwiftData.
 
+## Session status
+
+Read `STATUS.md` at session start; update it before the final report.
+
 ## Project Structure & Module Organization
 - `Documentation/` is the single source for architecture, AI, migration, deployment, and badge docs.
 
