@@ -18,6 +18,7 @@ Last session:
 | PR | What it does | Waits for |
 | --- | --- | --- |
 | #125 | Reload badges after a guest upgrade; share-store tests; main-actor hop in the account adapter (#121) | A test that runs the real upgrade reload, then CI and merge |
+| #129 | Add this STATUS.md and its pointer in CLAUDE.md | The owner's merge (docs only, CI skips iOS) |
 | #128 | Dependabot: bump re2js 2.8.6 → 2.9.1 in `functions/` | The owner's merge decision |
 | #95 (draft) | Record the Private Cloud Compute research for AI | The owner; agents leave it alone |
 
