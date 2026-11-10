@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "ttbp-9d652"
+  },
+  "targets": {
+    "ttbp-9d652": {
+      "hosting": {
+        "main": [
+          "ttbp-9d652"
+        ],
+        "triq": [
+          "triq"
+        ]
+      }
+    }
   }
 }
