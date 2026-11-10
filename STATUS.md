@@ -12,6 +12,7 @@ Last session:
 - Merged #126 (stop the client patch of server-owned stats on old user documents); #116 closed.
 - Held #125 (reload badges after a guest upgrade): the code is right, but its badge test only checks a constant list, not the `ProfileView` reload. Finding is in a PR comment.
 - Removed merged, clean worktrees (verify-99, verify-triq, wt-112, wt-116, the #90 nav-bar worktree).
+- With the owner's yes, deleted old worktrees and branches: `impl/53`, `impl/54` (older drafts; the work merged in #103), `feat/60-92` (PR #107 merged) and the #90 grey-band wip worktree.
 
 ## Open PRs
 
@@ -33,8 +34,3 @@ Last session:
 - #95 (draft, Private Cloud Compute research): finish or close.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): labelled `ready-for-human`.
 - #68 (run the UI tests in CI): needs a grilling round.
-- Old worktrees kept because they hold work that no merged PR has:
-  - `impl/53-one-listener-handle` and `impl/54-favorites-listener-call-site`: pushed, never had a PR.
-  - `feat/60-92-tab-and-trio-chrome`: 3 uncommitted UI-test file changes (its PR #107 merged).
-  - `worktree-agent-afe07a39aa03cfd1e`: 1 unpushed wip commit (iOS 18 grey band diagnosis, fixed later in #90).
-  Keep or delete each.
