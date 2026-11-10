@@ -151,9 +151,19 @@ final class AppEnvironment: ObservableObject {
         )
     }
 
+    #if DEBUG
+    /// How many live environments this process has built. A unit-test run must leave it at zero
+    /// (#112): `live()` is what opens the Firestore listeners, and the app's root view is its only
+    /// production caller, so a non-zero count means the test host rendered the app's own wiring.
+    private(set) static var liveBuildCount = 0
+    #endif
+
     /// The app's own wiring. Every model is built here and nowhere else on the production path.
     static func live(initialDeepLinkURL: URL? = nil) -> AppEnvironment {
-        AppEnvironment(
+        #if DEBUG
+        liveBuildCount += 1
+        #endif
+        return AppEnvironment(
             authModel: AuthModel(),
             questionModel: QuestionModel(),
             answerModel: AnswerModel(),

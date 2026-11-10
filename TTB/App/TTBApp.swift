@@ -14,6 +14,18 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         ImagePipeline.shared = ImagePipeline(configuration: .withDataCache)
 
+        // A unit-test host is a container for the test bundle, not an app launch (#112): it must not
+        // attest, register for remote notifications, or open the live environment's listeners. Only
+        // Firebase itself is still configured — it connects to nothing until a request is made, and
+        // a suite that reads the shared `NotificationService` reaches `Auth.auth()`, which traps
+        // when the default app is missing.
+        if UnitTestHost.isHostingUnitTests {
+            if FirebaseApp.app() == nil {
+                FirebaseApp.configure()
+            }
+            return true
+        }
+
         // Before every FirebaseApp.configure() below, including the harness one: Firebase reads the
         // App Check factory while it configures.
         AppCheckInstaller.install(AppCheckPolicy.provider(for: .current))
@@ -58,7 +70,13 @@ struct TTBApp: App {
     @ViewBuilder
     private var rootView: some View {
         #if DEBUG
-        if UITestLaunchOptions.isCategoryQuestionsHarnessEnabled
+        if UnitTestHost.isHostingUnitTests {
+            // Nothing to render: this launch exists only to hold the test bundle (#112). The live
+            // `AppEnvironment` is built on first render, so skipping it here is what keeps a
+            // unit-test run off the live project — its listeners are the ones that showed up as an
+            // App Check failure in a test log.
+            Color.clear
+        } else if UITestLaunchOptions.isCategoryQuestionsHarnessEnabled
             || UITestLaunchOptions.isGuestFavoriteMilestoneHarnessEnabled {
             UITestCategoryQuestionsRootView()
         } else if UITestLaunchOptions.isHomeHarnessEnabled

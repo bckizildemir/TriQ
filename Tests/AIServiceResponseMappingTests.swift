@@ -130,7 +130,7 @@ struct AIServiceResponseMappingTests {
 
     @Test func unauthenticatedWithoutAProviderKeyMessageIsARefusal() {
         // `CallableRefusal` claims every `unauthenticated` error except the provider-key fault, so
-        // the `.networkError` branch for `unauthenticated` in `mapFunctionsError` is unreachable.
+        // `mapFunctionsError` has no other `unauthenticated` branch left to reach (#112).
         let error = Self.functionsError(.unauthenticated, message: "Something else.", details: ["reason": "other"])
 
         #expect(Self.name(of: AIService.mapFunctionsError(error)) == "refused")
