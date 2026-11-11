@@ -134,7 +134,7 @@ The five canonical triage roles, each label string equal to its name (`needs-tri
 
 ### Domain docs
 
-Single-context — root `CONTEXT.md` plus `docs/adr/`. See `docs/agents/domain.md`.
+Single-context — root `GLOSSARY.md` plus `docs/adr/`. See `docs/agents/domain.md`.
 
 ## Firebase objects
 

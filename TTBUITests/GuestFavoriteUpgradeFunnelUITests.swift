@@ -3,7 +3,7 @@ import XCTest
 /// Covers the guest funnel from the favorite cap through to a migrated account.
 ///
 /// Both halves lived only on the production app root, so no harness presented them and nothing
-/// tested them — the divergence AD-3 exists to remove. The assertions are `CONTEXT.md`'s rules
+/// tested them — the divergence AD-3 exists to remove. The assertions are `GLOSSARY.md`'s rules
 /// rather than the wiring: reaching the guest favorite cap "prompts an upgrade", and guest
 /// favorites "migrate onto the account when the user upgrades".
 ///

@@ -2,7 +2,7 @@ import Testing
 import UIKit
 @testable import TTB
 
-/// `AnswerDraft.isComplete` — the Complete Answer rule from `CONTEXT.md` — and
+/// `AnswerDraft.isComplete` — the Complete Answer rule from `GLOSSARY.md` — and
 /// `isReadyToSave(against:)`, which combines it with `hasChanges(against:)` for the save tick.
 struct AnswerDraftTests {
     /// One slot's content, Sendable so it can parametrize a test. `SlotImage` holds a `UIImage`

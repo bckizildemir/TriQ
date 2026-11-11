@@ -28,7 +28,7 @@ render the app. Do that pass first, every time.
   load-bearing reason, record an ADR under `docs/adr/` and link it here so the next survey does not
   re-suggest it.
 - The vocabulary is deliberate: **module, interface, implementation, depth, seam, adapter, leverage,
-  locality** (from the `/codebase-design` skill). Domain nouns come from `CONTEXT.md`. Don't
+  locality** (from the `/codebase-design` skill). Domain nouns come from `GLOSSARY.md`. Don't
   substitute "service", "layer", "boundary" — the words are load-bearing across these entries.
 
 ## Scope and method
@@ -553,7 +553,7 @@ changes where the lifecycle is implemented on the client, not the claim/snapshot
 **Open questions for grilling.** Does the interface expose callables one-for-one, or fewer, wider
 operations? Is the cold-start flash acceptable, or does the pre-listener state need a different fix?
 
-**Note.** No test anywhere asserts snapshot immutability — the property `CONTEXT.md` states most
+**Note.** No test anywhere asserts snapshot immutability — the property `GLOSSARY.md` states most
 explicitly ("Later answer edits do not change an existing snapshot"). It currently holds only because
 no mutator happens to write `ownerAnswerSnapshots` after creation. Worth an assertion while in here.
 
@@ -581,7 +581,7 @@ recipient), so both screens render the same type. Split the file by screen while
 
 **Deletion test.** Concentrates — the pairing rule and the snapshot-vs-live distinction get one home.
 
-**Domain-model side effect.** If this lands, add the comparison term to `CONTEXT.md`: the glossary
+**Domain-model side effect.** If this lands, add the comparison term to `GLOSSARY.md`: the glossary
 names *Answer Snapshot* and *Reply Snapshot* but not the comparison between them, which is the thing
 both screens exist to render. Run `/domain-modeling` for the term rather than inventing one here.
 
@@ -669,7 +669,7 @@ existing **recipient** who reopens a **share link** after the owner disables it 
 accepting recipients" — `TTB/Views/Main/SharedQuestionListViews.swift:126-133` surfaces it as an error
 and never reaches the already-accepted re-route.
 
-`CONTEXT.md` defines a share link as granting claim access "until the link is disabled", i.e.
+`GLOSSARY.md` defines a share link as granting claim access "until the link is disabled", i.e.
 disabling should stop new claims, not re-entry. Fix: compute `isAccepted` first and return the
 accepted payload before the claimable check, on both callables. No test on either side covers this —
 the client tests only run the fixture branch (see AD-5), and
@@ -950,7 +950,7 @@ Findings are not all negative; these are the shapes the candidates above are try
   `GuestCapabilityPolicy` — rules extracted to where they can be tested without Firebase. AD-1 and
   AD-2 are asking for the same treatment on favorites resolution and answer saving.
 
-## Terms that may enter `CONTEXT.md`
+## Terms that may enter `GLOSSARY.md`
 
 **Settled** — AD-1's and AD-2's terms were added while designing their modules and then challenged in a
 `/domain-modeling` pass on 2026-07-31. What that pass changed is worth keeping, because in three of six
@@ -986,7 +986,7 @@ since a term agreed while designing its own module tends to describe the module.
 
 Suggested route for an agent or a fresh session:
 
-1. Read `CONTEXT.md` for the domain language and `docs/adr/` for decisions already made.
+1. Read `GLOSSARY.md` for the domain language and `docs/adr/` for decisions already made.
 2. Load the `/codebase-design` skill for the vocabulary, then re-verify the candidate's citations —
    line numbers drift.
 3. Run `/grilling` (or `/grill-with-docs`) on the chosen candidate to settle constraints, seam

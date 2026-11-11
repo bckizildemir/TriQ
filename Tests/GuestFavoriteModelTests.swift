@@ -202,7 +202,7 @@ final class GuestFavoriteModelTests: XCTestCase {
     }
 
     /// The bug this guards against: a partially-successful migration must not silently drop the
-    /// ids the server could not accept. See the Guest Favorite entry in `CONTEXT.md`.
+    /// ids the server could not accept. See the Guest Favorite entry in `GLOSSARY.md`.
     func testCompleteMigrationRetainsIdsTheServerReportedUnavailable() {
         let model = makeModel()
         _ = model.addFavorite(questionId: "q1")
