@@ -1,0 +1,48 @@
+---
+title: "TriQ: first open to first answer (guest)"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: Getting started
+    lg1: Home
+    lg2: Answering
+  }
+  class lg0 blue
+  class lg1 teal
+  class lg2 orange
+  s0: Sign-in screen
+  s1: Intro steps 1-4
+  s2: Last intro step, button off
+  s3: Last intro step, legal terms agreed
+  s4: Home
+  s5: Question card, empty
+  s6: Question card, answers typed (up to 3)
+  s7: Home with Error alert, answers rolled back
+  s8: Save and Close / Close Without Saving
+  [*] --> s0
+  s0 --> s1: you tap Continue as Guest
+  s1 --> s2: you tap Skip or you tap Continue
+  s2 --> s1: you tap Back
+  s2 --> s3: you tick Agree to the legal terms
+  s3 --> s2: you untick the legal terms
+  s3 --> s1: you tap Back
+  s3 --> s4: you tap See Today's Questions
+  s1 --> s3: you tap Continue or you tap Skip
+  s4 --> s5: you tap a question card
+  s5 --> s4: you tap Close
+  s5 --> s6: you type an answer
+  s6 --> s4: you tap Save, it saves
+  s6 --> s7: you tap Save, the save fails
+  s6 --> s8: you tap Close
+  s7 --> s4: you tap OK
+  s8 --> s4: you tap Close Without Saving or you tap Save and Close, it saves
+  s8 --> s7: you tap Save and Close, the save fails
+  class s0 blue
+  class s1 blue
+  class s2 blue
+  class s3 blue
+  class s4 teal
+  class s5 orange
+  class s6 orange
+  class s7 teal
+  class s8 orange

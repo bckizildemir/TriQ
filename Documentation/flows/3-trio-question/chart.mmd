@@ -1,0 +1,59 @@
+---
+title: "TriQ: write a Trio question"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: Guest
+    lg1: Signed in
+  }
+  class lg0 orange
+  class lg1 teal
+  s0: Home (signed in)
+  s1: Home (guest)
+  s2: Before You Use Trio (signed in)
+  s3: Before You Use Trio (guest)
+  s4: Trio feed (signed in)
+  s5: Trio feed (guest)
+  s6: Composer, empty, Submit off
+  s7: Create Account form
+  s8: Composer, ready to submit
+  s9: Composer, Use at least 8 characters
+  s10: Submitted for review (toast)
+  s11: Composer with 3 AI ideas
+  s12: Composer, submit error shown
+  s13: Composer, AI idea picked
+  [*] --> s0
+  [*] --> s1
+  s0 --> s2: you tap the Trio tab
+  s1 --> s3: you tap the Trio tab
+  s2 --> s4: you tap Continue
+  s3 --> s5: you tap Continue
+  s4 --> s6: you tap +
+  s5 --> s7: you tap +
+  s6 --> s4: you tap Cancel
+  s6 --> s8: you type a question of 8+ characters
+  s6 --> s9: you type under 8 characters
+  s7 --> s5: you tap Cancel
+  s8 --> s4: you tap Cancel
+  s8 --> s10: you tap Submit, it works
+  s8 --> s11: you tap Generate ideas
+  s8 --> s12: you tap Submit, it fails
+  s9 --> s8: you type a question of 8+ characters
+  s10 --> s4: the toast goes away
+  s11 --> s13: you tap an idea
+  s12 --> s10: you tap Submit again, it works
+  s13 --> s10: you tap Submit, it works
+  class s0 teal
+  class s1 orange
+  class s2 teal
+  class s3 orange
+  class s4 teal
+  class s5 orange
+  class s6 teal
+  class s7 orange
+  class s8 teal
+  class s9 teal
+  class s10 teal
+  class s11 teal
+  class s12 teal
+  class s13 teal

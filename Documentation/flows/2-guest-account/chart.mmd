@@ -1,0 +1,54 @@
+---
+title: "TriQ: guest becomes an account and leaves"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: Guest
+    lg1: Signed in
+    lg2: Signed out
+  }
+  class lg0 orange
+  class lg1 teal
+  class lg2 tan
+  s0: Home (guest)
+  s1: Profile (guest)
+  s2: Create Account form
+  s3: Sign-in screen
+  s4: Home (signed in)
+  s5: Create Account form, error shown
+  s6: Profile (signed in)
+  s7: Edit Profile
+  s8: Delete My Account Permanently sheet
+  s9: Enter your password again
+  s10: You've reached 10 favorites! sheet
+  [*] --> s0
+  s0 --> s1: you tap Profile
+  s1 --> s0: you tap Close
+  s1 --> s2: you tap Save your progress
+  s1 --> s3: you tap Delete Account, then Delete Guest Account
+  s2 --> s4: you tap Create Account, it works
+  s2 --> s1: you tap Cancel
+  s2 --> s5: you tap Create Account, it fails
+  s4 --> s6: you tap Profile
+  s5 --> s4: you fix it and tap Create Account, it works
+  s6 --> s4: you tap Close
+  s6 --> s7: you tap Edit Profile
+  s7 --> s6: you go back
+  s7 --> s8: you tap Delete Account
+  s8 --> s9: you tap Delete My Account Permanently
+  s9 --> s3: you type your password and confirm
+  s0 --> s10: you star a 10th question (saved) or an 11th (not saved)
+  s10 --> s0: you tap Maybe Later
+  s10 --> s2: you tap Create Free Account
+  s2 --> s0: you tap Cancel
+  class s0 orange
+  class s1 orange
+  class s2 orange
+  class s3 tan
+  class s4 teal
+  class s5 orange
+  class s6 teal
+  class s7 teal
+  class s8 teal
+  class s9 teal
+  class s10 orange
