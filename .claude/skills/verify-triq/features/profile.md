@@ -35,7 +35,8 @@ Preconditions: [Guest onboarding](./guest-onboarding.md) done; Home on screen.
   `../SKILL.md`, "A run's own account"): `vt tap --id profile-guest-upgrade-button`. Tap both "Show password" buttons
   first, then fill Username, Email, Password, Confirm password from the file. Take no shot or tree
   while the sheet shows the password. `vt tap --once --label 'Create Account' --element-type Button`.
-  Expect the sheet to close.
+  Expect the sheet and Profile to close and Home to show: the jump to Home is intended (owner,
+  2026-11-12, #136).
 - Second view: open Profile again. Expect the username and email and no guest card.
   `vt shot profile-account`, `vt tree profile-account`.
 - Close with `vt tap --id xmark.circle.fill`.
