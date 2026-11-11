@@ -32,6 +32,7 @@ the clean history as evidence.
 | ttb-share-link-deep-links | first-party | `own` |
 | ttb-live-adapter-tests | first-party | `own` |
 | verify-triq | first-party (`/create-verification-skill`, 2026-10-15) | `own` |
+| formal-ai-quota-pools | first-party (`/create-formal-verification-skill`, 2026-11-12) | `own` |
 
 ## Matt Pocock skills (`track`)
 

@@ -1,0 +1,79 @@
+---
+title: "AI quota: one caller across a UTC midnight"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: Within the daily limit
+  }
+  class lg0 blue
+  state "Day 1" as s0 {
+    s1: Guest #183; answers: 0
+    s2: Guest #183; answers: 0 #183; 1 in flight
+    s3: Email account (unverified) #183; answers: 0
+    s4: Guest #183; answers: 0 #183; 2 in flight
+    s5: Email account (unverified) #183; answers: 0 #183; 1 in flight
+    s6: Verified account #183; answers: 0
+    s7: Guest #183; answers: 1
+    s8: Email account (unverified) #183; answers: 0 #183; 2 in flight
+    s9: Verified account #183; answers: 0 #183; 1 in flight
+    s10: Guest #183; answers: 1 #183; 1 in flight
+    s11: Email account (unverified) #183; answers: 1
+    s12: Verified account #183; answers: 0 #183; 2 in flight
+    s13: Email account (unverified) #183; answers: 1 #183; 1 in flight
+    s14: Verified account #183; answers: 1
+    s15: Verified account #183; answers: 1 #183; 1 in flight
+    s16: Email account (unverified) #183; answers: 2
+    s17: Verified account #183; answers: 2
+  }
+  [*] --> s1
+  s1 --> s2: the app asks the AI
+  s1 --> s3: the guest links an email
+  s2 --> s4: the app asks the AI
+  s2 --> s5: the guest links an email
+  s3 --> s5: the app asks the AI
+  s3 --> s6: the user verifies the email
+  s4 --> s8: the guest links an email
+  s2 --> s7: the AI provider answers or fails (no refund)
+  s5 --> s8: the app asks the AI
+  s5 --> s9: the user verifies the email
+  s6 --> s9: the app asks the AI
+  s7 --> s10: the app asks the AI
+  s7 --> s11: the guest links an email
+  s4 --> s2: the server checks and counts the quota
+  s4 --> s10: the AI provider answers or fails (no refund)
+  s8 --> s12: the user verifies the email
+  s5 --> s11: the AI provider answers or fails (no refund)
+  s9 --> s12: the app asks the AI
+  s10 --> s7: the server checks and counts the quota
+  s10 --> s13: the guest links an email
+  s11 --> s13: the app asks the AI
+  s11 --> s14: the user verifies the email
+  s8 --> s13: the AI provider answers or fails (no refund)
+  s8 --> s5: the server checks and counts the quota
+  s9 --> s14: the AI provider answers or fails (no refund)
+  s13 --> s15: the user verifies the email
+  s13 --> s11: the server checks and counts the quota
+  s14 --> s15: the app asks the AI
+  s12 --> s15: the AI provider answers or fails (no refund)
+  s12 --> s9: the server checks and counts the quota
+  s13 --> s16: the AI provider answers or fails (no refund)
+  s15 --> s14: the server checks and counts the quota
+  s16 --> s17: the user verifies the email
+  s15 --> s17: the AI provider answers or fails (no refund)
+  class s1 blue
+  class s2 blue
+  class s3 blue
+  class s4 blue
+  class s5 blue
+  class s6 blue
+  class s7 blue
+  class s8 blue
+  class s9 blue
+  class s10 blue
+  class s11 blue
+  class s12 blue
+  class s13 blue
+  class s14 blue
+  class s15 blue
+  class s16 blue
+  class s17 blue
