@@ -208,6 +208,8 @@ struct AIQueryDetailView: View {
                     ForEach(Array(query.responses.enumerated()), id: \.offset) { index, response in
                         ResponseCard(number: index + 1, response: response)
                     }
+
+                    AIGeneratedNotice(surface: .queryDetail)
                 }
             } else {
                 VStack(spacing: 12) {

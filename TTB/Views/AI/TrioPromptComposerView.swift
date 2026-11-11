@@ -175,6 +175,10 @@ struct TrioPromptComposerView: View {
                 RoundedRectangle(cornerRadius: 18)
                     .fill(Color.theme.secondaryBackground)
             )
+
+            if !model.suggestedVariations.isEmpty {
+                AIGeneratedNotice(surface: .trioIdeas)
+            }
         }
     }
 
@@ -198,6 +202,8 @@ struct TrioPromptComposerView: View {
                 }
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("trio-suggested-category")
+
+                AIGeneratedNotice(surface: .trioCategory)
             }
 
             ScrollView(.horizontal, showsIndicators: false) {

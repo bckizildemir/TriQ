@@ -44,6 +44,8 @@ struct QuestionCardExpandedView: View {
     @State private var aiLoadingIndex: Int? = nil
     @State private var aiError: String?
     @State private var quickAnswerSuggestions: [String] = []
+    @State private var quickSuggestionsIncludeAI = false
+    @State private var aiFilledAnswers = AIFilledAnswers()
     @State private var isLoadingQuickSuggestions = false
     @FocusState private var focusedField: AnswerField?
 
@@ -207,6 +209,10 @@ struct QuestionCardExpandedView: View {
                                     answerSlot(at: index)
                                         .id("slot_\(index)")
                                 }
+                            }
+
+                            if showsWandNotice {
+                                AIGeneratedNotice(surface: .wandFill)
                             }
 
                             if let error = aiError {
@@ -570,8 +576,18 @@ struct QuestionCardExpandedView: View {
                     }
                     .padding(.vertical, 2)
                 }
+
+                if quickSuggestionsIncludeAI {
+                    AIGeneratedNotice(surface: .quickAnswers)
+                }
             }
         }
+    }
+
+    /// True while a slot still holds text the wand wrote.
+    private var showsWandNotice: Bool {
+        let texts: [String] = (0 ..< AnswerDraft.slotCount).map { draft[$0].text }
+        return aiFilledAnswers.hasAIText(in: texts)
     }
 
     private var canApplyQuickSuggestion: Bool {
@@ -976,6 +992,7 @@ struct QuestionCardExpandedView: View {
             let suggestions = try await aiService.suggestAnswers(for: currentQuestion.text)
             if index < suggestions.count {
                 draft[index].text = suggestions[index]
+                aiFilledAnswers.record(suggestions[index], at: index)
             }
         } catch {
             aiError = error.localizedDescription
@@ -1005,6 +1022,7 @@ struct QuestionCardExpandedView: View {
 
         await MainActor.run {
             quickAnswerSuggestions = localCandidates
+            quickSuggestionsIncludeAI = false
             isLoadingQuickSuggestions = localCandidates.count < 5
         }
 
@@ -1038,6 +1056,7 @@ struct QuestionCardExpandedView: View {
                     excluding: existingAnswers,
                     limit: 5
                 )
+                quickSuggestionsIncludeAI = !aiCandidates.isEmpty
                 isLoadingQuickSuggestions = false
             }
         } catch {

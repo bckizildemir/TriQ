@@ -546,6 +546,8 @@ struct AIQueryInputView: View {
                                 .stroke(Color.accentColor.opacity(0.2), lineWidth: 1)
                         )
                     }
+
+                    AIGeneratedNotice(surface: .queryResult)
                 }
             }
         }

@@ -6521,6 +6521,23 @@
         }
       }
     },
+    "ai.notice.generated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI-generated. AI can make mistakes; check important info."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapay zekâ üretti. Yapay zekâ hata yapabilir; önemli bilgileri kontrol edin."
+          }
+        }
+      }
+    },
     "ai.trioDisclosure.aiNote" : {
       "extractionState" : "manual",
       "localizations" : {
