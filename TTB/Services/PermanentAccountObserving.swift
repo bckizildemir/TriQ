@@ -29,12 +29,26 @@ protocol PermanentAccountObserving: Sendable {
     ) -> PermanentAccountObservation
 }
 
-/// The live adapter: the Firebase closure forwards raw values to `permanentUserID` and hops to
-/// the main actor, and does nothing else.
+/// The live adapter: the Firebase closure forwards raw values to `deliver` and does nothing else.
 struct LivePermanentAccountObserver: PermanentAccountObserving {
     /// `""` for a guest or a signed-out user, the uid for a permanent account.
     static func permanentUserID(uid: String?, isAnonymous: Bool) -> String {
         isAnonymous ? "" : uid ?? ""
+    }
+
+    /// Maps one ID-token callback to the handler's argument and delivers it on the main actor.
+    ///
+    /// Kept out of the Firebase closure so a test can run the exact path a live token change takes;
+    /// `FakePermanentAccountObserver` calls the stores directly and never exercises it (#121).
+    static func deliver(
+        uid: String?,
+        isAnonymous: Bool,
+        to handler: @escaping @MainActor @Sendable (String) -> Void
+    ) {
+        let id = permanentUserID(uid: uid, isAnonymous: isAnonymous)
+        Task { @MainActor in
+            handler(id)
+        }
     }
 
     @MainActor
@@ -43,10 +57,11 @@ struct LivePermanentAccountObserver: PermanentAccountObserving {
     ) -> PermanentAccountObservation {
         let auth = Auth.auth()
         let registration = auth.addIDTokenDidChangeListener { _, user in
-            let id = Self.permanentUserID(uid: user?.uid, isAnonymous: user?.isAnonymous ?? false)
-            Task { @MainActor in
-                handler(id)
-            }
+            Self.deliver(
+                uid: user?.uid,
+                isAnonymous: user?.isAnonymous ?? false,
+                to: handler
+            )
         }
         return PermanentAccountObservation {
             Auth.auth().removeIDTokenDidChangeListener(registration)

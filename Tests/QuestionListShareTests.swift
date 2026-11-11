@@ -1,3 +1,4 @@
+import Synchronization
 import XCTest
 @testable import TTB
 
@@ -315,6 +316,85 @@ final class QuestionListShareTests: XCTestCase {
         XCTAssertEqual(store.ownedShares.map(\.id), ["kept"])
     }
 
+    /// The protocol says the handler runs once at registration, so a store built while a permanent
+    /// account is already signed in starts on that account without an `emit` (#121).
+    func testRegistrationStartsTheStoreOnTheAccountAlreadySignedIn() async {
+        let service = FakeLiveQuestionListShareService()
+        let observer = FakePermanentAccountObserver(currentPermanentUserID: "uid-1")
+        let store = SharedQuestionListStore(service: service, accountObserver: observer)
+
+        await waitForListeners(2, on: service)
+
+        XCTAssertEqual(service.ownedListenerUserIDs, ["uid-1"])
+        XCTAssertEqual(service.acceptedListenerUserIDs, ["uid-1"])
+        _ = store
+    }
+
+    /// Signing out must not leave the previous account's shared lists on screen (#121).
+    func testSignOutClearsThePreviousAccountsShares() async {
+        let service = FakeLiveQuestionListShareService()
+        let observer = FakePermanentAccountObserver()
+        let store = SharedQuestionListStore(service: service, accountObserver: observer)
+
+        observer.emit("uid-1")
+        await waitForListeners(2, on: service)
+        let signedInHandles = service.handles
+        store.applyOwnedSharesSnapshotForTesting([makeShare(id: "owned")])
+        store.applyAcceptedSharesSnapshotForTesting([
+            AcceptedQuestionListShare(
+                share: makeShare(id: "accepted"),
+                recipient: makeRecipient(shareId: "accepted", updatedAt: Date())
+            )
+        ])
+        service.recipients = [makeRecipient(shareId: "owned", updatedAt: Date())]
+        await store.fetchRecipients(for: "owned")
+        store.error = "stale error"
+
+        observer.emit("")
+        await waitForRemoval(of: signedInHandles)
+
+        XCTAssertTrue(store.ownedShares.isEmpty)
+        XCTAssertTrue(store.acceptedShares.isEmpty)
+        XCTAssertTrue(store.recipientsByShareID.isEmpty)
+        XCTAssertNil(store.error)
+        XCTAssertFalse(store.isLoading)
+        XCTAssertEqual(service.ownedListenerUserIDs, ["uid-1"])
+    }
+
+    /// A different account in the same process must not see the previous account's shares (#121).
+    func testSwitchingAccountsClearsThePreviousAccountsSharesAndRestartsTheListeners() async {
+        let service = FakeLiveQuestionListShareService()
+        let observer = FakePermanentAccountObserver()
+        let store = SharedQuestionListStore(service: service, accountObserver: observer)
+
+        observer.emit("uid-1")
+        await waitForListeners(2, on: service)
+        let firstAccountHandles = service.handles
+        store.applyOwnedSharesSnapshotForTesting([makeShare(id: "uid-1-share")])
+
+        observer.emit("uid-2")
+        await waitForListeners(4, on: service)
+
+        XCTAssertTrue(store.ownedShares.isEmpty)
+        XCTAssertEqual(service.ownedListenerUserIDs, ["uid-1", "uid-2"])
+        XCTAssertTrue(firstAccountHandles.allSatisfy(\.isRemoved))
+        XCTAssertTrue(service.handles.suffix(2).allSatisfy { !$0.isRemoved })
+    }
+
+    func testDeinitCancelsTheAccountObservation() {
+        let observer = FakePermanentAccountObserver()
+        var store: SharedQuestionListStore? = SharedQuestionListStore(
+            service: FakeLiveQuestionListShareService(),
+            accountObserver: observer
+        )
+        XCTAssertEqual(observer.activeObservationCount, 1)
+
+        store = nil
+
+        XCTAssertNil(store)
+        XCTAssertEqual(observer.activeObservationCount, 0)
+    }
+
     func testAcceptShareDoesNotPermanentlyRebindAdapterIdentity() async throws {
         let share = makeShare(id: "share-1", shareCode: "code-1")
         let service = InMemoryQuestionListShareService(ownedShares: [share], currentUserId: "local-user")
@@ -405,6 +485,24 @@ final class QuestionListShareTests: XCTestCase {
         XCTAssertEqual(store.ownedShare(withID: share.id)?.ownerAnswerSnapshots["q1"], originalSnapshot)
     }
 
+    /// Waits for the store's listener registrations: the reset runs in a task, so a test cannot
+    /// assert on them straight after `emit`.
+    private func waitForListeners(
+        _ expectedCount: Int,
+        on service: FakeLiveQuestionListShareService
+    ) async {
+        for _ in 0..<1000 where service.handles.count < expectedCount {
+            await Task.yield()
+        }
+        XCTAssertEqual(service.handles.count, expectedCount)
+    }
+
+    private func waitForRemoval(of handles: [FakeQuestionListShareListenerHandle]) async {
+        for _ in 0..<1000 where !handles.allSatisfy(\.isRemoved) {
+            await Task.yield()
+        }
+    }
+
     private func makeShare(
         id: String,
         shareCode: String? = nil,
@@ -474,27 +572,40 @@ final class QuestionListShareTests: XCTestCase {
 @MainActor
 private final class FakeLiveQuestionListShareService: QuestionListShareServicing {
     private(set) var ownedListenerUserIDs: [String] = []
+    private(set) var acceptedListenerUserIDs: [String] = []
+    /// Every listener handle the store asked for, in registration order, so a test can see which
+    /// ones the store removed.
+    private(set) var handles: [FakeQuestionListShareListenerHandle] = []
+    /// What `fetchRecipients` answers, so a test can populate `recipientsByShareID`.
+    var recipients: [QuestionListShareRecipient] = []
 
     func ownedSharesListener(
         userId: String,
         completion: @escaping @MainActor @Sendable (Result<[QuestionListShare], Error>) -> Void
     ) async -> QuestionListShareListenerHandle {
         ownedListenerUserIDs.append(userId)
-        return FakeQuestionListShareListenerHandle()
+        return recordHandle()
     }
 
     func acceptedRecipientsListener(
         userId: String,
         completion: @escaping @MainActor @Sendable (Result<[QuestionListShareRecipient], Error>) -> Void
     ) async -> QuestionListShareListenerHandle {
-        FakeQuestionListShareListenerHandle()
+        acceptedListenerUserIDs.append(userId)
+        return recordHandle()
+    }
+
+    private func recordHandle() -> FakeQuestionListShareListenerHandle {
+        let handle = FakeQuestionListShareListenerHandle()
+        handles.append(handle)
+        return handle
     }
 
     func fetchShare(shareId: String) async throws -> QuestionListShare {
         throw QuestionListShareService.ShareError.invalidResponse
     }
 
-    func fetchRecipients(shareId: String) async throws -> [QuestionListShareRecipient] { [] }
+    func fetchRecipients(shareId: String) async throws -> [QuestionListShareRecipient] { recipients }
 
     func fetchAcceptedShare(shareId: String, recipientId: String) async throws -> AcceptedQuestionListShare {
         throw QuestionListShareService.ShareError.invalidResponse
@@ -528,6 +639,14 @@ private final class FakeLiveQuestionListShareService: QuestionListShareServicing
     func markReplySeen(shareId: String, recipientId: String) async throws {}
 }
 
-private struct FakeQuestionListShareListenerHandle: QuestionListShareListenerHandle {
-    func remove() {}
+/// Records `remove()`, so a test can see the store drop a listener it no longer wants.
+private final class FakeQuestionListShareListenerHandle: QuestionListShareListenerHandle, Sendable {
+    private let removals = Mutex(0)
+
+    var removeCount: Int { removals.withLock { $0 } }
+    var isRemoved: Bool { removeCount > 0 }
+
+    func remove() {
+        removals.withLock { $0 += 1 }
+    }
 }

@@ -918,13 +918,19 @@ struct ProfileView: View {
   }
 
   private func handleAnonymousStateChange(_ isAnonymous: Bool) {
-    // Guest account was just upgraded to a real account.
-    // The UID stays the same after linking, so ProfileModel's
-    // userId.didSet won't fire — reload the profile manually.
-    if !isAnonymous {
-      Task {
-        await model.loadUserProfile()
-        await model.loadStatistics()
+    // Guest account was just upgraded to a real account. The UID stays the same after linking, so
+    // neither ProfileModel's userId observer nor BadgeModel's listener notices the upgrade, and the
+    // upgrade sheet covers this screen, so `.onAppear` does not run again either (#121).
+    Task {
+      await ProfileAccountRefresh.run(isAnonymous: isAnonymous) { reload in
+        switch reload {
+        case .profile:
+          await model.loadUserProfile()
+        case .statistics:
+          await model.loadStatistics()
+        case .badges:
+          badgeModel.loadBadges()
+        }
       }
     }
   }
