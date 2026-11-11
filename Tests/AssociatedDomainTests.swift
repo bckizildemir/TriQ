@@ -89,8 +89,12 @@ struct AssociatedDomainTests {
     private func hostingPublicFolder() throws -> String {
         let data = try Data(contentsOf: repoRoot.appending(path: "firebase.json"))
         let file = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
-        let hosting = try #require(file["hosting"] as? [String: Any])
+        // `hosting` is a list with one entry per site target (ttbp-9d652.web.app and triq.web.app).
+        // Both sites serve the same folder, so the association file is the same on each.
+        let sites = try #require(file["hosting"] as? [[String: Any]])
+        let folders = Set(sites.compactMap { $0["public"] as? String })
 
-        return try #require(hosting["public"] as? String)
+        #expect(folders.count == 1, "firebase.json hosting sites serve different folders: \(folders.sorted())")
+        return try #require(folders.first)
     }
 }

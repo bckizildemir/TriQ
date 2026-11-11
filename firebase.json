@@ -17,69 +17,138 @@
       "port": 9099
     }
   },
-  "hosting": {
-    "public": "Website",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "!Website/.well-known",
-      "!Website/.well-known/**",
-      "**/node_modules/**"
-    ],
-    "headers": [
-      {
-        "source": "**",
-        "headers": [
-          {
-            "key": "Content-Security-Policy",
-            "value": "frame-ancestors 'none'"
-          },
-          {
-            "key": "X-Frame-Options",
-            "value": "DENY"
-          },
-          {
-            "key": "X-Content-Type-Options",
-            "value": "nosniff"
-          },
-          {
-            "key": "Referrer-Policy",
-            "value": "strict-origin-when-cross-origin"
+  "hosting": [
+    {
+      "target": "main",
+      "public": "Website",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "!Website/.well-known",
+        "!Website/.well-known/**",
+        "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "frame-ancestors 'none'"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            }
+          ]
+        },
+        {
+          "source": "/.well-known/apple-app-site-association",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      ],
+      "rewrites": [
+        {
+          "source": "/share/lists/**",
+          "function": {
+            "functionId": "questionSharePage",
+            "region": "europe-west1"
           }
-        ]
-      },
-      {
-        "source": "/.well-known/apple-app-site-association",
-        "headers": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
+        },
+        {
+          "source": "/l/**",
+          "function": {
+            "functionId": "questionSharePage",
+            "region": "europe-west1"
           }
-        ]
-      }
-    ],
-    "rewrites": [
-      {
-        "source": "/share/lists/**",
-        "function": {
-          "functionId": "questionSharePage",
-          "region": "europe-west1"
+        },
+        {
+          "source": "/q/**",
+          "function": {
+            "functionId": "questionSharePage",
+            "region": "europe-west1"
+          }
         }
-      },
-      {
-        "source": "/l/**",
-        "function": {
-          "functionId": "questionSharePage",
-          "region": "europe-west1"
+      ]
+    },
+    {
+      "target": "triq",
+      "public": "Website",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "!Website/.well-known",
+        "!Website/.well-known/**",
+        "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "frame-ancestors 'none'"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            }
+          ]
+        },
+        {
+          "source": "/.well-known/apple-app-site-association",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ]
         }
-      },
-      {
-        "source": "/q/**",
-        "function": {
-          "functionId": "questionSharePage",
-          "region": "europe-west1"
+      ],
+      "rewrites": [
+        {
+          "source": "/share/lists/**",
+          "function": {
+            "functionId": "questionSharePage",
+            "region": "europe-west1"
+          }
+        },
+        {
+          "source": "/l/**",
+          "function": {
+            "functionId": "questionSharePage",
+            "region": "europe-west1"
+          }
+        },
+        {
+          "source": "/q/**",
+          "function": {
+            "functionId": "questionSharePage",
+            "region": "europe-west1"
+          }
         }
-      }
-    ]
-  }
+      ]
+    }
+  ]
 }
