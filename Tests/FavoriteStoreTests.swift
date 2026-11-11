@@ -263,7 +263,7 @@ final class FavoriteStoreTests: XCTestCase {
     }
 
     /// The data-loss bug this guards against: a migration the server only partly accepts must not
-    /// clear ids it never confirmed. See the Guest Favorite entry in `CONTEXT.md`.
+    /// clear ids it never confirmed. See the Guest Favorite entry in `GLOSSARY.md`.
     func testMigrationRetainsOnlyTheIdsTheServerReportedUnavailable() async {
         let (store, service, guest) = makeStore(corpus: [question("q1"), question("q2"), question("q3")])
         await store.setIdentity(.guest)

@@ -2,13 +2,13 @@
 
 How the engineering skills should consume this repo's domain documentation when exploring the codebase.
 
-This repo is **single-context**: one `CONTEXT.md` at the root and one `docs/adr/` directory.
+This repo is **single-context**: one `GLOSSARY.md` at the root and one `docs/adr/` directory.
 
 ## Before exploring, read these
 
-- **`CONTEXT.md`** at the repo root — the glossary / ubiquitous language.
+- **`GLOSSARY.md`** at the repo root — the glossary / ubiquitous language.
 - **`docs/adr/`** — read ADRs that touch the area you're about to work in.
-- `Documentation/` also holds long-form architecture, AI, migration, deployment, and badge docs. It is not the domain model — read it for background, but `CONTEXT.md` and `docs/adr/` are the authoritative sources for terminology and decisions.
+- `Documentation/` also holds long-form architecture, AI, migration, deployment, and badge docs. It is not the domain model — read it for background, but `GLOSSARY.md` and `docs/adr/` are the authoritative sources for terminology and decisions.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
@@ -16,17 +16,17 @@ If any of these files don't exist, **proceed silently**. Don't flag their absenc
 
 ```
 /
-├── CONTEXT.md
+├── GLOSSARY.md
 ├── docs/adr/     ← the numbered ADRs, 0001 upwards; list them to see the set
 ├── TTB/          ← iOS app source
 └── functions/    ← Firebase Cloud Functions
 ```
 
-If this repo ever splits into genuinely separate bounded contexts, the multi-context layout is a root `CONTEXT-MAP.md` pointing at one `CONTEXT.md` per context, with context-scoped `docs/adr/` directories alongside each.
+If this repo ever splits into genuinely separate bounded contexts, the multi-context layout is a root `GLOSSARY-MAP.md` pointing at one `GLOSSARY.md` per context, with context-scoped `docs/adr/` directories alongside each.
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
+When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `GLOSSARY.md`. Don't drift to synonyms the glossary explicitly avoids.
 
 If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
 

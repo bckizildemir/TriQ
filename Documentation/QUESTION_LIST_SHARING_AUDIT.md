@@ -23,7 +23,7 @@ where an interface lives and where an **adapter** can be swapped in.
 | Tests | `Tests/QuestionListShareTests.swift`, `functions/questionListShares.test.js` | 357 / 507 |
 
 Behavior matches `Question_List_Sharing_UX.md` and ADR
-`docs/adr/0001-question-list-sharing-links-and-snapshots.md`. The domain language in `CONTEXT.md`
+`docs/adr/0001-question-list-sharing-links-and-snapshots.md`. The domain language in `GLOSSARY.md`
 is used consistently in code — `share`, `recipient`, `snapshot`, `revoke` all mean what the
 glossary says they mean. That consistency is worth preserving.
 
@@ -36,7 +36,7 @@ glossary says they mean. That consistency is worth preserving.
 > the count from that subcollection inside their transaction. Existing documents were cleaned on
 > 2026-07-30 and re-verified clean — see [Remediation](#remediation-finding-1) below.
 
-`CONTEXT.md` states: "Recipients do not see other recipients." The implementation did not hold
+`GLOSSARY.md` states: "Recipients do not see other recipients." The implementation did not hold
 that invariant.
 
 `recipientIds: [uid, ...]` is stored **on the share document** (`questionListShares.js:44`, `:142`),
@@ -351,7 +351,7 @@ That document was written independently and overlaps this one. Where they meet:
 - **FIX-2 is a finding this audit missed** — since fixed. `previewQuestionListShare` and
   `acceptQuestionListShare` both applied the `shareIsClaimable` gate *before* the already-accepted
   check, so an existing recipient who reopened a link after the owner disabled it was told the link is
-  not accepting recipients — contradicting `CONTEXT.md`, where disabling stops new claims rather than
+  not accepting recipients — contradicting `GLOSSARY.md`, where disabling stops new claims rather than
   re-entry. Both callables now resolve already-accepted first, and require the share to still be
   active so a half-completed revocation cannot pass as re-entry. Recorded under FIX-2 in that
   document.

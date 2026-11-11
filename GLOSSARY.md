@@ -1,4 +1,4 @@
-# TTB Context
+# TTB Glossary
 
 TTB is a three-slot prompt app where people collect questions, answer them, and share focused question-list exchanges with other people.
 

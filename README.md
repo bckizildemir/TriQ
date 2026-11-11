@@ -56,7 +56,7 @@ Unit tests use Swift Testing; UI tests use XCTest. CI builds the app and all tes
 | `Website/` | Firebase Hosting: landing, privacy, terms, share-link pages |
 | `Scripts/` | Build lock wrapper, seeding, model-impact checks |
 | `Documentation/` | Product, architecture, AI, and badge docs — start at [`Documentation/README.md`](Documentation/README.md) |
-| `CONTEXT.md`, `docs/adr/` | Domain language and architecture decision records |
+| `GLOSSARY.md`, `docs/adr/` | Domain language and architecture decision records |
 
 ## Contributing
 

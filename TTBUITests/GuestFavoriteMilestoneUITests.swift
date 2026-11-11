@@ -2,7 +2,7 @@ import XCTest
 
 /// Covers the guest favorite milestone toast that replaced the inline reminder card.
 ///
-/// The milestone is encouragement, not the upgrade prompt — `CONTEXT.md` is explicit that it
+/// The milestone is encouragement, not the upgrade prompt — `GLOSSARY.md` is explicit that it
 /// "asks nothing of the user" — so the toast has no tap target. That is asserted directly rather
 /// than assumed, because the toast used to open the upgrade sheet and a regression here would be
 /// silent otherwise.
