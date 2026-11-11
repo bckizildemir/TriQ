@@ -1,6 +1,6 @@
 ---
 name: verify-triq
-description: Drive the real TriQ (TTB) iOS app on a fresh, private simulator and capture proof of what a user sees — screenshots and accessibility trees of the sign-in, guest onboarding, Home feed and other mapped journeys, in English or Turkish. The app always talks to the live Firebase project, so each feature file names what it writes. Use when a PR needs a verify-triq proof, when asked to check a change in the running app, or when CLAUDE.md's "Verify trial" asks for a simulator check.
+description: Drive the real TriQ (TTB) iOS app on a fresh, private simulator and capture proof of what a user sees — screenshots and accessibility trees of the sign-in, guest onboarding, Home feed and other mapped journeys, in English or Turkish. The app always talks to the live Firebase project, so each feature file names what it writes. Use when a PR needs a verify-triq proof, after every server deploy or user-facing merge (the check loop), when asked to check a change in the running app, or when CLAUDE.md's "Verify trial" asks for a simulator check.
 ---
 
 # verify-triq
@@ -26,8 +26,8 @@ allow rule matches that path, and a worktree session refuses a command name held
   Those harnesses skip Firebase and run on fixtures, so they prove nothing about the real app. A
   feature that only a harness can reach is not verifiable here: say so.
 - Data only through user screens. Not a harness: the XCUITest suite `TTBUITests`.
-- Drive with `axe` (or xcodebuildmcp `snapshot_ui`/`tap`/`type_text`/`screenshot` with this run's
-  `simulatorId`) and `xcrun simctl`. Never osascript, never scripted mouse clicks: the owner works on
+- Drive with `axe` (through `$V`) and `xcrun simctl` only: axe is the one driver for TriQ and
+  Purrtine (owner, 2026-11-12). XcodeBuildMCP is only for `open_sim` on an empty tree. Never osascript, never scripted mouse clicks: the owner works on
   the same Mac.
 - One fresh slim simulator per run, one driver (owner, 2026-10-27). `$V start` clones the
   project's pristine SimSlim template `iPhone 12 slim tmpl (TriQ)` (profile
@@ -67,6 +67,13 @@ the live Firebase project without asking: sign-in, guest and permanent test acco
 answers, account deletion. Write each thing it creates in a `live=` line in `run.txt`; the owner cleans
 the project before the release. AI calls, deploys, Hosting changes and anything that can bill still
 need a yes per action. This replaces the per-write questions below until the release.
+
+**Standing yes for AI calls (owner, 2026-11-12):** while the AI provider is free (Groq), a run may
+make AI calls (card open, wand, Trio ideas) without asking. Record each in a `live=` line. If the
+deployed functions switch to a provider that bills (`AI_PROVIDER=openrouter`), ask again. The owner
+keeps free models until the release. Checked live on 2026-11-12: `AI_PROVIDER=groq`,
+`AI_MODEL=openai/gpt-oss-120b` on the AI functions. Before a run with AI calls, check one again
+(read-only): `gcloud run services describe suggestquickanswers --region europe-west1 --project ttbp-9d652 --format='value(spec.template.spec.containers[0].env)'`.
 
 Owner rule (2026-10-15): a run may read; each write or AI call needs a yes, and a yes covers one
 action, not the next one (`~/.claude/CLAUDE.md`, "Cloud spend needs the user's yes"). Ask in plain
@@ -220,9 +227,6 @@ axe swipe --start-x 195 --start-y 600 --end-x 195 --end-y 250 --udid <UDID>   # 
   twice (a second guest user) or undo the first. After a `--once` warning, read `$V ui`; do not tap again.
 - System alerts show in `$V ui` as SpringBoard elements (the notification and photo permission
   prompts appear only on the last onboarding step, and only when the user taps Allow on that card).
-- xcodebuildmcp works too: pass `simulatorId=<UDID>` to `snapshot_ui`, `tap` (element refs from
-  `snapshot_ui` only), `type_text` and `screenshot`. Never call its `boot_sim`, `build_run_sim` or
-  `session_set_defaults` with another device.
 
 The recipes are in `features/` — read `features/README.md`, then the feature's file.
 [Guest onboarding](features/guest-onboarding.md) comes first: every other feature starts on Home.
@@ -306,7 +310,7 @@ deleted) by the next `start` of either project. `Scripts/slim-sim.sh slots` list
   empty tree, run `$V cleanup` and start again; if it repeats, use `$V start --os 26.5` and say so.
 - **A screenshot with no device names the wrong one.** With several simulators booted (2026-10-27),
   xcodebuildmcp `screenshot` with no `simulatorId` captured another simulator. Take evidence with
-  `$V shot`, or pass `simulatorId=<UDID>` (the clone's UDID) to every xcodebuildmcp call.
+  `$V shot` only.
 - **`build` passes the run's OS to xcb** (`XCB_OS`). xcb finds `XCB_SIMULATOR` by name only on that
   runtime; without it an iOS 27 device is not found.
 
@@ -318,12 +322,50 @@ deleted) by the next `start` of either project. `Scripts/slim-sim.sh slots` list
   `launch`, `doctor`, `ui`, `tap [--once] AXE-TAP-ARGS…`, `shot NAME`, `tree NAME`, `revive` (boot
   the device if needed, end the app, launch it again), `cleanup`, `status`. `$V` alone prints this list.
 
+## After a deploy or a merge (the check loop)
+
+Run this after every server deploy and every merge a user can feel (#138). Nobody asks the owner to
+test; the loop is the proof.
+
+1. **What changed.** `git diff --name-only <before>..<after>` (for a deploy: the last deployed
+   commit to the deployed one; the deploy's function list). For each path or function, find the
+   journeys in [`features/changes.md`](features/changes.md). Done when every changed path has a
+   journey, or a line saying why none is drivable (admin only, no entry point).
+2. **Drive.** One run: `start`, `build`, `install`, `launch`, `doctor`, guest onboarding, then each
+   picked journey as each account kind the map names (guest first, then the upgrade to the run's
+   own account, then the account journeys). Follow the feature files; evidence as in "Evidence".
+3. **Server logs.** Right after the drive, read the errors the run caused (read-only, free):
+   `gcloud logging read 'resource.type="cloud_run_revision" AND severity>=ERROR AND NOT logName:"cloudaudit"' --project ttbp-9d652 --freshness=30m --limit 50 --format='value(timestamp,resource.labels.service_name,textPayload,jsonPayload.message,httpRequest.status)'`.
+   Without the `cloudaudit` filter, a deploy's quota failures show as ERROR lines with empty text
+   (2026-11-12); those belong to the deploy check, not to the run. No output means no error.
+   An error from a function the run called fails the loop. Paste the matching lines into `run.txt`.
+   No output can also mean a broken query, so also count the run's calls (read-only):
+   `gcloud logging read 'resource.type="cloud_run_revision" AND httpRequest.status>0' --project ttbp-9d652 --freshness=30m --limit 200 --format='value(resource.labels.service_name,httpRequest.status)' | sort | uniq -c`.
+   Each function the run drove must show up with status 200.
+   After a deploy, also confirm each deployed service runs its newest revision (global CLAUDE.md,
+   "Firebase deploys").
+4. **Verdict.** PASS only when every picked journey passed on each account kind and the log check is
+   clean. Otherwise FAIL with the journey, the step and the evidence path. A journey with no feature
+   file: drive it from the screens, then add its feature file in a PR or record the gap in
+   `STATUS.md`.
+5. **Report** to the owner in plain words: what changed, what was driven on which account kind, the
+   verdict, the evidence folder, what could not be driven and why. `cleanup` after the last drive.
+
+Under load (a Mac load average far above the core count, 2026-11-12: about 45 from other jobs)
+`vt ui`, `doctor` and `axe type` can take a minute or hang, and a tap can report "screen changed"
+when nothing happened. Run slow steps in the background, `vt revive` a stuck app, and before any
+relaunch check prove the save from the screen itself (for a card: `question-card-fullscreen-save` is
+gone from `vt ui`). First proof: run `2026-11-12-004718-1aa9` (#131 deploy, PASS).
+
+Through the `sim-verifier` subagent, name this section, the journeys from step 1 and the account
+kinds in its prompt; the coordinator does step 1 and reads the verdict.
+
 ## Maintenance pass (`/maintain-verification-skill`)
 
 The owner starts it by typing it; an agent cannot. A pass drives **every** feature on **one**
 device, in one language, in one run: `start`, `build` (background), `install`, `launch`,
 `doctor`, then guest onboarding first and the other features in the order of `features/README.md`.
-Each feature marked writes live or AI call needs the owner's yes before that drive. Teardown (`$V cleanup`) happens once, after the last drive. A full pass
+Writes and AI calls follow the standing yeses in "Live Firebase". Teardown (`$V cleanup`) happens once, after the last drive. A full pass
 took about 45 minutes on 2026-10-21 (the favorites cap alone about 10).
 
 Keep the map honest as the app changes with `/maintain-verification-skill`.

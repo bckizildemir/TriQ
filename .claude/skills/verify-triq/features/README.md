@@ -2,7 +2,7 @@
 
 This directory is the maintained source for verifying what a user of TriQ sees. Read this index
 before you drive the app, then use the matching feature file as the recipe. The harness is
-`scripts/vt.sh` plus `axe` (or xcodebuildmcp UI tools) on the run's own fresh simulator; see
+`scripts/vt.sh` plus `axe` (the only driver, owner 2026-11-12) on the run's own fresh simulator; see
 `../SKILL.md` for launch, doctor, the live-Firebase rules and cleanup.
 
 ## Baseline preconditions
@@ -41,6 +41,9 @@ the file was written from source and nobody has driven it yet.
 | [Question card](./question-card.md) | AI call on open (`suggestQuickAnswers`); writes live to save (`saveQuestionAnswers`) | proved 2026-10-21, save included |
 | [Profile and guest upgrade](./profile.md) | reads live; the upgrade and Delete Account write live | proved 2026-10-21; delete (guest and account) 2026-11-11 |
 | [Trio question composer](./trio-composer.md) | AI call (ideas) and writes live (publish); a permanent account only | proved 2026-10-21 |
+
+[Change map](./changes.md): which journeys a changed function, rules path or screen needs (the
+check loop in `../SKILL.md`).
 
 Order for a full pass: guest onboarding, Home feed, guest favorites, question card, profile, Trio as
 guest, then the upgrade of the run's guest to the run's own account (owner's yes; see `../SKILL.md`)
