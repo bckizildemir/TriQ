@@ -98,7 +98,14 @@ const REGION = "europe-west1";
 // redeploying the services that are already capped frees enough headroom for a straggler to
 // start, and each straggler that lands frees about 97 more. 3 instances at the v2 default of 80
 // concurrent requests each is ~240 in flight per function, still far above current traffic.
-setGlobalOptions({ maxInstances: 3 });
+//
+// 3 was not low enough either (2026-11-11). With all 32 services at 3 instances x 1 CPU the
+// project holds ~96 CPU, and a dependency bump (#128) that touches every function left almost no
+// room: 12 services failed on the quota even when deployed three at a time. At 1, each new
+// revision asks for 1 CPU instead of 3, and each service that lands frees 2 more for the next.
+// One instance still takes 80 concurrent requests, far above current traffic, and a lower cap
+// can only lower the bill. Deploy in named groups (see firebase deploy --only functions:<name>).
+setGlobalOptions({ maxInstances: 1 });
 
 const PEXELS_API_KEY = defineSecret("PEXELS_API_KEY");
 const GROQ_API_KEY = defineSecret("GROQ_API_KEY");
