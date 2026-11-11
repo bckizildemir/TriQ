@@ -39,7 +39,7 @@ the file was written from source and nobody has driven it yet.
 | [Home feed](./home-feed.md) | reads live | proved 2026-10-21; the fold and the scrolled chip tap proved 2026-10-28 |
 | [Guest favorites](./guest-favorites.md) | local only for a guest | proved 2026-10-21, cap included |
 | [Question card](./question-card.md) | AI call on open (`suggestQuickAnswers`); writes live to save (`saveQuestionAnswers`) | proved 2026-10-21, save included |
-| [Profile and guest upgrade](./profile.md) | reads live; the upgrade writes live (a permanent account) | proved 2026-10-21 |
+| [Profile and guest upgrade](./profile.md) | reads live; the upgrade and Delete Account write live | proved 2026-10-21; delete (guest and account) 2026-11-11 |
 | [Trio question composer](./trio-composer.md) | AI call (ideas) and writes live (publish); a permanent account only | proved 2026-10-21 |
 
 Order for a full pass: guest onboarding, Home feed, guest favorites, question card, profile, Trio as

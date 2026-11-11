@@ -18,6 +18,23 @@ matching skill, then edit. This applies to one-line changes too: a small change 
 | Navigation titles, toolbars, `ToolbarSpacer`               | `ios-navigation-chrome` |
 | Anything perf-shaped: scroll, memory, launch, image decode | `ios-memory-perf`       |
 | Any Swift file — modern-API choice over legacy, naming, structure | `swift-style-guide` |
+| Any SwiftUI view — Apple's own SwiftUI guidance (with `swiftui-pro`) | `swiftui-specialist` |
+| iOS 27 SwiftUI API: `reorderable`, swipe actions outside `List`, toolbar overflow, `@State` macro errors | `swiftui-whats-new-27` |
+| An XCTest file, or moving a test to Swift Testing (with `swift-testing-pro`) | `modernize-tests`   |
+| Profiling with Instruments or `xctrace` (with `ios-memory-perf`)  | `xctrace`           |
+| App Intents, Shortcuts, Siri, widget configuration intents        | `app-intents-specialist`, `app-intents-whats-new-27` |
+
+The five rows above under the style-guide row are Apple's own skills, exported from Xcode 27 with
+`xcrun mcpbridge run-agent skills export` into `~/.claude/skills/` (2026-11-11). Their text says it supersedes
+older training; when one disagrees with a community skill above, follow Apple's. Re-export after each Xcode update
+(`--replace-existing`).
+
+**Newer-iOS APIs go through `Backport`.** The deployment target is iOS 18.2, and `swiftui-whats-new-27`,
+`app-intents-whats-new-27` and the Liquid Glass skills teach iOS 26/27-only API. Wrap each such API in the
+existing backport system: `TTB/Utilities/Backport.swift` (`view.backport.<name>(…)`, or `Backport.<Name>` for
+toolbar content), one `TTB/Utilities/Backport+<Feature>.swift` per API, with `if #available(iOS 26.0, *)` (or
+27.0) inside it and a fallback for older iOS (the old look, or nothing when the feature is cosmetic). Do
+not add a new `#available` check in a view; reuse or add a `Backport+` file. Example: `Backport+ToolbarSpacer.swift`.
 
 More than one row can apply — invoke each that does, and `swift-style-guide` applies to every Swift
 edit. `ios-memory-perf` is the one exception to

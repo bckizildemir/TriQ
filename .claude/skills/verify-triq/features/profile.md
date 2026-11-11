@@ -42,10 +42,35 @@ Preconditions: [Guest onboarding](./guest-onboarding.md) done; Home on screen.
 - Record: `feature=profile entry=home-profile-toolbar result=pass`; for the upgrade, a `live=` line with
   the username, the uid and `claimUsername`.
 
+## Delete account (proved 2026-11-11, run `2026-11-11-035301-3e84`, iOS 27.0, English)
+
+**Writes live** (covered by the standing yes until release): `deleteOwnAccountData` removes the Auth user,
+`users/<uid>` and the claimed username.
+
+Guest:
+- Home → Profile. Scroll until "Delete Account" sits above y=735, then `vt tap --once --label 'Delete Account'`.
+  A popover opens: `vt tap --once --label 'Delete Guest Account'`.
+- Expect the Welcome/sign-in screen, no alert. `vt revive` (a real kill and relaunch) → still sign-in.
+
+Permanent account (the signed-in profile has no "Delete Account" row; it lives in Edit Profile):
+- Profile → `vt tap --id profile-edit-button` → "Delete Account" → a sheet: "Delete My Account Permanently"
+  → a "Delete Account" screen asks "Enter your password again" (type it from the run's credentials file;
+  eye button `eye`) → "Delete My Account Permanently" again (`--once`).
+- Expect sign-in, no alert. Signing in with the same email and password shows "The supplied auth credential
+  is malformed or has expired." That alert is the proof the account is gone.
+- Server check (read-only): `gcloud logging read` for the service `deleteownaccountdata` in europe-west1
+  shows `200` and "Callable request verification passed {app: VALID, auth: VALID}"; Auth
+  `accounts:lookup` for the email returns no user; Firestore `usernames/<name>` returns 404.
+- Record: `feature=profile entry=delete-account result=pass` and update the `live=` lines (deleted).
+
 ## Gotchas
 
-- Tap "Sign Out" and "Delete Account" only with the owner's yes: a sign-out loses a guest for good,
-  and a delete writes live.
+- "Sign Out" loses a guest for good; tap it only with the owner's yes. "Delete Account" writes live
+  and is covered by the standing yes until release (see above).
+- The upgrade sheet's "Create Account" sits under the keyboard: swipe the sheet up ~250 px first, or a
+  tap lands on a key. Both "Show password" buttons share one label: tap the eyes by coordinate.
+- After Sign In, a system "Save Password?" popup appears that axe cannot see: dismiss "Not Now" by
+  coordinate. `vt launch` on a running app only foregrounds it; use `vt revive` to prove a relaunch.
 - The statistics count only an account's own saves: a guest's earlier save shows as 0 after the
   upgrade (by design: `saveQuestionAnswers` skips `users/<uid>` for a guest).
 - The upgrade links the guest (`AuthModel.linkAnonymousAccount`), so by source the uid stays the
