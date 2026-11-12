@@ -11,16 +11,16 @@ functions.
 | Changed function | Journey (feature file) | Account kinds |
 | --- | --- | --- |
 | `claimUsername`, `releaseUsername` | guest upgrade ([profile](./profile.md)) | guest → account |
-| `resolveUsername` | sign in with a username: **no feature file** | account |
+| `resolveUsername` | sign in with a username or an unknown name ([guest onboarding](./guest-onboarding.md), sign-in form) | account |
 | `deleteOwnAccountData`, `purgeOwnAnswersForAccountDeletion` | Delete Account ([profile](./profile.md)) | guest and account |
 | `saveQuestionAnswers` | save answers ([question card](./question-card.md)) | guest and account |
 | `suggestQuickAnswers`, `suggestAIAnswers` (AI) | open a card, wand ([question card](./question-card.md)) | guest |
-| `suggestAnswerImages`, `saveSuggestedAnswerImage` | "Add image" on a card ([question card](./question-card.md)); the pick has **no feature file** | account |
+| `suggestAnswerImages`, `saveSuggestedAnswerImage` | "Add image" → "Find Image" on a card ([question card](./question-card.md)); the library pick (system picker) is not drivable | guest and account |
 | `generateQuestionPrompt`, `generateQuestionVariations`, `generateTrioQuestionSuggestions` (AI) | ideas ([Trio composer](./trio-composer.md)) | account |
-| `toggleQuestionFavorite` | favorite as an account ([home feed](./home-feed.md), [question card](./question-card.md)) | account |
+| `toggleQuestionFavorite` | favorite as an account ([guest favorites](./guest-favorites.md), `fav-account`) | account |
 | `addQuestionFavorites` | guest favorites carried over by the upgrade ([guest favorites](./guest-favorites.md), [profile](./profile.md)) | guest → account |
-| `createQuestionList`, `updateQuestionList`, `deleteQuestionList`, `setQuestionInList` | Profile → Question Lists: **no feature file** | account |
-| `*QuestionListShare*`, `sendQuestionListShareReply`, `markQuestionListShareReplySeen`, `questionSharePage` | share a list: **no feature file** (needs a second account) | account × 2 |
+| `createQuestionList`, `updateQuestionList`, `deleteQuestionList`, `setQuestionInList` | Profile → Question Lists ([question lists](./question-lists.md)) | account |
+| `*QuestionListShare*`, `sendQuestionListShareReply`, `markQuestionListShareReplySeen`, `questionSharePage` | share a list: the share sheet only ([question lists](./question-lists.md)); receiving needs a second account: verified-unreachable | account × 2 |
 | `askAIQuestion` (AI) | no entry point outside previews (2026-11-12): nothing to drive; say so | — |
 | `publishPendingContentRelease`, `sendTestContentReleaseNotification` | admin only: not drivable; say so | — |
 
@@ -38,7 +38,7 @@ account (last; the guest delete only when `deleteOwnAccountData` itself changed)
 | `firestore.rules` `users`, `usernames` | guest onboarding, profile (upgrade, edit, delete) |
 | `firestore.rules` `questions`, `userAnswers` | home feed, question card (save) |
 | `firestore.rules` `aiUsage*`, `aiConfig`, `users/*/aiQueries` | question card (open), Trio ideas |
-| `firestore.rules` `questionLists`, `questionListShares` | question lists, list share (no feature files) |
+| `firestore.rules` `questionLists`, `questionListShares` | [question lists](./question-lists.md) (share receive: unreachable) |
 | `storage.rules` `answers/` | question card "Add image"; Delete Account |
 | `storage.rules` `profiles/` | profile photo (the picker runs out of process: not drivable) |
 | `TTB/Views/...` or `TTB/Models/...` | the feature file whose sub-features name that screen; when unsure, grep the view name in `features/` |

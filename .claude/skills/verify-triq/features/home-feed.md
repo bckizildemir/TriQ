@@ -3,7 +3,7 @@
 Home lists "Today's Questions" and one section per category, each with question cards from the live
 database. A chip row pinned above the feed opens a category's full list. Proved on 2026-10-15 (run
 `2026-10-15-005622-39fa`, iOS 26.5) and on 2026-10-21 (run `2026-10-21-140704-1396`, iOS 27.0,
-English), Best Of and the scroll included.
+English), Best Of and the scroll included. Re-driven 2026-11-12 (run `2026-11-12-180550-18bb`, iOS 27.0, English).
 
 **Live-data class: reads live.** Snapshot listeners on `questions` and `categories`; no write.
 
@@ -18,20 +18,27 @@ English), Best Of and the scroll included.
   A chip tap pushes the category list: `Heading` = category name, the back button (identifier
   `BackButton`, label = the previous screen's title, which changes with the time of day), cards
   `question-card-category.<CategoryId>-<questionId>`.
-- `scroll` the navigation bar minimizes on scroll down (iOS 27, #101): the greeting
-  collapses, the Profile button stays, and the chip row stays pinned where the bar was
-  (y = 58 on iPhone 12 after a scroll). Scrolling back up brings the greeting back. A chip
-  tap or View All in this state opens the category list; it used to hang the app (#101).
-- `card-buttons` each card has `question-card-share-…`, `question-card-list-…` and
-  `question-card-favorite-…` buttons (labels "Share", "Add to question list", "Add to favorites";
-  the list and favorite labels change when the question is already saved).
+- `scroll` the navigation bar minimizes on scroll down (iOS 27, #124): the greeting
+  collapses and the chip row stays pinned where the bar was (y = 58 on iPhone 12 after a scroll).
+  On 2026-11-12 the Profile button was gone from the tree and the screen in this state, and the
+  tab bar shrank to one `RadioButton | Home`: swipe down to bring the greeting, Profile and all
+  three tabs back. A chip tap or View All in the pinned state opens the category list; it used to
+  hang the app (#124).
+- `card-buttons` each Home, category-list and Trio card has `question-card-share-…`,
+  `question-card-list-…` and `question-card-favorite-…` buttons (labels "Share", "Add to question
+  list", "Add to favorites"; the list and favorite labels change when the question is already saved).
+  The list button as a guest opens `guest-upgrade-sheet` ("Upgrade Account", "Cancel"); as an account
+  it opens the "Question Lists" sheet (`Done`, "Create"; see [Question lists](./question-lists.md)).
 - `profile` the toolbar button "Profile" (identifier `person.circle.fill`) opens
   [Profile](./profile.md) as a full-screen cover. For an account with a photo the button shows the photo.
 - `tabs` `RadioButton`s "Home" (`lanyardcard.fill`, value `1` when selected), "Best Of"
   (`medal.star.fill`), "Trio" (`sparkles`). Each tab keeps its pushed screen.
 - `best-of` the Best Of tab: `Heading` "Most Answered", `RadioButton`s "Today" (value `1`) and
-  "All Time", ranked cards when there are answers. On 2026-10-21 it showed the empty state
-  "No Rankings Yet" with a button back to today's questions.
+  "All Time", ranked cards `question-card-mostAnswered-<questionId>` when there are answers. A Best
+  Of card has only two buttons, `question-card-share-mostAnswered-<id>` and
+  `question-card-favorite-mostAnswered-<id>` (no list button). On 2026-11-12 Today first showed the
+  empty state "No Rankings Yet" ("Go to today's questions"), All Time showed ranked cards, and after
+  the run saved answers to one question Today ranked that question.
 
 ## How to get to it (user POV)
 
@@ -52,12 +59,15 @@ Preconditions: guest onboarding done; Home on screen, scrolled to the top.
   bar minimized (no greeting heading), the Profile button, and the chip row pinned at the top.
   `vt shot home-scrolled`. A chip tap in this state opens the category list, and so does View All.
 - `vt tap --label 'Best Of' --element-type RadioButton`. Expect `Most Answered`. `vt shot best-of`.
-  Back with `vt tap --label Home --element-type RadioButton`.
+  Tap `All Time`: expect `question-card-mostAnswered-*` cards. Back with `vt tap --label Home
+  --element-type RadioButton`.
+- After a scroll the tab bar is minimized: swipe down (`axe swipe --start-x 195 --start-y 300 --end-x
+  195 --end-y 700 --udid <UDID>`) until `vt ui` lists the three tabs again.
 - Record: `feature=home-feed entry=home-tab+chip-<CategoryId> result=pass`.
 
 ## Gotchas
 
-- **Fixed (#101, 2026-10-28):** a chip tap or View All after a scroll hung the app (100 % CPU, a
+- **Fixed (#124, 2026-10-28):** a chip tap or View All after a scroll hung the app (100 % CPU, a
   layout loop) while Home minimized the navigation bar on iOS 27. The cause was the *destination*:
   `CategoryQuestionsView` asked for a large title, and expanding a large title out of the minimized
   bar never settles during the push transition. It now uses an inline title. Never push a
@@ -65,6 +75,8 @@ Preconditions: guest onboarding done; Home on screen, scrolled to the top.
   If the hang returns, `vt doctor` fails with "the app is hung" and `vt revive` recovers.
 - The chip `Home` (`home-category-chip-Home`) and the tab "Home" share a label; tap the tab with
   `--element-type RadioButton`.
-- Chips far right have x beyond 390; axe taps by id still work for those seen. Scroll the row if a
-  tap by id fails.
+- Chips far right have x beyond 390. On 2026-11-12 `vt tap --id home-category-chip-Career` (x = 590,
+  off screen) opened Relationships, a different category, with no error: an off-screen chip tap lands
+  on whatever sits at its clamped point. Swipe the chip row sideways (`axe swipe` at y = 130) until
+  the chip's frame is inside 0 to 390, or use a chip that is already visible (Personal, Self Discovery).
 - Question text and the number of cards come from live data and change daily. Use ids, not text.

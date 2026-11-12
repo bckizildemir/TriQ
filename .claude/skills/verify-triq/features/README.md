@@ -35,19 +35,21 @@ the file was written from source and nobody has driven it yet.
 
 | Feature | Live-data class | Status |
 | --- | --- | --- |
-| [Guest onboarding](./guest-onboarding.md) | writes live (one anonymous Auth user + `users/<uid>`; free; standing yes) | proved 2026-10-21 |
-| [Home feed](./home-feed.md) | reads live | proved 2026-10-21; the fold and the scrolled chip tap proved 2026-10-28 |
-| [Guest favorites](./guest-favorites.md) | local only for a guest | proved 2026-10-21, cap included |
-| [Question card](./question-card.md) | AI call on open (`suggestQuickAnswers`); writes live to save (`saveQuestionAnswers`) | proved 2026-10-21, save included |
-| [Profile and guest upgrade](./profile.md) | reads live; the upgrade and Delete Account write live | proved 2026-10-21; delete (guest and account) 2026-11-11 |
-| [Trio question composer](./trio-composer.md) | AI call (ideas) and writes live (publish); a permanent account only | proved 2026-10-21 |
+| [Guest onboarding](./guest-onboarding.md) | writes live (one anonymous Auth user + `users/<uid>`; free; standing yes); the sign-in form reads live (`resolveUsername`) | proved 2026-10-21; sign-in form and legal links 2026-11-12 |
+| [Home feed](./home-feed.md) | reads live | proved 2026-10-21; the fold and the scrolled chip tap proved 2026-10-28; re-proved 2026-11-12 |
+| [Guest favorites](./guest-favorites.md) | local only for a guest; the strip upgrade and the signed-in star write live | proved 2026-10-21, cap included; strip upgrade and signed-in star 2026-11-12 (cap not re-driven) |
+| [Question card](./question-card.md) | AI calls (open: `suggestQuickAnswers`, wand: `suggestAIAnswers`); live reads (`suggestAnswerImages`); writes live to save (`saveQuestionAnswers`, `saveSuggestedAnswerImage`) | proved 2026-10-21, save included; wand, Find Image, Save and Close 2026-11-12 |
+| [Profile and guest upgrade](./profile.md) | reads live; the upgrade and Delete Account write live | proved 2026-10-21; delete (guest and account) 2026-11-11 and 2026-11-12 |
+| [Trio question composer](./trio-composer.md) | AI call (ideas) and writes live (publish); a permanent account only | proved 2026-10-21; re-proved 2026-11-12 |
+| [Question lists](./question-lists.md) | writes live (`createQuestionList`, `setQuestionInList`, `updateQuestionList`, `deleteQuestionList`); an account only | proved 2026-11-12; receiving a shared list verified-unreachable |
 
 [Change map](./changes.md): which journeys a changed function, rules path or screen needs (the
 check loop in `../SKILL.md`).
 
 Order for a full pass: guest onboarding, Home feed, guest favorites, question card, profile, Trio as
-guest, then the upgrade of the run's guest to the run's own account (owner's yes; see `../SKILL.md`)
-and the account part of profile and Trio.
+guest, then the upgrade of the run's guest to the run's own account (standing yes; see `../SKILL.md`;
+the favorites strip's "Keep them" is a good entry), the account part of Home (star, list button),
+Trio, question lists, and last Delete Account (account, then a second guest for the guest delete).
 
 ## Not reachable without a harness
 
@@ -55,7 +57,9 @@ These states need a `-ui-test-*` harness flag or live data that a fresh run does
 skill does not use the flags, so a run reports them as not verifiable:
 
 - the AI daily-limit state (`DAILY_LIMITS` in `functions/aiUsageLimit.js`); the seeded Trio draft;
-- a shared question list received from a link (needs a second account that shares one);
+- a shared question list received from a link (needs a second account that shares one; see
+  [Question lists](./question-lists.md));
 - a published Trio question in the app: it stays `pending` and no screen shows it until a moderator
   approves it;
-- Best Of rankings: on 2026-10-21 the Today tab showed "No Rankings Yet".
+- Best Of Today rankings on a fresh day: on 2026-10-21 and 2026-11-12 the Today tab started with "No
+  Rankings Yet" (it ranks a question once someone saved answers to it; All Time has rankings).

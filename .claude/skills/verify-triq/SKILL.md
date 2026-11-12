@@ -311,6 +311,17 @@ deleted) by the next `start` of either project. `Scripts/slim-sim.sh slots` list
 - **A screenshot with no device names the wrong one.** With several simulators booted (2026-10-27),
   xcodebuildmcp `screenshot` with no `simulatorId` captured another simulator. Take evidence with
   `$V shot` only.
+- **`vt ui` prints covered screens too** (2026-11-12). Under a full-screen cover or a sheet (the Trio
+  disclosure, a card, a New List sheet) it still lists the Home tree. Read the lines after the sheet's own
+  identifier (`vt ui | awk '/<id>/{f=1} f'`) or look at `vt shot`.
+- **After a scroll the tab bar minimizes** and the Home toolbar's Profile button leaves the tree: swipe
+  down before you tap a tab or Profile (`features/home-feed.md`).
+- **A tap on an off-screen chip lands elsewhere.** A chip with x beyond 390 opened another category by
+  `--id`; make it visible first (`features/home-feed.md`).
+- **axe types and deletes.** `axe key 42` does nothing; use `axe key-sequence --keycodes 42,42,…`
+  (Backspace, 100 a call). A button under the keyboard needs a coordinate tap on its visible part.
+- **Hidden-eye password field = dead taps.** See `features/profile.md`, Gotchas: shut down and boot this
+  run's device, `vt launch`; the session survives.
 - **`build` passes the run's OS to xcb** (`XCB_OS`). xcb finds `XCB_SIMULATOR` by name only on that
   runtime; without it an iOS 27 device is not found.
 
