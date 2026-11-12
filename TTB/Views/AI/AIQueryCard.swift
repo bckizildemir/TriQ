@@ -213,6 +213,8 @@ struct AIQueryCard: View {
                     responseItemView(number: index + 1, response: response)
                 }
             }
+
+            AIGeneratedNotice(surface: .queryCard)
         }
         .padding(.top, 8)
     }
