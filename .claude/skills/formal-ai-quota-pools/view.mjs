@@ -8,7 +8,6 @@ export const state = (v) => {
   const calls = Object.values(first(v.call));
   const doc = first(v.uidDoc);
   const waiting = calls.filter((c) => c.phase === "stamped" || c.phase === "charged").length;
-  const stale = calls.some((c) => c.phase === "stamped" && c.day < v.day);
   const paid = [1, 2].map((d) => calls.filter((c) => c.paid && c.day === d).length);
   const passed = calls.filter((c) => c.passed && c.day === v.day).length;
   // The counter is shown only when it disagrees with the calls it let through today.
@@ -19,7 +18,7 @@ export const state = (v) => {
   return [
     `Day ${v.day}`,
     `${kinds[first(v.account)]}${first(v.deleted) ? ", data deleted" : ""} · ${answers}${counter}` +
-      (waiting ? ` · ${waiting} in flight${stale ? " (one sent before midnight)" : ""}` : ""),
+      (waiting ? ` · ${waiting} in flight` : ""),
   ];
 };
 

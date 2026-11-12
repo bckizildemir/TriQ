@@ -73,7 +73,7 @@ need(wrapper, "isGuest: isGuestToken(request.auth?.token)", "isGuest comes from 
 need(wrapper, 'isAnonymous: request.auth?.token?.firebase?.sign_in_provider === "anonymous"', "the per-uid tier comes from sign_in_provider");
 need(guest, 'token?.firebase?.sign_in_provider === "anonymous" || token?.email_verified !== true', "isGuestToken: anonymous or unverified email");
 need(index, "onCall(AI_FUNCTION_OPTIONS, withSingleUseAppCheck(withDailyQuota({ db, group }, handler)))", "aiCallable wraps every AI handler in the quota");
-need(deletion, "await deleteAiUsageCounter({ db, uid, now });", "account deletion calls deleteAiUsageCounter (DeleteAccountData)");
+need(deletion, "await deleteAiUsageCounter({ db, uid });", "account deletion calls deleteAiUsageCounter (DeleteAccountData)");
 need(deletion, "storedDay >= today", "deleteAiUsageCounter keeps today's counter (DeleteAccountData)");
 if (/recursiveDelete\(db\.collection\("aiUsageDaily"\)/.test(deletion)) {
   problems.push("account deletion deletes the per-uid counter outright: the model keeps today's (TriQ#153)");

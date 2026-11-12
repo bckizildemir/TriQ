@@ -46,7 +46,9 @@ Expected output today (sync commit below): every rule HOLDS on all four configs 
 `rollover`, `deletion`, `core`). `run.sh` keeps `known_breaks` empty; a break is a new finding.
 
 `core` turns off UTC midnight and account deletion; `rollover` and `deletion` each keep one of the
-two, so a regression shows on its own config. A new finding goes into `known_breaks` in `run.sh` and
+two. The model reads the day inside the transaction, so a regression back to a stale clock read is
+not representable in it: `extract-flags.mjs` guards that shape, and `run.sh` also runs `replay.cjs`
+on the real `consumeDailyQuota` (needs `npm ci` in `functions/`; skipped with a note otherwise). A new finding goes into `known_breaks` in `run.sh` and
 into the list below in the same PR.
 
 ## Reading a result
@@ -115,10 +117,12 @@ days; Firestore outages and partial writes (the transaction is all or nothing).
 
 ## Charts
 
-`charts/` holds the `/statechart` output for the three chart configs (one caller, no second caller):
-`core` (2 calls, the whole graph, every rule holds), `rollover` and `deletion` (the two fixed findings' configs; the charts were drawn before the fix and show
-the old paths). The core chart hides no steps and has 34 arrows. Make them again with
-`/statechart`, a new output folder, `view.mjs` and the matching `chart-*.cfg`.
+`charts/` holds the `/statechart` output for the three chart configs (one caller, no second caller),
+drawn again after the #153 fix: `core` (2 calls, the whole graph, 34 arrows, every rule holds) and
+`deletion` (account deletion kept, 85 arrows, every rule holds). `rollover` has only `report.md`: with
+the midnight steps its graph is over the 500-state chart budget and no rule breaks, so the command
+draws no chart. Make them again with `/statechart`, a new output folder, `view.mjs` and the matching
+`chart-*.cfg`.
 
 ## When the code changed
 

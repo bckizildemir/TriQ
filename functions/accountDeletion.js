@@ -23,7 +23,7 @@ const RECIPIENT_STATUSES = ["accepted", "left", "revoked"];
  * question ids leave their lists and shares (with the answers copied into those shares); and the
  * caller's recipient entries on their shares go, with the share's accepted count decremented.
  */
-async function deleteOwnAccountData({ db, bucket, auth, uid, now = new Date() }) {
+async function deleteOwnAccountData({ db, bucket, auth, uid }) {
   if (typeof uid !== "string" || uid.length === 0) {
     throw new HttpsError("unauthenticated", "Authentication is required.");
   }
@@ -56,7 +56,7 @@ async function deleteOwnAccountData({ db, bucket, auth, uid, now = new Date() })
     db.collection("usernames").where("uid", "==", uid)
   );
 
-  await deleteAiUsageCounter({ db, uid, now });
+  await deleteAiUsageCounter({ db, uid });
   await deleteFilesWithPrefix(bucket, `profiles/${uid}/`);
 
   for (const name of ["aiQueries", "aiUsage", "notificationDevices"]) {
