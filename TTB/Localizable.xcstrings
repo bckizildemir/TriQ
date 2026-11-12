@@ -5592,13 +5592,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TTB AI Assistant"
+            "value" : "TriQ AI Assistant"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TTB AI Asistanı"
+            "value" : "TriQ AI Asistanı"
           }
         }
       }
@@ -5626,13 +5626,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Discover more questions with the TTB app!"
+            "value" : "Discover more questions with the TriQ app!"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TTB uygulamasıyla daha fazla soru keşfet!"
+            "value" : "TriQ uygulamasıyla daha fazla soru keşfet!"
           }
         }
       }
@@ -10367,13 +10367,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TTB is a warm place where you collect your favorites, moments, and little things that stay with you through three answers."
+            "value" : "TriQ is a warm place where you collect your favorites, moments, and little things that stay with you through three answers."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TTB; favorilerini, anlarını ve aklında kalan küçük şeyleri üç cevapla topladığın sıcak bir alan."
+            "value" : "TriQ; favorilerini, anlarını ve aklında kalan küçük şeyleri üç cevapla topladığın sıcak bir alan."
           }
         }
       }
