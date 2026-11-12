@@ -5,20 +5,26 @@ Every PR or issue number goes with a plain title.
 
 ## Focus
 
-Fix the three bugs the formal checks found (owner, 2026-11-12). Plan: each issue's text (counterexample steps) and
-`.claude/skills/formal-*/`. Items:
-- #151 (guest upgrade: a username gets stuck, shown twice or lost)
-- #152 (an old share link admits after Regenerate; a reply lands after Remove or Revoke): fix in PR (fix/152-formal-bug), awaiting owner merge and deploy
-- #153 (the per-user AI daily limit is beaten at midnight or by deleting the account)
+Fix the three bugs the formal checks found (owner, 2026-11-12): done, 3/3. Next focus not chosen yet.
+- #151 (guest upgrade username): fixed in #161
+- #152 (old share link; late reply): fixed in #159
+- #153 (AI daily limit at midnight / after delete): fixed in #160
 
 ## Last updated
 
 2026-11-12
 
 Last session:
-- #153 (per-user AI daily limit at midnight / after account delete): fix in a PR (fix/153-formal-bug): the clock is read
-  inside the quota transaction, the counter never moves back, account deletion keeps today's counter. Formal check
-  `formal-ai-quota-pools` holds on all four configs. Needs a functions deploy after the owner's yes.
+- Late 2026-11-12: merged #159, #160, #161 (closes #151-#153). Owner decisions: a guest's mid-upgrade name hold is
+  10 minutes; after an account delete today's AI counter (counts only) stays until the next day. Deployed 14
+  functions in 5 named groups (claimUsername, releaseUsername, acceptQuestionListShare, sendQuestionListShareReply,
+  createQuestionListShare, deleteOwnAccountData, askAIQuestion, suggestAIAnswers, suggestQuickAnswers,
+  generateQuestionPrompt, generateQuestionVariations, generateTrioQuestionSuggestions, suggestAnswerImages,
+  saveSuggestedAnswerImage): all Successful, 32/32 services ready. Check loop PASS (run `2026-11-12-215651-3efb`):
+  guest, upgrade, card + wand + Find Image, lists + share link, Trio ideas, both deletes; no server errors.
+  Not driven: share receive (needs a second account). To look at: a question list may stay on the server after
+  its owner deletes the account; one Find Image pick saved right after picking was not stored. #158 opened
+  (Home scroll hides the Profile button).
 - Owner decisions: the jump to Home after a guest upgrade is intended (#136, closed; recorded in
   verify-triq `features/profile.md`). `CONTEXT.md` renamed to `GLOSSARY.md` (#143).
 - Merged: #149 (verify-triq check loop after deploys and merges + `features/changes.md`, closes #138),
@@ -30,7 +36,7 @@ Last session:
   #153 (the per-user AI daily limit can be beaten at midnight or by deleting the account).
 - Owner rules: AI calls are allowed while the models are free (live check 2026-11-12: `AI_PROVIDER=groq`);
   axe is the only simulator driver. Image suggestions are a Pexels photo search, not AI: no AI notice
-  (pending the owner's final word).
+ .
 - verify-triq maintenance pass done (#156, run `2026-11-12-180550-18bb`): every feature driven, a new
   `features/question-lists.md`. Formal checks re-run in sync (#155). Possible bug to look at: after a Home
   scroll the Profile button and the tab bar leave the screen. A pending Trio question from the run is left on the server.
@@ -41,7 +47,7 @@ None.
 
 ## Next step
 
-1. Fix #151, #152 and #153 (the formal-check bugs).
+1. Choose the next focus; candidates: #158 (Home scroll hides Profile), the question-list cleanup on account delete.
 2. Open an issue for the other client writes of server-owned stats that the rules refuse:
    `QuestionService.backfillBadgeProgressIfNeeded` and the `totalAnswered` write in `ProfileModel` (same kind of bug as #116).
 
