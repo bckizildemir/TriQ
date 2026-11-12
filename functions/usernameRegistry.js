@@ -19,6 +19,28 @@ function isPlaceholderUsername(username) {
   return PLACEHOLDER_USERNAMES.includes(username);
 }
 
+// True when the profile shows the name in either field (an older write can leave only one of them current).
+function profileShows(userData, normalizedUsername) {
+  return normalizeUsername(userData.usernameNormalized) === normalizedUsername
+    || normalizeUsername(userData.username) === normalizedUsername;
+}
+
+const ANONYMOUS_HOLD_GRACE_MS = 10 * 60 * 1000;
+
+// Only a Firestore Timestamp (or a Date) tells its age; anything else counts as old.
+function isFreshClaim(updatedAt) {
+  const millis = typeof updatedAt?.toMillis === "function"
+    ? updatedAt.toMillis()
+    : updatedAt instanceof Date ? updatedAt.getTime() : null;
+  return millis !== null && Date.now() - millis < ANONYMOUS_HOLD_GRACE_MS;
+}
+
+// The first username a new account shows (AuthModelDependencies.defaultUserData).
+function placeholderPatch(isAnonymous) {
+  const username = isAnonymous ? PLACEHOLDER_USERNAMES[0] : PLACEHOLDER_USERNAMES[1];
+  return { username, usernameNormalized: normalizeUsername(username) };
+}
+
 function normalizeUsername(username) {
   return String(username || "").trim().toLowerCase();
 }
@@ -72,6 +94,7 @@ async function claimUsername({
   email,
   isAnonymous,
   createServerTimestamp,
+  isReclaimableHolder,
 }) {
   if (!user?.uid) {
     throw new HttpsError("unauthenticated", "Authentication is required.");
@@ -86,6 +109,23 @@ async function claimUsername({
   const userRef = db.collection("users").doc(user.uid);
   const usernameRef = db.collection("usernames").doc(normalizedUsername);
 
+  // A name stays held by an account that can no longer use it (a Guest whose upgrade was cut off,
+  // a deleted account whose cleanup lost the answer). The caller injects the check against Firebase
+  // Auth; it runs outside the transaction, which re-checks that the same account still holds the name.
+  // It answers "gone" (no Auth user), "anonymous" (a Guest) or a falsy value (a permanent account).
+  // A Guest's name is only taken once its claim is older than ANONYMOUS_HOLD_GRACE_MS, so a claim
+  // that is about to be linked is never taken away mid-upgrade.
+  let reclaimableHolderUid = null;
+  let reclaimableHolderKind = null;
+  if (typeof isReclaimableHolder === "function") {
+    const heldSnapshot = await usernameRef.get();
+    const heldBy = heldSnapshot.data()?.uid;
+    if (heldSnapshot.exists && heldBy && heldBy !== user.uid) {
+      reclaimableHolderKind = (await isReclaimableHolder(heldBy)) || null;
+      if (reclaimableHolderKind) reclaimableHolderUid = heldBy;
+    }
+  }
+
   await db.runTransaction(async (transaction) => {
     const [usernameSnapshot, userSnapshot] = await Promise.all([
       transaction.get(usernameRef),
@@ -93,8 +133,25 @@ async function claimUsername({
     ]);
 
     const usernameData = usernameSnapshot.data() || {};
+    let takenOverFrom = null;
     if (usernameSnapshot.exists && usernameData.uid !== user.uid) {
-      throw new HttpsError("already-exists", "This username is already taken.");
+      const holderUid = usernameData.uid;
+      const holderRef = holderUid ? db.collection("users").doc(holderUid) : null;
+      const holderSnapshot = holderRef ? await transaction.get(holderRef) : null;
+      // A missing users document alone proves nothing: the Auth check must also call the holder
+      // gone, or an anonymous Guest without a profile.
+      const authSaysReclaimable = holderUid === reclaimableHolderUid;
+      const holderHasProfile = Boolean(holderSnapshot?.exists);
+      const holderGone = authSaysReclaimable && (
+        reclaimableHolderKind === "gone" || (reclaimableHolderKind === "anonymous" && !holderHasProfile)
+      );
+      const holderIdleGuest = authSaysReclaimable
+        && reclaimableHolderKind === "anonymous"
+        && !isFreshClaim(usernameData.updatedAt);
+      if (!holderGone && !holderIdleGuest) {
+        throw new HttpsError("already-exists", "This username is already taken.");
+      }
+      takenOverFrom = { ref: holderRef, snapshot: holderSnapshot };
     }
 
     const userData = userSnapshot.data() || {};
@@ -116,6 +173,17 @@ async function claimUsername({
     const nextIsAnonymous =
       typeof isAnonymous === "boolean" ? isAnonymous : Boolean(userData.isAnonymous);
 
+    if (takenOverFrom?.snapshot?.exists) {
+      const holderData = takenOverFrom.snapshot.data() || {};
+      if (profileShows(holderData, normalizedUsername)) {
+        transaction.set(
+          takenOverFrom.ref,
+          { ...placeholderPatch(holderData.isAnonymous !== false), updatedAt: now },
+          { merge: true }
+        );
+      }
+    }
+
     transaction.set(
       usernameRef,
       {
@@ -125,7 +193,7 @@ async function claimUsername({
         email: nextEmail,
         isAnonymous: nextIsAnonymous,
         updatedAt: now,
-        createdAt: usernameSnapshot.exists
+        createdAt: usernameSnapshot.exists && !takenOverFrom
           ? usernameData.createdAt || now
           : now,
       },
@@ -206,6 +274,7 @@ async function releaseUsername({
   await db.runTransaction(async (transaction) => {
     const usernameSnapshot = await transaction.get(usernameRef);
     const restoreSnapshot = restoreRef ? await transaction.get(restoreRef) : null;
+    const userSnapshot = await transaction.get(userRef);
     const usernameData = usernameSnapshot.data() || {};
     if (usernameSnapshot.exists && usernameData.uid === user.uid) {
       transaction.delete(usernameRef);
@@ -233,6 +302,16 @@ async function releaseUsername({
       );
     }
 
+    // No restore name applied: the profile must not keep showing a name the registry no longer holds
+    // for it (the client's profile read can fail, or the restore name can be taken).
+    const userData = userSnapshot.data() || {};
+    if (restorePatch.username === undefined && profileShows(userData, normalizedUsername)) {
+      const wasAnonymous = typeof restoreIsAnonymous === "boolean"
+        ? restoreIsAnonymous
+        : userData.isAnonymous !== false;
+      Object.assign(restorePatch, placeholderPatch(wasAnonymous));
+    }
+
     if (typeof restoreEmail === "string") {
       restorePatch.email = restoreEmail.trim();
     }
@@ -241,7 +320,10 @@ async function releaseUsername({
       restorePatch.isAnonymous = restoreIsAnonymous;
     }
 
-    transaction.set(userRef, restorePatch, { merge: true });
+    // A set with merge would create a stub profile for an account whose document is gone (sign-up cleanup).
+    if (userSnapshot.exists) {
+      transaction.set(userRef, restorePatch, { merge: true });
+    }
   });
 
   return { success: true };

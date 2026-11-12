@@ -2,111 +2,67 @@
 title: "TriQ: a Guest becomes an account, and who holds the username"
 ---
 stateDiagram-v2
-  state "Legend" as legend {
-    lg0: Breaks FailedUpgradeLeavesNoName or NoOrphanAfterUpgrade or ShownNameIsHeld or UpgradedAccountKeepsItsName
-    lg1: Breaks NoOrphanAfterSignUp or NoOrphanAfterUpgrade or ShownNameIsHeld or UpgradedAccountKeepsItsName in some cases
-    lg2: Path to the FailedUpgradeLeavesNoName or NoOrphanAfterSignUp or NoOrphanAfterUpgrade or ShownNameIsHeld or UpgradedAccountKeepsItsName bug
-  }
-  class lg0 breaks
-  class lg1 mayBreak
-  class lg2 bugPath
   s0: Guest
-  s1: Guest, saving the username
-  s2: Signed out
+  s1: Signed out
+  s2: Guest, saving the username
   s3: Guest (name taken by someone else)
-  s4: Guest: the Guest kept the name
-  s5: Guest, name saved, linking the email
+  s4: Guest, name saved, linking the email
+  s5: Guest, letting the name go
   s6: Guest, saving the username (name taken by someone else)
   s7: Signing up, saving the username
-  s8: Signed out: the name is stuck on an account nobody can use
-  s9: Guest, letting the name go
-  s10: Account, finishing the upgrade
-  s11: Sign-up failed, deleting the new account
-  s12: Account (signed up)
-  s13: Signing up, saving the username (name taken by someone else)
-  s14: Guest: the profile shows a name it does not hold#59; the Guest kept the name
-  s15: Account (upgraded)
-  s16: Account, letting the name go
-  s17: Signing up, saving the username: the name is stuck on an account nobody can use
-  s18: Sign-up failed, deleting the new account (name taken by someone else)
-  s19: Guest, saving the username: the profile shows a name it does not hold
-  s20: Account (upgraded): the profile shows a name it does not hold#59; the upgraded account has no username
-  s21: Account (upgraded): the upgraded account has no username
-  s22: Sign-up failed, deleting the new account: the name is stuck on an account nobody can use
-  s23: Account (signed up): the name is stuck on an account nobody can use
+  s8: Guest: the Guest kept the name
+  s9: Account, finishing the upgrade
+  s10: Account (signed up)
+  s11: Signing up, saving the username (name taken by someone else)
+  s12: Signed out: the name is stuck on an account nobody can use
+  s13: Account (upgraded)
+  s14: Sign-up failed, deleting the new account
+  s15: Account (signed up) (name taken by someone else)
+  s16: Signing up, saving the username: the name is stuck on an account nobody can use
+  s17: Sign-up failed, deleting the new account (name taken by someone else)
+  s18: Account (signed up): the name is stuck on an account nobody can use
+  s19: Sign-up failed, deleting the new account: the name is stuck on an account nobody can use
   [*] --> s0
-  s0 --> s1: you tap Create account#59; the profile read fails or you tap Create account
-  s0 --> s2: you sign out
+  s0 --> s1: you sign out
+  s0 --> s2: you tap Create account
   s0 --> s3: someone else takes the name
-  s1 --> s4: the name is saved, but the app gets an error or saving the name fails
-  s1 --> s5: the name is saved
-  s1 --> s0: saving the name fails
-  s1 --> s6: someone else takes the name
-  s2 --> s7: you sign up
-  s3 --> s6: you tap Create account#59; the profile read fails or you tap Create account
-  s3 --> s2: you sign out
-  s4 --> s1: you tap Create account or you tap Create account#59; the profile read fails
-  s4 --> s8: you sign out
-  s5 --> s9: linking the email fails
-  s5 --> s10: the email links
+  s1 --> s7: you sign up
+  s2 --> s0: saving the name fails
+  s2 --> s4: the name is saved
+  s2 --> s5: the name is saved, but the app gets an error
+  s2 --> s6: someone else takes the name
+  s3 --> s1: you sign out
+  s3 --> s6: you tap Create account
+  s4 --> s5: linking the email fails
+  s4 --> s9: the email links
+  s5 --> s0: the name is let go
+  s5 --> s8: letting the name go fails
+  s1 --> s11: you sign up
   s6 --> s3: saving the name fails or the name is taken
-  s2 --> s13: you sign up
-  s7 --> s11: the name is taken, or saving it fails or the name is saved, but the app gets an error
-  s7 --> s12: the name is saved
-  s7 --> s13: someone else takes the name
-  s8 --> s17: you sign up
-  s9 --> s4: letting the name go fails
-  s9 --> s14: the name is let go, the old name is not put back
-  s10 --> s16: the token refresh fails or confirming the name fails
-  s9 --> s0: the name is let go
-  s11 --> s2: the app deletes the new account
-  s11 --> s18: someone else takes the name
-  s11 --> s8: the app deletes the new account
-  s12 --> s2: you sign out
-  s13 --> s18: the name is taken, or saving it fails
-  s14 --> s19: you tap Create account or you tap Create account#59; the profile read fails
-  s14 --> s2: you sign out
-  s10 --> s15: the name is confirmed
-  s15 --> s2: you sign out
-  s16 --> s15: letting the name go fails
-  s16 --> s20: the name is let go, the old name is not put back
-  s16 --> s21: the name is let go
-  s17 --> s22: the name is taken, or saving it fails
-  s18 --> s2: the app deletes the new account
-  s19 --> s4: the name is saved, but the app gets an error
-  s19 --> s5: the name is saved
-  s19 --> s14: saving the name fails or the name is taken
-  s20 --> s2: you sign out
-  s21 --> s2: you sign out
-  s22 --> s8: the app deletes the new account
-  s23 --> s8: you sign out
-  classDef breaks fill:#ffecee,stroke:#e72e3b,stroke-width:2.5px,color:#cd2834
-  classDef mayBreak fill:#fff3e6,stroke:#e8730c,stroke-width:2.5px,color:#b85a06
-  class s0 bugPath
-  class s1 bugPath
-  class s2 mayBreak
-  class s2 bugPath
-  class s4 breaks
-  class s4 bugPath
-  class s5 bugPath
-  class s7 mayBreak
-  class s7 bugPath
-  class s8 mayBreak
-  class s8 bugPath
-  class s9 bugPath
-  class s10 bugPath
-  class s11 mayBreak
-  class s11 bugPath
-  class s12 mayBreak
-  class s13 mayBreak
-  class s14 breaks
-  class s14 bugPath
-  class s16 bugPath
-  class s17 breaks
-  class s18 mayBreak
-  class s19 breaks
-  class s20 breaks
-  class s21 breaks
-  class s21 bugPath
-  class s22 breaks
-  class s23 breaks
+  s7 --> s10: the name is saved or the name is taken, or saving it fails or the name is saved, but the app gets an error
+  s7 --> s11: someone else takes the name
+  s8 --> s3: someone else takes the name
+  s8 --> s2: you tap Create account
+  s8 --> s12: you sign out
+  s10 --> s1: you sign out
+  s10 --> s14: SignUpReleaseFails or SignUpReleases
+  s10 --> s15: someone else takes the name
+  s11 --> s15: the name is taken, or saving it fails
+  s2 --> s8: saving the name fails
+  s12 --> s1: someone else takes the name
+  s12 --> s16: you sign up
+  s9 --> s13: confirming the name fails or the name is confirmed
+  s13 --> s1: you sign out
+  s14 --> s1: the app deletes the new account
+  s14 --> s17: someone else takes the name
+  s14 --> s12: the app deletes the new account
+  s15 --> s17: SignUpReleaseFails or SignUpReleases
+  s16 --> s11: someone else takes the name
+  s16 --> s18: the name is taken, or saving it fails
+  s17 --> s1: the app deletes the new account
+  s18 --> s10: someone else takes the name
+  s18 --> s12: you sign out
+  s18 --> s15: someone else takes the name
+  s18 --> s19: SignUpReleaseFails or SignUpReleases
+  s19 --> s17: someone else takes the name
+  s19 --> s12: the app deletes the new account

@@ -32,6 +32,18 @@ struct UserDocumentWritePlanTests {
         #expect(Set(patch.keys) == ["isAnonymous", "updatedAt"])
     }
 
+    /// A failed final claim after linking leaves the profile marked anonymous on a permanent account.
+    @Test func storedAnonymousFlagIsSyncedWhenAuthSaysPermanent() throws {
+        let stored: [String: Any] = [
+            "isAnonymous": true, "usernameNormalized": "tester", "username": "Tester",
+        ]
+        let patch = try #require(
+            LiveAuthUserDocumentManager.writePlan(existing: stored, isAnonymous: false).patch)
+
+        #expect(patch["isAnonymous"] as? Bool == false)
+        #expect(Set(patch.keys) == ["isAnonymous", "updatedAt"])
+    }
+
     @Test func completeDocumentOnlyGetsUpdatedAt() throws {
         let complete: [String: Any] = [
             "dailyAnswers": 1, "weeklyAnswers": 1, "totalAnswered": 1,

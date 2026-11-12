@@ -6918,6 +6918,23 @@
         }
       }
     },
+    "auth.error.usernameLostAfterUpgrade" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account was created. Choose a username in Profile."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hesabın oluşturuldu. Profil'den bir kullanıcı adı seç."
+          }
+        }
+      }
+    },
     "auth.error.usernameServiceUnavailable" : {
       "extractionState" : "manual",
       "localizations" : {
