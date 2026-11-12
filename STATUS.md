@@ -18,8 +18,7 @@ Last session:
 - 2026-11-13: #163 merged: the app shows as "TriQ" on the Home Screen (display name, photo permission text,
   3 strings), build number 11. App Store Connect name is now "TriQ: Answers in Threes". Left as "TTB": the
   `"TTB user"` fallback name in 5 Swift files and the list-share web page text in `functions/` (needs a deploy).
-  TestFlight: the build 11 upload hit an Apple App Store Connect outage (error 500); check
-  `asc builds list --app 6760952229 --limit 2`. The `## Open PRs` section left this file: GitHub is the only
+  TestFlight: build 11 is uploaded and `VALID` (internal testers get it; not sent to external testers). The `## Open PRs` section left this file: GitHub is the only
   list of open PRs (`gh pr list`, or `/where`), so the file cannot go stale on it.
 - Late 2026-11-12: merged #159, #160, #161 (closes #151-#153). Owner decisions: a guest's mid-upgrade name hold is
   10 minutes; after an account delete today's AI counter (counts only) stays until the next day. Deployed 14
