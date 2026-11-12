@@ -114,7 +114,9 @@ async function acceptQuestionListShare({
       transaction.get(acceptedRecipientsQuery(shareRef)),
     ]);
     const share = currentShareSnapshot.data() || {};
-    if (!currentShareSnapshot.exists) {
+    // The share was found by code outside this transaction. The owner may have regenerated
+    // the link since, so the code must still match what the recipient opened.
+    if (!currentShareSnapshot.exists || share.shareCode !== shareCode) {
       throw new HttpsError("failed-precondition", "This share link is not accepting recipients.");
     }
 
@@ -302,14 +304,28 @@ async function sendQuestionListShareReply({
   const questionIds = normalizedQuestionIds(share.questionIds);
   const latestReplyAnswerSnapshots = await answerSnapshotsForUser(db, uid, questionIds);
   const recipientDisplayName = await displayNameForUser(db, uid);
-  await recipientRef.set({
-    recipientDisplayName,
-    latestReplyAnswerSnapshots,
-    repliedAt: now,
-    unreadByOwner: true,
-    updatedAt: now,
-  }, { merge: true });
-  await shareRef.update({ updatedAt: now });
+  // Re-check the share and the membership inside the transaction: the recipient may have
+  // left, or the owner revoked, since the plain reads above.
+  await db.runTransaction(async (transaction) => {
+    const [currentShareSnapshot, currentRecipientSnapshot] = await Promise.all([
+      transaction.get(shareRef),
+      transaction.get(recipientRef),
+    ]);
+    if (!currentShareSnapshot.exists || currentShareSnapshot.data()?.status !== "active") {
+      throw new HttpsError("not-found", "Shared question list not found.");
+    }
+    if (!currentRecipientSnapshot.exists || currentRecipientSnapshot.data()?.status !== "accepted") {
+      throw new HttpsError("permission-denied", "Shared question list is not accepted.");
+    }
+    transaction.set(recipientRef, {
+      recipientDisplayName,
+      latestReplyAnswerSnapshots,
+      repliedAt: now,
+      unreadByOwner: true,
+      updatedAt: now,
+    }, { merge: true });
+    transaction.update(shareRef, { updatedAt: now });
+  });
 
   return { success: true, repliedQuestionCount: Object.keys(latestReplyAnswerSnapshots).length };
 }
