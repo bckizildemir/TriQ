@@ -12,9 +12,14 @@ Fix the three bugs the formal checks found (owner, 2026-11-12): done, 3/3. Next 
 
 ## Last updated
 
-2026-11-12
+2026-11-13
 
 Last session:
+- 2026-11-13: #163 merged: the app shows as "TriQ" on the Home Screen (display name, photo permission text,
+  3 strings), build number 11. App Store Connect name is now "TriQ: Answers in Threes". Left as "TTB": the
+  `"TTB user"` fallback name in 5 Swift files and the list-share web page text in `functions/` (needs a deploy).
+  TestFlight: build 11 is uploaded and `VALID` (internal testers get it; not sent to external testers). The `## Open PRs` section left this file: GitHub is the only
+  list of open PRs (`gh pr list`, or `/where`), so the file cannot go stale on it.
 - Late 2026-11-12: merged #159, #160, #161 (closes #151-#153). Owner decisions: a guest's mid-upgrade name hold is
   10 minutes; after an account delete today's AI counter (counts only) stays until the next day. Deployed 14
   functions in 5 named groups (claimUsername, releaseUsername, acceptQuestionListShare, sendQuestionListShareReply,
@@ -40,10 +45,6 @@ Last session:
 - verify-triq maintenance pass done (#156, run `2026-11-12-180550-18bb`): every feature driven, a new
   `features/question-lists.md`. Formal checks re-run in sync (#155). Possible bug to look at: after a Home
   scroll the Profile button and the tab bar leave the screen. A pending Trio question from the run is left on the server.
-
-## Open PRs
-
-None.
 
 ## Next step
 

@@ -44,7 +44,8 @@ apply: this app persists through Firestore, not SwiftData.
 
 ## Session status
 
-Read `STATUS.md` at session start; update it before the final report.
+Read `STATUS.md` at session start; update it before the final report. Open PRs are not in it: read them
+from GitHub (`gh pr list`).
 
 ## Safe merges
 
