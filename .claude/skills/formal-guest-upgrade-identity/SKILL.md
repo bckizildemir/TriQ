@@ -96,7 +96,7 @@ stores (ADR 0012), which follow the uid and the ID token and were not modelled h
 
 ## Coverage record
 
-Sync commit: `2878987` (origin/main, 2026-11-12). The model describes these as of that commit:
+Sync commit: `4f4bfe3` (origin/main, 2026-11-12). The model describes these as of that commit:
 
 - `TTB/Models/AuthModel.swift`: `linkAnonymousAccount` (:328-378), `signUp` (:247-294),
   `deletePartiallyCreatedAccount` (:380), `signOut` effects via `ProfileModel.signOut`.
@@ -108,7 +108,7 @@ Sync commit: `2878987` (origin/main, 2026-11-12). The model describes these as o
 To see whether the model may be stale:
 
 ```sh
-git diff 2878987 -- TTB/Models/AuthModel.swift TTB/Models/AuthModelDependencies.swift TTB/Services/UsernameService.swift functions/usernameRegistry.js
+git diff 4f4bfe3 -- TTB/Models/AuthModel.swift TTB/Models/AuthModelDependencies.swift TTB/Services/UsernameService.swift functions/usernameRegistry.js
 ```
 
 Move the sync commit forward only after you read that diff and confirm the model still describes
