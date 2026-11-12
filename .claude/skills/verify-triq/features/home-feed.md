@@ -20,8 +20,9 @@ English), Best Of and the scroll included. Re-driven 2026-11-12 (run `2026-11-12
   `question-card-category.<CategoryId>-<questionId>`.
 - `scroll` the navigation bar minimizes on scroll down (iOS 27, #124): the greeting
   collapses and the chip row stays pinned where the bar was (y = 58 on iPhone 12 after a scroll).
-  On 2026-11-12 the Profile button was gone from the tree and the screen in this state, and the
-  tab bar shrank to one `RadioButton | Home`: swipe down to bring the greeting, Profile and all
+  In this state the Profile button leaves the tree and the screen with the bar, and the tab bar
+  shrinks to one `RadioButton | Home`. Both are intended (owner, 2026-11-13; #158 closed as not a
+  bug): swipe down to bring the greeting, Profile and all
   three tabs back. A chip tap or View All in the pinned state opens the category list; it used to
   hang the app (#124).
 - `card-buttons` each Home, category-list and Trio card has `question-card-share-…`,
@@ -56,7 +57,8 @@ Preconditions: guest onboarding done; Home on screen, scrolled to the top.
   `vt tree chip-personal`.
 - `vt tap --id BackButton`. Expect the Home feed and the chip row again.
 - Scroll: `axe swipe --start-x 195 --start-y 600 --end-x 195 --end-y 250 --udid <UDID>`. Expect the
-  bar minimized (no greeting heading), the Profile button, and the chip row pinned at the top.
+  bar minimized (no greeting heading, no Profile button: intended), one `RadioButton | Home`, and
+  the chip row pinned at the top.
   `vt shot home-scrolled`. A chip tap in this state opens the category list, and so does View All.
 - `vt tap --label 'Best Of' --element-type RadioButton`. Expect `Most Answered`. `vt shot best-of`.
   Tap `All Time`: expect `question-card-mostAnswered-*` cards. Back with `vt tap --label Home
