@@ -136,7 +136,7 @@ Covered: `functions/aiUsageLimit.js` (`consumeDailyQuota`, `nextProjectDocument`
 only), `functions/accountDeletion.js` (`deleteOwnAccountData`, the `aiUsageDaily` delete),
 `firestore.rules` (`aiUsageDaily`, `aiUsageProjectDaily`).
 
-Sync commit: `4f4bfe3d445dc060ff0bf89f20458f9c3c4e6379` (2026-11-12). Proved at this commit: two
+Sync commit: `b5b03d7` (2026-11-12, the #153 fix; model, flags and code confirmed together). Proved at this commit: two
 scratch breaks in `functions/aiUsageLimit.js` were caught and dropped: `used > limit` in
 `nextProjectDocument` (`PoolWithinDailyLimit` CHANGED on all four configs) and calling the handler
 before `consumeDailyQuota` (`UidWithinDailyLimit` CHANGED on `core`).
