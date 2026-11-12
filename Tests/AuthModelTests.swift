@@ -107,6 +107,84 @@ final class AuthModelTests: XCTestCase {
         XCTAssertTrue(model.errorState.isShowing)
     }
 
+    /// The first claim's answer is lost: the Guest must end with the placeholder and no held name.
+    func testLinkAnonymous_firstClaimFailureReleasesAndRestoresTheGuest() async {
+        let (model, usernameService, documentManager) = makeGuestUpgrade()
+        documentManager.profileSnapshotResult = UserProfileSnapshot(
+            username: "Guest User",
+            email: "",
+            isAnonymous: true
+        )
+        usernameService.failingClaimCalls = [1]
+
+        await model.linkAnonymousAccount(email: "user@example.com", password: "password", username: "newuser")
+
+        XCTAssertEqual(usernameService.releaseCalls.count, 1)
+        XCTAssertEqual(usernameService.releaseCalls.first?.username, "newuser")
+        XCTAssertEqual(usernameService.releaseCalls.first?.restoreUsername, "Guest User")
+        XCTAssertEqual(usernameService.releaseCalls.first?.restoreIsAnonymous, true)
+        XCTAssertTrue(model.errorState.isShowing)
+    }
+
+    /// A failed profile read must not start the upgrade: nothing could be restored afterwards.
+    func testLinkAnonymous_profileReadFailureClaimsNothing() async {
+        let (model, usernameService, documentManager) = makeGuestUpgrade()
+        documentManager.profileSnapshotError = NSError(domain: "profile", code: 1)
+
+        await model.linkAnonymousAccount(email: "user@example.com", password: "password", username: "newuser")
+
+        XCTAssertTrue(usernameService.claimCalls.isEmpty)
+        XCTAssertTrue(usernameService.releaseCalls.isEmpty)
+        XCTAssertTrue(model.errorState.isShowing)
+    }
+
+    /// After a successful link the account is permanent: a failed token refresh must not release the name.
+    func testLinkAnonymous_tokenRefreshFailureAfterLinkKeepsTheName() async {
+        let (model, usernameService, _) = makeGuestUpgrade(refreshShouldFail: true)
+
+        await model.linkAnonymousAccount(email: "user@example.com", password: "password", username: "newuser")
+
+        XCTAssertTrue(usernameService.releaseCalls.isEmpty)
+        XCTAssertEqual(usernameService.claimCalls.last?.isAnonymous, false)
+        XCTAssertEqual(model.username, "")
+    }
+
+    func testLinkAnonymous_secondClaimFailureAfterLinkKeepsTheNameAndRetriesOnce() async {
+        let (model, usernameService, _) = makeGuestUpgrade()
+        usernameService.failingClaimCalls = [2]
+
+        await model.linkAnonymousAccount(email: "user@example.com", password: "password", username: "newuser")
+
+        XCTAssertTrue(usernameService.releaseCalls.isEmpty)
+        XCTAssertEqual(usernameService.claimCalls.count, 3)
+        XCTAssertFalse(model.errorState.isShowing)
+    }
+
+    func testSignUp_claimFailureReleasesTheNameBeforeDeletingTheAccount() async {
+        let (model, _, usernameService, documentManager) = makeAuthModelForTesting()
+        usernameService.claimShouldFail = true
+        model.email = "user@example.com"
+        model.password = "password"
+        model.confirmPassword = "password"
+        model.username = "tester"
+
+        await model.signUp()
+
+        XCTAssertEqual(usernameService.releaseCalls.map(\.username), ["tester"])
+        XCTAssertEqual(documentManager.deletedUserIDs, ["created-user"])
+    }
+
+    private func makeGuestUpgrade(
+        refreshShouldFail: Bool = false
+    ) -> (AuthModel, MockUsernameService, MockUserDocumentManager) {
+        let auth = MockAuthProvider()
+        let mockUser = MockAuthUser(uid: "anon-uid", isAnonymous: true, email: nil)
+        mockUser.refreshShouldFail = refreshShouldFail
+        auth.currentUserValue = mockUser
+        let (model, _, usernameService, documentManager) = makeAuthModelForTesting(auth: auth)
+        return (model, usernameService, documentManager)
+    }
+
     func testLinkAnonymous_successClaimsTwice() async {
         let auth = MockAuthProvider()
         auth.currentUserValue = MockAuthUser(uid: "anon-uid", isAnonymous: true, email: nil)

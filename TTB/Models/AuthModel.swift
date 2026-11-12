@@ -280,6 +280,14 @@ class AuthModel: ObservableObject {
           isAnonymous: false
         )
       } catch {
+        // The claim may have committed although the answer was lost: free the name while the
+        // account can still call the server, then delete the account.
+        await dependencies.usernameService.releaseUsername(
+          trimmedUsername,
+          restoreUsername: nil,
+          restoreEmail: nil,
+          restoreIsAnonymous: nil
+        )
         await deletePartiallyCreatedAccount(user: user)
         authState = .signedOut
         throw error
@@ -345,22 +353,19 @@ class AuthModel: ObservableObject {
       guard let currentUser = dependencies.auth.currentUser else {
         throw AuthError.userNotFound
       }
-      let previousProfile = try? await dependencies.userDocumentManager.profileSnapshot(userId: currentUser.uid)
+      // Without the Guest profile nothing could be restored after a failure, so a failed read stops here.
+      let previousProfile = try await dependencies.userDocumentManager.profileSnapshot(userId: currentUser.uid)
 
-      _ = try await dependencies.usernameService.claimUsername(
-        username,
-        email: email,
-        isAnonymous: true
-      )
-
+      // Until the link succeeds, any failure (also a lost answer to the claim) hands the name back.
+      // Release is idempotent on the server, so it is safe when the claim never committed.
+      let linkedUser: AuthModelUser
       do {
-        let linkedUser = try await currentUser.linkAccount(with: credential)
-        try await linkedUser.forceRefreshIDToken()
         _ = try await dependencies.usernameService.claimUsername(
           username,
           email: email,
-          isAnonymous: false
+          isAnonymous: true
         )
+        linkedUser = try await currentUser.linkAccount(with: credential)
       } catch {
         await dependencies.usernameService.releaseUsername(
           username,
@@ -371,9 +376,36 @@ class AuthModel: ObservableObject {
         throw error
       }
 
+      // The account is permanent from here: never release or restore the Guest profile. Both steps are
+      // repeatable, so a failure leaves the name held by the account that now owns it.
+      await finishLinkedAccount(linkedUser, username: username, email: email)
       clearFields()
     } catch {
       showError(message: error.localizedDescription)
+    }
+  }
+
+  /// Refreshes the token and marks the claimed name as a permanent account's, once more on failure.
+  /// Failures are logged only: the name is already held by this account.
+  @MainActor
+  private func finishLinkedAccount(_ linkedUser: AuthModelUser, username: String, email: String) async {
+    do {
+      try await linkedUser.forceRefreshIDToken()
+    } catch {
+      logger.error("Token refresh after linking failed: \(error.localizedDescription)")
+    }
+
+    for attempt in 1...2 {
+      do {
+        _ = try await dependencies.usernameService.claimUsername(
+          username,
+          email: email,
+          isAnonymous: false
+        )
+        return
+      } catch {
+        logger.error("Final username claim \(attempt) after linking failed: \(error.localizedDescription)")
+      }
     }
   }
 

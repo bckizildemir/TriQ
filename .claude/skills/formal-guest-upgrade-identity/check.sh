@@ -16,7 +16,7 @@ set -eu
 here=$(cd "$(dirname "$0")" && pwd)
 
 # Rules the code at the sync commit breaks (SKILL.md "Findings"). Edit only with a matching SKILL.md change.
-KNOWN_FINDINGS="FailedUpgradeLeavesNoName NoOrphanAfterSignUp NoOrphanAfterUpgrade ShownNameIsHeld UpgradedAccountKeepsItsName"
+KNOWN_FINDINGS=""
 
 if [ -z "${STATECHART:-}" ] || [ ! -x "$STATECHART" ]; then
   echo "Set STATECHART to the script of the /statechart skill (load /statechart; it names its script)." >&2

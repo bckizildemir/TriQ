@@ -1,12 +1,11 @@
-// Replays the server half of each bug path the TLA+ model reports against the real
+// Replays the server half of each former bug path (issue #151) and checks the fix against the real
 // functions/usernameRegistry.js (claimUsername, releaseUsername), with an in-memory Firestore.
 // The client half is the order of calls in AuthModel.linkAnonymousAccount / signUp; each
 // replay says which client branch it stands for. No network, no Firebase project.
 //
 //   node .claude/skills/formal-guest-upgrade-identity/replay-server.mjs
 //
-// Exit 0: the rule that holds still holds (HOLDS) and every finding still reproduces (REPRODUCES).
-// Exit 1: BROKEN or GONE: the code changed; re-read the model before trusting it.
+// Exit 0: every path ends consistent (HOLDS). Exit 1: BROKEN, the bug is back.
 
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -47,107 +46,117 @@ function fakeDb() {
 }
 
 const guestDoc = { username: "Guest User", usernameNormalized: "guest user", email: "", isAnonymous: true };
-const claim = (db, uid, isAnonymous) =>
-  claimUsername({ db, user: { uid }, username: N, email: "a@b.co", isAnonymous, createServerTimestamp: () => TS });
+const claim = (db, uid, isAnonymous, extra = {}) =>
+  claimUsername({ db, user: { uid }, username: N, email: "a@b.co", isAnonymous, createServerTimestamp: () => TS, ...extra });
 const release = (db, uid, restore) =>
   releaseUsername({ db, user: { uid }, username: N, ...restore, createServerTimestamp: () => TS });
 
 let failed = 0;
-function report(name, ok, detail) {
-  console.log(`${ok ? "REPRODUCES" : "GONE      "}  ${name}\n            ${detail}`);
-  if (!ok) failed += 1;
-}
 function holds(name, ok, detail) {
   console.log(`${ok ? "HOLDS     " : "BROKEN    "}  ${name}\n            ${detail}`);
   if (!ok) failed += 1;
 }
 
-// NameStaysWithItsHolder (holds): a claim never takes N from the account that holds it (:96).
+// NameStaysWithItsHolder: a claim never takes N from a permanent account that holds it.
 {
   const db = fakeDb();
   await claimUsername({ db, user: { uid: "o" }, username: N, email: "o@b.co", isAnonymous: false, createServerTimestamp: () => TS });
   let refused = false;
   try {
-    await claim(db, "g", true);
+    await claim(db, "g", true, { isReclaimableHolder: async () => null });
   } catch (e) {
     refused = /already taken/.test(e.message);
   }
   holds(
-    "NameStaysWithItsHolder (the Guest claims a name someone else holds)",
+    "NameStaysWithItsHolder (the Guest claims a name a permanent account holds)",
     refused && db.doc("usernames", n)?.uid === "o",
     `claim refused: ${refused}; usernames/${n}.uid=${db.doc("usernames", n)?.uid}.`,
   );
 }
 
-// FailedUpgradeLeavesNoName / NoOrphanAfterUpgrade: claim 1 (:350) commits, the client throws
-// before the inner do/catch, so releaseUsername is never called.
+// Finding 1: claim 1 commits, the answer is lost; the client now calls releaseUsername with the
+// Guest profile it read first.
 {
   const db = fakeDb();
   db.seed("users", "g", { ...guestDoc });
   await claim(db, "g", true);
-  const reg = db.doc("usernames", n);
-  const user = db.doc("users", "g");
-  report(
-    "FailedUpgradeLeavesNoName + NoOrphanAfterUpgrade (claim 1 answer lost, no release)",
-    reg?.uid === "g" && user.username === N && user.isAnonymous === true,
-    `usernames/${n}.uid=${reg?.uid}; users/g.username=${user.username}, isAnonymous=${user.isAnonymous}. ` +
-      "Nothing on the server frees it when the Guest signs out.",
-  );
-}
-
-// ShownNameIsHeld: profileSnapshot (:348, try?) came back nil, link fails, release with no restore.
-{
-  const db = fakeDb();
-  db.seed("users", "g", { ...guestDoc });
-  await claim(db, "g", true);
-  await release(db, "g", {}); // restoreUsername/Email/IsAnonymous all nil
-  let otherGot = false;
-  try {
-    await claimUsername({ db, user: { uid: "o" }, username: N, email: "o@b.co", isAnonymous: false, createServerTimestamp: () => TS });
-    otherGot = db.doc("usernames", n)?.uid === "o";
-  } catch {}
-  const gName = db.doc("users", "g").username;
-  report(
-    "ShownNameIsHeld (profile read nil, link fails, release without restore)",
-    gName === N && otherGot,
-    `users/g.username=${gName} after release; someone else then claims ${N}: ${otherGot}. Two profiles show ${N}.`,
-  );
-}
-
-// UpgradedAccountKeepsItsName: link succeeded, forceRefreshIDToken (:358) or claim 2 (:359)
-// throws, the catch releases N and restores the Guest profile on a now-permanent account.
-{
-  const db = fakeDb();
-  db.seed("users", "g", { ...guestDoc });
-  await claim(db, "g", true);
-  // (linkAccount succeeded here on the client; the Auth user is permanent from now on.)
   await release(db, "g", { restoreUsername: "Guest User", restoreEmail: "", restoreIsAnonymous: true });
   const user = db.doc("users", "g");
-  const reg = db.doc("usernames", n);
-  report(
-    "UpgradedAccountKeepsItsName (link ok, token refresh fails, release)",
-    reg === undefined && user.username === "Guest User" && user.isAnonymous === true,
-    `usernames/${n} exists=${reg !== undefined}; users/g.username=${user.username}, isAnonymous=${user.isAnonymous} ` +
-      "on an account Firebase Auth now treats as permanent.",
+  holds(
+    "FailedUpgradeLeavesNoName (claim 1 answer lost, client releases)",
+    db.doc("usernames", n) === undefined && user.username === "Guest User" && user.isAnonymous === true,
+    `usernames/${n} exists=${db.doc("usernames", n) !== undefined}; users/g.username=${user.username}.`,
   );
 }
 
-// NoOrphanAfterSignUp: signUp claim (:277) commits, the client gets an error, :283
-// deleteUserAndAuth removes users/s and the Auth user but not usernames/N.
+// Finding 1, app killed before the release: the next claim takes the idle Guest's name over and
+// puts the placeholder on the Guest's profile.
+{
+  const db = fakeDb();
+  db.seed("users", "g", { ...guestDoc });
+  await claim(db, "g", true);
+  await claim(db, "o", false, { isReclaimableHolder: async (uid) => (uid === "g" ? "anonymous" : null) });
+  const user = db.doc("users", "g");
+  holds(
+    "NoOrphanAfterUpgrade (Guest killed after claim 1, someone else claims the name)",
+    db.doc("usernames", n)?.uid === "o" && user.username === "Guest User",
+    `usernames/${n}.uid=${db.doc("usernames", n)?.uid}; users/g.username=${user.username}.`,
+  );
+}
+
+// Finding 2: release without any restore data must not leave the name on the profile.
+{
+  const db = fakeDb();
+  db.seed("users", "g", { ...guestDoc });
+  await claim(db, "g", true);
+  await release(db, "g", {});
+  const gName = db.doc("users", "g").username;
+  holds(
+    "ShownNameIsHeld (release without restore data)",
+    gName === "Guest User" && db.doc("usernames", n) === undefined,
+    `users/g.username=${gName} after release; usernames/${n} exists=${db.doc("usernames", n) !== undefined}.`,
+  );
+}
+
+// Finding 3: link succeeded; the client no longer releases. Claim 2 repeated gives the same result.
+{
+  const db = fakeDb();
+  db.seed("users", "g", { ...guestDoc });
+  await claim(db, "g", true);
+  await claim(db, "g", false);
+  await claim(db, "g", false);
+  const user = db.doc("users", "g");
+  holds(
+    "UpgradedAccountKeepsItsName (claim 2 repeated after the link)",
+    db.doc("usernames", n)?.uid === "g" && user.username === N && user.isAnonymous === false,
+    `usernames/${n}.uid=${db.doc("usernames", n)?.uid}; users/g.username=${user.username}, isAnonymous=${user.isAnonymous}.`,
+  );
+}
+
+// Finding 4: the sign-up claim commits, the answer is lost; the client releases before deleting.
+{
+  const db = fakeDb();
+  await claim(db, "s", false);
+  await release(db, "s", {});
+  db.deleteUserDoc("s");
+  let otherGot = false;
+  try {
+    await claim(db, "o", false);
+    otherGot = db.doc("usernames", n)?.uid === "o";
+  } catch {}
+  holds("NoOrphanAfterSignUp (release before delete)", otherGot, `someone else claims ${N}: ${otherGot}.`);
+}
+
+// Finding 4, the release failed: the deleted account's name is taken over.
 {
   const db = fakeDb();
   await claim(db, "s", false);
   db.deleteUserDoc("s");
-  let otherRefused = false;
-  try {
-    await claimUsername({ db, user: { uid: "o" }, username: N, email: "o@b.co", isAnonymous: false, createServerTimestamp: () => TS });
-  } catch (e) {
-    otherRefused = /already taken/.test(e.message);
-  }
-  report(
-    "NoOrphanAfterSignUp (sign-up claim answer lost, account deleted)",
-    db.doc("usernames", n)?.uid === "s" && db.doc("users", "s") === undefined && otherRefused,
-    `usernames/${n}.uid=${db.doc("usernames", n)?.uid} for a deleted account; anyone else claiming ${N} gets "already taken": ${otherRefused}.`,
+  await claim(db, "o", false);
+  holds(
+    "NoOrphanAfterSignUp (release failed, account deleted)",
+    db.doc("usernames", n)?.uid === "o",
+    `usernames/${n}.uid=${db.doc("usernames", n)?.uid}.`,
   );
 }
 

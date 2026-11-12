@@ -7,6 +7,7 @@ final class MockAuthUser: AuthModelUser {
     let isAnonymous: Bool
     let email: String?
     var linkShouldFail = false
+    var refreshShouldFail = false
     private(set) var deleteCalled = false
 
     init(uid: String = UUID().uuidString, isAnonymous: Bool = false, email: String? = nil) {
@@ -24,10 +25,16 @@ final class MockAuthUser: AuthModelUser {
         if linkShouldFail {
             throw NSError(domain: "MockAuthUser", code: 1, userInfo: nil)
         }
-        return MockAuthUser(uid: uid, isAnonymous: false, email: email)
+        let linked = MockAuthUser(uid: uid, isAnonymous: false, email: email)
+        linked.refreshShouldFail = refreshShouldFail
+        return linked
     }
 
-    nonisolated(nonsending) func forceRefreshIDToken() async throws {}
+    nonisolated(nonsending) func forceRefreshIDToken() async throws {
+        if refreshShouldFail {
+            throw NSError(domain: "MockAuthUser", code: 2, userInfo: nil)
+        }
+    }
 }
 
 final class MockAuthProvider: AuthModelAuthProviding {
@@ -96,6 +103,8 @@ final class MockUsernameService: UsernameServiceProtocol {
     private(set) var releaseCalls: [(username: String, restoreUsername: String?, restoreEmail: String?, restoreIsAnonymous: Bool?)] = []
     private(set) var resolveEmailCalls: [String] = []
     var claimShouldFail = false
+    /// 1-based claim call numbers that throw `claimError`; the other calls succeed.
+    var failingClaimCalls: Set<Int> = []
     var claimError: Error = UsernameServiceError.usernameAlreadyExists
     var resolveEmailResult = "resolved@example.com"
 
@@ -105,7 +114,7 @@ final class MockUsernameService: UsernameServiceProtocol {
         isAnonymous: Bool?
     ) async throws -> ClaimedUsername {
         claimCalls.append((username, email, isAnonymous))
-        if claimShouldFail {
+        if claimShouldFail || failingClaimCalls.contains(claimCalls.count) {
             throw claimError
         }
         return ClaimedUsername(username: username, usernameNormalized: username.lowercased())
@@ -132,6 +141,7 @@ final class MockUserDocumentManager: AuthUserDocumentManaging {
     private(set) var deletedUserIDs: [String] = []
     private(set) var deleteUserCalled = false
     var profileSnapshotResult: UserProfileSnapshot?
+    var profileSnapshotError: Error?
     private var blockedEnsureUserIDs: Set<String> = []
     private var ensureStartedUserIDs: Set<String> = []
     private var ensureContinuations: [String: CheckedContinuation<Void, Never>] = [:]
@@ -151,6 +161,7 @@ final class MockUserDocumentManager: AuthUserDocumentManaging {
 
     func profileSnapshot(userId: String) async throws -> UserProfileSnapshot? {
         _ = userId
+        if let profileSnapshotError { throw profileSnapshotError }
         return profileSnapshotResult
     }
 

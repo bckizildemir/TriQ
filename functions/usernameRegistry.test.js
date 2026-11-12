@@ -167,6 +167,136 @@ test("releaseUsername deletes only the current user's claimed username", async (
   assert.equal(db.getDocument("users", "user-1").isAnonymous, true);
 });
 
+const claimArgs = (db, uid, extra = {}) => ({
+  db,
+  user: { uid },
+  username: "Berke",
+  email: "new@example.com",
+  isAnonymous: false,
+  createServerTimestamp: () => SERVER_TIMESTAMP,
+  ...extra,
+});
+
+test("claimUsername takes over a name held by an account whose user document is gone", async () => {
+  const db = createFakeDb({
+    users: {},
+    usernames: { berke: { uid: "deleted", username: "Berke", email: "" } },
+  });
+
+  await claimUsername(claimArgs(db, "user-2"));
+
+  assert.equal(db.getDocument("usernames", "berke").uid, "user-2");
+  assert.equal(db.getDocument("users", "user-2").username, "Berke");
+});
+
+test("claimUsername takes over a name held by an anonymous account and resets that profile", async () => {
+  const db = createFakeDb({
+    users: { guest: { username: "Berke", usernameNormalized: "berke", isAnonymous: true } },
+    usernames: { berke: { uid: "guest", username: "Berke", isAnonymous: true } },
+  });
+
+  await claimUsername(claimArgs(db, "user-2", { isReclaimableHolder: async (uid) => (uid === "guest" ? "anonymous" : null) }));
+
+  assert.equal(db.getDocument("usernames", "berke").uid, "user-2");
+  assert.equal(db.getDocument("users", "guest").username, "Guest User");
+  assert.equal(db.getDocument("users", "guest").usernameNormalized, "guest user");
+});
+
+test("claimUsername keeps an anonymous holder's name while its claim is fresh", async () => {
+  const db = createFakeDb({
+    users: { guest: { username: "Berke", usernameNormalized: "berke", isAnonymous: true } },
+    usernames: { berke: { uid: "guest", username: "Berke", updatedAt: new Date(Date.now() - 1000) } },
+  });
+
+  await assert.rejects(
+    claimUsername(claimArgs(db, "user-2", { isReclaimableHolder: async () => "anonymous" })),
+    /already taken/
+  );
+  assert.equal(db.getDocument("usernames", "berke").uid, "guest");
+});
+
+test("claimUsername takes a name from a deleted Auth user even when its claim is fresh", async () => {
+  const db = createFakeDb({
+    users: { gone: { username: "Berke", usernameNormalized: "berke", isAnonymous: false } },
+    usernames: { berke: { uid: "gone", username: "Berke", updatedAt: new Date() } },
+  });
+
+  await claimUsername(claimArgs(db, "user-2", { isReclaimableHolder: async () => "gone" }));
+
+  assert.equal(db.getDocument("usernames", "berke").uid, "user-2");
+});
+
+test("claimUsername keeps a name held by a permanent account", async () => {
+  const db = createFakeDb({
+    users: { owner: { username: "Berke", usernameNormalized: "berke", isAnonymous: true } },
+    usernames: { berke: { uid: "owner", username: "Berke", isAnonymous: true } },
+  });
+
+  await assert.rejects(
+    claimUsername(claimArgs(db, "user-2", { isReclaimableHolder: async () => false })),
+    /already taken/
+  );
+  assert.equal(db.getDocument("usernames", "berke").uid, "owner");
+  assert.equal(db.getDocument("users", "owner").username, "Berke");
+});
+
+test("claimUsername with the same name twice by one user is a no-op change", async () => {
+  const db = createFakeDb({ users: {}, usernames: {} });
+
+  await claimUsername(claimArgs(db, "user-1", { isAnonymous: true }));
+  await claimUsername(claimArgs(db, "user-1", { isAnonymous: true }));
+  await claimUsername(claimArgs(db, "user-1"));
+
+  assert.equal(db.getDocument("usernames", "berke").uid, "user-1");
+  assert.equal(db.getDocument("users", "user-1").isAnonymous, false);
+});
+
+test("releaseUsername without a restore name puts the placeholder on the profile that showed the name", async () => {
+  const db = createFakeDb({
+    users: { "user-1": { username: "Berke", usernameNormalized: "berke", isAnonymous: true } },
+    usernames: { berke: { uid: "user-1", username: "Berke" } },
+  });
+
+  await releaseUsername({
+    db,
+    user: { uid: "user-1" },
+    username: "Berke",
+    createServerTimestamp: () => SERVER_TIMESTAMP,
+  });
+
+  assert.equal(db.getDocument("usernames", "berke"), undefined);
+  assert.equal(db.getDocument("users", "user-1").username, "Guest User");
+});
+
+test("releaseUsername twice leaves the same result", async () => {
+  const db = createFakeDb({
+    users: { "user-1": { username: "Berke", usernameNormalized: "berke", isAnonymous: false } },
+    usernames: { berke: { uid: "user-1", username: "Berke" } },
+  });
+  const args = { db, user: { uid: "user-1" }, username: "Berke", createServerTimestamp: () => SERVER_TIMESTAMP };
+
+  await releaseUsername(args);
+  await releaseUsername(args);
+
+  assert.equal(db.getDocument("users", "user-1").username, "User");
+});
+
+test("releaseUsername does not touch a profile that shows another name", async () => {
+  const db = createFakeDb({
+    users: { "user-1": { username: "Other", usernameNormalized: "other" } },
+    usernames: {},
+  });
+
+  await releaseUsername({
+    db,
+    user: { uid: "user-1" },
+    username: "Berke",
+    createServerTimestamp: () => SERVER_TIMESTAMP,
+  });
+
+  assert.equal(db.getDocument("users", "user-1").username, "Other");
+});
+
 function createFakeDb(initialCollections) {
   const collections = new Map(
     Object.entries(initialCollections).map(([name, documents]) => [
@@ -279,7 +409,8 @@ test("releaseUsername does not restore a name another user owns", async () => {
     createServerTimestamp: () => SERVER_TIMESTAMP,
   });
 
-  assert.equal(db.getDocument("users", "mallory").username, "Mallory2");
+  // The released name leaves the profile too, so it never shows a name the registry does not hold.
+  assert.equal(db.getDocument("users", "mallory").username, "Guest User");
   assert.equal(db.getDocument("usernames", "berke").uid, "berke");
 });
 
@@ -365,5 +496,5 @@ test("releaseUsername does not register a look-alike name", async () => {
   });
 
   assert.equal(db.getDocument("usernames", "аlice"), undefined);
-  assert.equal(db.getDocument("users", "mallory").username, "Mallory2");
+  assert.equal(db.getDocument("users", "mallory").username, "Guest User");
 });

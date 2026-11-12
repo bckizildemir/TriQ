@@ -556,8 +556,21 @@ exports.claimUsername = onCall({ region: REGION, enforceAppCheck: true }, async 
       ? request.data.isAnonymous
       : signInProvider === "anonymous",
     createServerTimestamp: () => admin.firestore.FieldValue.serverTimestamp(),
+    isReclaimableHolder: isAccountGoneOrAnonymous,
   });
 });
+
+// "gone" when Firebase Auth has no such user any more, "anonymous" while the user is still a Guest: nobody
+// can sign in to such an account with a name, so a claim may take the name over. Anything else, also any
+// other error, keeps the name held.
+async function isAccountGoneOrAnonymous(uid) {
+  try {
+    const record = await admin.auth().getUser(uid);
+    return record.providerData.length === 0 ? "anonymous" : null;
+  } catch (error) {
+    return error?.code === "auth/user-not-found" ? "gone" : null;
+  }
+}
 
 // Username sign-in needs this before the user is signed in, so it cannot require auth. It returns
 // an email, so without App Check a script could walk usernames and collect every user's email.
