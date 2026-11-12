@@ -3,6 +3,14 @@
 The hand-off file. Read it at session start; update it before the final report.
 Every PR or issue number goes with a plain title.
 
+## Focus
+
+Fix the three bugs the formal checks found (owner, 2026-11-12). Plan: each issue's text (counterexample steps) and
+`.claude/skills/formal-*/`. Items:
+- #151 (guest upgrade: a username gets stuck, shown twice or lost)
+- #152 (an old share link admits after Regenerate; a reply lands after Remove or Revoke)
+- #153 (the per-user AI daily limit is beaten at midnight or by deleting the account)
+
 ## Last updated
 
 2026-11-12
@@ -20,8 +28,9 @@ Last session:
 - Owner rules: AI calls are allowed while the models are free (live check 2026-11-12: `AI_PROVIDER=groq`);
   axe is the only simulator driver. Image suggestions are a Pexels photo search, not AI: no AI notice
   (pending the owner's final word).
-- verify-triq maintenance pass NOT run: `/maintain-verification-skill` can only be started by the owner.
-  The worktree `../wt-t-maint` (branch `verify/maintenance-2026-11-12`) waits for it.
+- verify-triq maintenance pass done (#156, run `2026-11-12-180550-18bb`): every feature driven, a new
+  `features/question-lists.md`. Formal checks re-run in sync (#155). Possible bug to look at: after a Home
+  scroll the Profile button and the tab bar leave the screen. A pending Trio question from the run is left on the server.
 
 ## Open PRs
 
@@ -30,10 +39,7 @@ None.
 ## Next step
 
 1. Fix #151, #152 and #153 (the formal-check bugs).
-2. Owner runs `/maintain-verification-skill` for verify-triq (drift notes: profile ids, question card
-   wand/menu/Find Image, home feed list button, guest favorites toast, sign-in form, Trio composer, a new
-   `question-lists.md`).
-3. Open an issue for the other client writes of server-owned stats that the rules refuse:
+2. Open an issue for the other client writes of server-owned stats that the rules refuse:
    `QuestionService.backfillBadgeProgressIfNeeded` and the `totalAnswered` write in `ProfileModel` (same kind of bug as #116).
 
 ## Waits for the owner
