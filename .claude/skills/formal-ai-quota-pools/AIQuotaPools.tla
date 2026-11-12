@@ -54,8 +54,9 @@ vars == <<day, account, call, uidDoc, poolDoc, deleted>>
 (* Phases of one request through aiCallable =                                *)
 (*   withSingleUseAppCheck(withDailyQuota({db, group}, handler)):             *)
 (*   "idle"     not sent yet                                                  *)
-(*   "stamped"  App Check passed; withDailyQuota read now() (the day) and the *)
-(*              token's sign_in_provider / email_verified                     *)
+(*   "stamped"  App Check passed; withDailyQuota read the token's              *)
+(*              sign_in_provider / email_verified (the day is read later,     *)
+(*              inside the transaction)                                       *)
 (*   "charged"  the quota transaction let it through; provider not called yet *)
 (*   "called"   (only if the handler ran before the charge) provider called   *)
 (*   "done"     the provider answered or failed (no refund), or refused       *)
@@ -92,12 +93,14 @@ Init ==
     /\ poolDoc = [d \in Days1 |-> [p \in Pools |-> 0]]
     /\ deleted = [u \in Uids |-> FALSE]
 
-(* withDailyQuota: `now: now()` and the ID token claims, read once, before the  *)
-(* transaction. isAnonymous = sign_in_provider is "anonymous"; isGuest =        *)
+(* withDailyQuota: the ID token claims, read once, before the transaction. The *)
+(* day is NOT read here: consumeDailyQuota reads the clock inside the          *)
+(* transaction (TriQ#153), so `day` of a call is set by QuotaTransaction.       *)
+(* isAnonymous = sign_in_provider is "anonymous"; isGuest =        *)
 (* isGuestToken (anonymous, or email_verified is not true).                    *)
 SendCall(u, s) ==
     /\ call[u][s].phase = "idle"
-    /\ call' = [call EXCEPT ![u][s] = [NoCall EXCEPT !.phase = "stamped", !.day = day,
+    /\ call' = [call EXCEPT ![u][s] = [NoCall EXCEPT !.phase = "stamped",
                                        !.anon = (account[u] = "anonymous"),
                                        !.guest = (account[u] # "verified")]]
     /\ UNCHANGED <<day, account, uidDoc, poolDoc, deleted>>
@@ -106,9 +109,11 @@ SendCall(u, s) ==
 (* aiUsageProjectDaily/{dayKey}, then writes both. Firestore runs it as one     *)
 (* serializable step, so it is one action here. A count stored under another   *)
 (* dayKey counts as 0 (`stored?.dayKey === dayKey ? ... : {}`), and the write  *)
-(* replaces the document with this call's dayKey.                              *)
+(* replaces the document with the dayKey read inside the transaction (`day`;   *)
+(* a stored day ahead of the clock wins, which never happens here: the model   *)
+(* clock only moves forward).                                                  *)
 QuotaTransaction(u, s) ==
-    LET c     == call[u][s]
+    LET c     == [call[u][s] EXCEPT !.day = day]
         used  == IF uidDoc[u].dayKey = c.day THEN uidDoc[u].count ELSE 0
         p     == PoolOf(c)
         pUsed == poolDoc[c.day][p]
@@ -116,15 +121,16 @@ QuotaTransaction(u, s) ==
     IN /\ c.phase = IF ChargeBeforeProvider THEN "stamped" ELSE "called"
        /\ IF Refuses(used, LimitOf(c), UidRefusesAtLimit)
           THEN \* reason "daily-limit"
-               /\ call' = [call EXCEPT ![u][s].phase = "done",
+               /\ call' = [call EXCEPT ![u][s].phase = "done", ![u][s].day = day,
                                        ![u][s].wrong = (Passed(u, c.day) < LimitOf(c))]
                /\ UNCHANGED <<uidDoc, poolDoc>>
           ELSE IF Refuses(pUsed, PoolLimit(p), PoolRefusesAtLimit)
           THEN \* reason "project-daily-limit"
-               /\ call' = [call EXCEPT ![u][s].phase = "done",
+               /\ call' = [call EXCEPT ![u][s].phase = "done", ![u][s].day = day,
                                        ![u][s].wrong = (PoolPassed(c.day, p) < PoolLimit(p))]
                /\ UNCHANGED <<uidDoc, poolDoc>>
-          ELSE /\ call' = [call EXCEPT ![u][s].phase = after, ![u][s].passed = TRUE]
+          ELSE /\ call' = [call EXCEPT ![u][s].phase = after, ![u][s].day = day,
+                                       ![u][s].passed = TRUE]
                /\ uidDoc' = [uidDoc EXCEPT ![u] = [dayKey |-> c.day, count |-> used + 1]]
                /\ poolDoc' = [poolDoc EXCEPT ![c.day][p] = pUsed + 1]
        /\ UNCHANGED <<day, account, deleted>>
@@ -138,7 +144,7 @@ ProviderCall(u, s) ==
                             ![u][s].paid = TRUE]
     /\ UNCHANGED <<day, account, uidDoc, poolDoc, deleted>>
 
-(* UTC midnight. A call already stamped keeps its old dayKey. *)
+(* UTC midnight. A call not yet in its transaction takes the new day. *)
 Midnight ==
     /\ WithDayRollover
     /\ day < Days
@@ -157,15 +163,17 @@ VerifyEmail(u) ==
     /\ account' = [account EXCEPT ![u] = "verified"]
     /\ UNCHANGED <<day, call, uidDoc, poolDoc, deleted>>
 
-(* deleteOwnAccountData (accountDeletion.js) recursiveDeletes aiUsageDaily/{uid} *)
-(* before the Auth user. The uid can still call afterwards: onCall verifies the *)
+(* deleteOwnAccountData (accountDeletion.js) calls deleteAiUsageCounter, which  *)
+(* deletes aiUsageDaily/{uid} unless its dayKey is today (TriQ#153), before the *)
+(* Auth user. The uid can still call afterwards: onCall verifies the *)
 (* ID token without checkRevoked, so a token stays good until it expires (up to *)
 (* an hour), and if deleteAuthUser throws the account stays for a retry.        *)
 DeleteAccountData(u) ==
     /\ WithAccountDeletion
     /\ ~deleted[u]
     /\ deleted' = [deleted EXCEPT ![u] = TRUE]
-    /\ uidDoc' = [uidDoc EXCEPT ![u] = [dayKey |-> 0, count |-> 0]]
+    /\ uidDoc' = [uidDoc EXCEPT ![u] = IF uidDoc[u].dayKey >= day THEN uidDoc[u]
+                                                                    ELSE [dayKey |-> 0, count |-> 0]]
     /\ UNCHANGED <<day, account, call, poolDoc>>
 
 AllDone == \A u \in Uids : \A s \in Slots(u) : call[u][s].phase = "done"

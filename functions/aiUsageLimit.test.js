@@ -385,6 +385,65 @@ test("a group without a project cap writes no project document", async () => {
   assert.equal(db.documents.get(`${PROJECT_USAGE_COLLECTION}/2026-07-31`), undefined);
 });
 
+// A call reads the clock, then waits on a contended counter while another call commits. The day
+// and the minute a call counts against must be those of its own commit, not an earlier reading.
+async function runLateCall({ lateTime, earlyTime, seed }) {
+  const db = createFakeDb(seed);
+  const clock = { time: lateTime };
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  const slowDb = { ...db, runTransaction: async (callback) => { await gate; return db.runTransaction(callback); } };
+  const request = { auth: { uid: "guest-1", token: { firebase: { sign_in_provider: "anonymous" } } } };
+  const late = withDailyQuota({ db: slowDb, group: AI_QUERY_GROUP, now: () => new Date(clock.time) }, async () => "ran")(request);
+  clock.time = earlyTime;
+  await withDailyQuota({ db, group: AI_QUERY_GROUP, now: () => new Date(clock.time) }, async () => "ran")(request);
+  release();
+  await late;
+  return db;
+}
+
+test("a call that read the clock before UTC midnight does not wipe the next day's counter (TriQ#153)", async () => {
+  const db = await runLateCall({
+    lateTime: "2026-07-31T23:59:59.000Z",
+    earlyTime: "2026-08-01T00:00:00.100Z",
+    seed: { [`${USAGE_COLLECTION}/guest-1`]: { dayKey: "2026-07-31", counts: { [AI_QUERY_GROUP]: 4 } } },
+  });
+
+  const stored = db.documents.get(`${USAGE_COLLECTION}/guest-1`);
+  assert.equal(stored.dayKey, "2026-08-01");
+  assert.equal(stored.counts[AI_QUERY_GROUP], 2);
+});
+
+test("a call that read the clock in the previous minute does not restart the project minute count (TriQ#153)", async () => {
+  const db = await runLateCall({
+    lateTime: "2026-07-31T10:00:59.000Z",
+    earlyTime: "2026-07-31T10:01:00.100Z",
+    seed: {},
+  });
+
+  const project = db.documents.get(`${PROJECT_USAGE_COLLECTION}/2026-07-31`);
+  assert.equal(project.minuteKey, "2026-07-31T10:01");
+  assert.equal(project.minuteCount, 2);
+});
+
+test("a stored counter from a later day is never rolled back by a clock that runs behind", async () => {
+  const db = createFakeDb({
+    [`${USAGE_COLLECTION}/user-1`]: { dayKey: "2026-08-01", counts: { [AI_QUERY_GROUP]: 3 } },
+  });
+
+  await consumeDailyQuota({
+    db,
+    uid: "user-1",
+    group: AI_QUERY_GROUP,
+    isAnonymous: false,
+    now: () => new Date("2026-07-31T23:59:59Z"),
+  });
+
+  const stored = db.documents.get(`${USAGE_COLLECTION}/user-1`);
+  assert.equal(stored.dayKey, "2026-08-01");
+  assert.equal(stored.counts[AI_QUERY_GROUP], 4);
+});
+
 function createFakeDb(initialDocuments = {}) {
   const documents = new Map(
     Object.entries(initialDocuments).map(([path, data]) => [path, structuredClone(data)])

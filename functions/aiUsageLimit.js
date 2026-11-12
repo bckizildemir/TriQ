@@ -91,22 +91,31 @@ function isGuestToken(token) {
  * Records one attempt for this caller and group, or rejects when the day's limit is spent.
  * Attempts count, not successes: the money goes out when we call the provider, so a caller who
  * retries into a provider error must not get those calls for free.
+ *
+ * `now` is a Date or a function that returns one. The day and the minute come from a reading made
+ * inside the transaction, so a call that waited on a contended counter counts against the day it
+ * commits in, never against an earlier day it would write back over a newer one (TriQ#153). A
+ * stored day or minute that is ahead of the reading (clock skew between instances) wins for the
+ * same reason: the counter never moves backwards.
  */
 async function consumeDailyQuota({ db, uid, group, isAnonymous, isGuest = isAnonymous, now }) {
   const limit = limitFor(group, isAnonymous);
-  const dayKey = dayKeyFor(now);
+  const readClock = typeof now === "function" ? now : () => now;
   const reference = db.collection(USAGE_COLLECTION).doc(uid);
   const projectLimits = PROJECT_DAILY_LIMITS[group];
-  const projectReference = projectLimits === undefined
-    ? undefined
-    : db.collection(PROJECT_USAGE_COLLECTION).doc(dayKey);
 
   return db.runTransaction(async (transaction) => {
     // A transaction must finish every read before its first write.
     const snapshot = await transaction.get(reference);
+    const stored = snapshot.exists ? snapshot.data() : undefined;
+
+    const clock = readClock();
+    const dayKey = laterKey(dayKeyFor(clock), stored?.dayKey);
+    const projectReference = projectLimits === undefined
+      ? undefined
+      : db.collection(PROJECT_USAGE_COLLECTION).doc(dayKey);
     const projectSnapshot = projectReference ? await transaction.get(projectReference) : undefined;
 
-    const stored = snapshot.exists ? snapshot.data() : undefined;
     const counts = stored?.dayKey === dayKey ? { ...stored.counts } : {};
     const used = typeof counts[group] === "number" ? counts[group] : 0;
 
@@ -126,7 +135,7 @@ async function consumeDailyQuota({ db, uid, group, isAnonymous, isGuest = isAnon
         pool: poolFor(isGuest),
         limit: projectLimits[poolFor(isGuest)],
         dayKey,
-        now,
+        now: clock,
       });
     }
 
@@ -134,7 +143,7 @@ async function consumeDailyQuota({ db, uid, group, isAnonymous, isGuest = isAnon
     transaction.set(reference, {
       dayKey,
       counts,
-      updatedAt: now.toISOString(),
+      updatedAt: clock.toISOString(),
     });
     if (projectDocument) {
       transaction.set(projectReference, projectDocument);
@@ -142,6 +151,11 @@ async function consumeDailyQuota({ db, uid, group, isAnonymous, isGuest = isAnon
 
     return { used: counts[group], limit };
   });
+}
+
+/** The later of two ISO-ordered keys; a missing or non-string key loses. */
+function laterKey(key, other) {
+  return typeof other === "string" && other > key ? other : key;
 }
 
 /**
@@ -160,7 +174,8 @@ function nextProjectDocument({ stored, group, pool, limit, dayKey, now }) {
     });
   }
 
-  const minuteKey = minuteKeyFor(now);
+  // A stored minute ahead of this reading wins, so a late call never restarts the minute.
+  const minuteKey = laterKey(minuteKeyFor(now), stored?.minuteKey);
   const minuteCount = stored?.minuteKey === minuteKey && typeof stored.minuteCount === "number"
     ? stored.minuteCount
     : 0;
@@ -199,7 +214,7 @@ function withDailyQuota({ db, group, now = () => new Date() }, handler) {
       group,
       isAnonymous: request.auth?.token?.firebase?.sign_in_provider === "anonymous",
       isGuest: isGuestToken(request.auth?.token),
-      now: now(),
+      now,
     });
 
     return handler(request);

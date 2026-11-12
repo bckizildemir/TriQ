@@ -41,7 +41,7 @@ echo "$flags" | sed 's/^/  /'
 cp "$here/AIQuotaPools.tla" "$out/"
 
 # Expected result: "<cfg> <rule>" pairs that break today (SKILL.md, "Known findings").
-known_breaks="AIQuotaPools:UidWithinDailyLimit rollover:UidWithinDailyLimit deletion:UidWithinDailyLimit"
+known_breaks=""
 
 rules_all="UidWithinDailyLimit PoolWithinDailyLimit NoWrongLockout"
 status=0

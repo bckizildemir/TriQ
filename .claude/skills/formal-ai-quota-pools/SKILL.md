@@ -33,8 +33,8 @@ The script:
 
 1. Prints a NOTE if a covered file changed after the sync commit (below).
 2. Runs `extract-flags.mjs`, which reads three facts from the code and checks the shapes the model
-   takes as fixed (one transaction for both counters, the day read once before it, the reset on another
-   dayKey, the pool from `isGuestToken`, the `aiCallable` wrapping, the counter deletion, the
+   takes as fixed (one transaction for both counters, the day read inside it, the reset on another
+   dayKey, the pool from `isGuestToken`, the `aiCallable` wrapping, the counter deletion keeping today's, the
    `if: false` rules, no refund). Exit 2 means the code moved away from the model: read the message,
    then "When the code changed" below.
 3. Runs TLC on four configs, checking every rule; when a rule breaks it drops that rule and runs again,
@@ -42,23 +42,12 @@ The script:
 4. Compares each verdict with the known findings. Exit 0: as expected. Exit 1: some verdict
    `CHANGED`.
 
-Expected output today (sync commit below):
+Expected output today (sync commit below): every rule HOLDS on all four configs (`AIQuotaPools`,
+`rollover`, `deletion`, `core`). `run.sh` keeps `known_breaks` empty; a break is a new finding.
 
-```
-AIQuotaPools  UidWithinDailyLimit   BREAKS  as expected      (findings 1 and 2)
-AIQuotaPools  PoolWithinDailyLimit  HOLDS   as expected
-AIQuotaPools  NoWrongLockout        HOLDS   as expected
-rollover      UidWithinDailyLimit   BREAKS  as expected      (finding 1)
-rollover      PoolWithinDailyLimit / NoWrongLockout  HOLDS
-deletion      UidWithinDailyLimit   BREAKS  as expected      (finding 2)
-deletion      PoolWithinDailyLimit / NoWrongLockout  HOLDS
-core          all three             HOLDS   as expected
-```
-
-`core` turns off UTC midnight and account deletion, so it still guards the per-uid check while
-findings 1 and 2 stand. `rollover` and `deletion` each keep one of the two, so a fix to one finding
-shows as `CHANGED (expected BREAKS)` on its own config. When you fix a finding, update
-`known_breaks` in `run.sh` and the list below in the same PR.
+`core` turns off UTC midnight and account deletion; `rollover` and `deletion` each keep one of the
+two, so a regression shows on its own config. A new finding goes into `known_breaks` in `run.sh` and
+into the list below in the same PR.
 
 ## Reading a result
 
@@ -72,25 +61,21 @@ step: `replay.cjs` shows how (in-memory Firestore, one transaction at a time; ru
 or after `npm ci` in `functions/`). If the path cannot happen in the code, the model is wrong: fix the
 model and say so in the PR, never weaken a rule to make it pass.
 
-## Known findings (both replayed on the real code by `replay.cjs`)
+## Findings fixed (TriQ#153, both were replayed on the real code by `replay.cjs`)
 
-Both break the per-uid limit only. The pool rule holds in every config, so neither lets spend pass
-the project pool.
+Both broke the per-uid limit only; the pool rule held, so neither let spend pass the project pool.
+`replay.cjs` now asserts the fixed behaviour (exit 0 when neither reproduces).
 
-1. **A call that read the clock before UTC midnight resets the counter after it.** `withDailyQuota`
-   reads `now()` once, before `db.runTransaction`, and a transaction retry keeps that day. Steps:
-   a guest at 5 of 5 on 2026-07-31 sends a call at 23:59:59 (it waits on the contended counter);
-   another call at 00:00:00.1 commits first and writes `dayKey: "2026-08-01"`; the late call then
-   reads a document whose `dayKey` is not its own, counts it as 0
-   (`stored?.dayKey === dayKey ? … : {}`), passes, and writes `dayKey: "2026-07-31", count 1`. The
-   guest gets 6 provider calls on 2026-07-31; the next call on 2026-08-01 resets again and wipes that
-   day's count too. Each call that crosses midnight this way is one extra call, and the reset also
-   wipes the uid's other groups (the whole `counts` map is rewritten).
-2. **Account deletion resets the counter while the uid can still call.** `deleteOwnAccountData`
-   deletes `aiUsageDaily/{uid}` before the Auth user. `onCall` verifies the ID token without
-   `checkRevoked`, so the deleted uid's token keeps working for up to an hour (and if
-   `deleteAuthUser` throws, the account stays). Steps: a guest uses 5 of 5, deletes the account, and
-   sends 5 more calls on the same day with the same token. Low harm: a new guest uid is free anyway.
+1. **A call that read the clock before UTC midnight reset the counter after it.** `withDailyQuota`
+   used to read `now()` before `db.runTransaction`, so a call waiting on the contended counter wrote
+   its old day over the next day's count. Fixed: `consumeDailyQuota` takes `now` as a function and
+   reads the clock inside the transaction, and a stored day or minute ahead of the reading wins
+   (`laterKey`), so the counter never moves back. `PROJECT_MINUTE_LIMIT` had the same shape
+   (`minuteKey`) and is fixed by the same change (unit test: the minute count is not restarted).
+2. **Account deletion reset the counter while the uid could still call.** The deleted uid's ID token
+   stays valid up to an hour (`onCall` does not check revocation). Fixed: `deleteAiUsageCounter` in
+   `accountDeletion.js` keeps today's counter (counts only, no profile data) and deletes older or
+   malformed ones.
 
 Not a finding, by design (ADR-0006, ADR-0011): a provider error costs the attempt; an unverified
 email account keeps the permanent per-uid limit but draws from the guest pool; a guest who links an
@@ -103,12 +88,12 @@ guest + permanent.
 
 | Model action        | Code |
 | ------------------- | ---- |
-| `SendCall`          | `aiCallable` → `withSingleUseAppCheck` → `withDailyQuota`: reads `now()` (`dayKeyFor`) and the token's `sign_in_provider` / `isGuestToken` |
-| `QuotaTransaction`  | `consumeDailyQuota` + `nextProjectDocument`: one `db.runTransaction`, reads `aiUsageDaily/{uid}` and `aiUsageProjectDaily/{dayKey}`, refuses (`daily-limit`, `project-daily-limit`) or writes both. One atomic step, as Firestore serializes it |
+| `SendCall`          | `aiCallable` → `withSingleUseAppCheck` → `withDailyQuota`: reads the token's `sign_in_provider` / `isGuestToken` (the day is read later, in the transaction) |
+| `QuotaTransaction`  | `consumeDailyQuota` + `nextProjectDocument`: one `db.runTransaction`, reads the clock (`dayKeyFor`), `aiUsageDaily/{uid}` and `aiUsageProjectDaily/{dayKey}`, refuses (`daily-limit`, `project-daily-limit`) or writes both. One atomic step, as Firestore serializes it |
 | `ProviderCall`      | the handler in `index.js` calling `aiProviderProxy.js`; answer and failure end the same way (no refund) |
 | `Midnight`          | the UTC day changes (`dayKeyFor`) |
 | `LinkEmail`, `VerifyEmail` | the guest links an email (same uid, `sign_in_provider` not anonymous), then verifies it (`email_verified`) |
-| `DeleteAccountData` | `accountDeletion.js`: `recursiveDelete(aiUsageDaily/{uid})`; the uid keeps calling |
+| `DeleteAccountData` | `accountDeletion.js`: `deleteAiUsageCounter` (keeps today's `aiUsageDaily/{uid}`); the uid keeps calling |
 
 Flags from the code (`extract-flags.mjs`): `UidRefusesAtLimit` (`if (used >= limit)` in
 `consumeDailyQuota`), `PoolRefusesAtLimit` (same in `nextProjectDocument`), `ChargeBeforeProvider`
@@ -123,9 +108,7 @@ UTC days. The caller under study (`FirstUid`) starts as a guest, sends 3 calls, 
 and delete; a second caller of any account kind sends 1 call. About 730 000 states for the full
 config.
 
-**Left out.** `PROJECT_MINUTE_LIMIT` (same stale-key shape as finding 1 by reading:
-`minuteCount` restarts when the stored `minuteKey` differs, so a late call can restart the minute;
-not checked); App Check single-use (it refuses before the quota and touches no counter); the other
+**Left out.** `PROJECT_MINUTE_LIMIT` (fixed with finding 1 and covered by a unit test, not modelled); App Check single-use (it refuses before the quota and touches no counter); the other
 groups and their limits; the client's `users/{uid}/aiUsage` document (display only, ADR-0006); token
 staleness (an old token only gives a lower limit or the guest pool); more than 3 calls, 2 callers or 2
 days; Firestore outages and partial writes (the transaction is all or nothing).
@@ -133,8 +116,8 @@ days; Firestore outages and partial writes (the transaction is all or nothing).
 ## Charts
 
 `charts/` holds the `/statechart` output for the three chart configs (one caller, no second caller):
-`core` (2 calls, the whole graph, every rule holds), `rollover` (finding 1's path), `deletion`
-(finding 2's path). The core chart hides no steps and has 34 arrows. Make them again with
+`core` (2 calls, the whole graph, every rule holds), `rollover` and `deletion` (the two fixed findings' configs; the charts were drawn before the fix and show
+the old paths). The core chart hides no steps and has 34 arrows. Make them again with
 `/statechart`, a new output folder, `view.mjs` and the matching `chart-*.cfg`.
 
 ## When the code changed
