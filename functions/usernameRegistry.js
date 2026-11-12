@@ -19,6 +19,12 @@ function isPlaceholderUsername(username) {
   return PLACEHOLDER_USERNAMES.includes(username);
 }
 
+// True when the profile shows the name in either field (an older write can leave only one of them current).
+function profileShows(userData, normalizedUsername) {
+  return normalizeUsername(userData.usernameNormalized) === normalizedUsername
+    || normalizeUsername(userData.username) === normalizedUsername;
+}
+
 const ANONYMOUS_HOLD_GRACE_MS = 10 * 60 * 1000;
 
 // Only a Firestore Timestamp (or a Date) tells its age; anything else counts as old.
@@ -132,10 +138,14 @@ async function claimUsername({
       const holderUid = usernameData.uid;
       const holderRef = holderUid ? db.collection("users").doc(holderUid) : null;
       const holderSnapshot = holderRef ? await transaction.get(holderRef) : null;
-      const holderGone = !holderSnapshot || !holderSnapshot.exists || (
-        holderUid === reclaimableHolderUid && reclaimableHolderKind === "gone"
+      // A missing users document alone proves nothing: the Auth check must also call the holder
+      // gone, or an anonymous Guest without a profile.
+      const authSaysReclaimable = holderUid === reclaimableHolderUid;
+      const holderHasProfile = Boolean(holderSnapshot?.exists);
+      const holderGone = authSaysReclaimable && (
+        reclaimableHolderKind === "gone" || (reclaimableHolderKind === "anonymous" && !holderHasProfile)
       );
-      const holderIdleGuest = holderUid === reclaimableHolderUid
+      const holderIdleGuest = authSaysReclaimable
         && reclaimableHolderKind === "anonymous"
         && !isFreshClaim(usernameData.updatedAt);
       if (!holderGone && !holderIdleGuest) {
@@ -165,8 +175,7 @@ async function claimUsername({
 
     if (takenOverFrom?.snapshot?.exists) {
       const holderData = takenOverFrom.snapshot.data() || {};
-      const holderShown = normalizeUsername(holderData.usernameNormalized) || normalizeUsername(holderData.username);
-      if (holderShown === normalizedUsername) {
+      if (profileShows(holderData, normalizedUsername)) {
         transaction.set(
           takenOverFrom.ref,
           { ...placeholderPatch(holderData.isAnonymous !== false), updatedAt: now },
@@ -296,8 +305,7 @@ async function releaseUsername({
     // No restore name applied: the profile must not keep showing a name the registry no longer holds
     // for it (the client's profile read can fail, or the restore name can be taken).
     const userData = userSnapshot.data() || {};
-    const shownNormalized = normalizeUsername(userData.usernameNormalized) || normalizeUsername(userData.username);
-    if (restorePatch.username === undefined && shownNormalized === normalizedUsername) {
+    if (restorePatch.username === undefined && profileShows(userData, normalizedUsername)) {
       const wasAnonymous = typeof restoreIsAnonymous === "boolean"
         ? restoreIsAnonymous
         : userData.isAnonymous !== false;
@@ -312,7 +320,10 @@ async function releaseUsername({
       restorePatch.isAnonymous = restoreIsAnonymous;
     }
 
-    transaction.set(userRef, restorePatch, { merge: true });
+    // A set with merge would create a stub profile for an account whose document is gone (sign-up cleanup).
+    if (userSnapshot.exists) {
+      transaction.set(userRef, restorePatch, { merge: true });
+    }
   });
 
   return { success: true };

@@ -149,8 +149,9 @@ final class AuthModelTests: XCTestCase {
         XCTAssertEqual(model.username, "")
     }
 
-    func testLinkAnonymous_secondClaimFailureAfterLinkKeepsTheNameAndRetriesOnce() async {
+    func testLinkAnonymous_transientSecondClaimFailureAfterLinkKeepsTheNameAndRetriesOnce() async {
         let (model, usernameService, _) = makeGuestUpgrade()
+        usernameService.claimError = UsernameServiceError.serviceUnavailable
         usernameService.failingClaimCalls = [2]
 
         await model.linkAnonymousAccount(email: "user@example.com", password: "password", username: "newuser")
@@ -158,6 +159,33 @@ final class AuthModelTests: XCTestCase {
         XCTAssertTrue(usernameService.releaseCalls.isEmpty)
         XCTAssertEqual(usernameService.claimCalls.count, 3)
         XCTAssertFalse(model.errorState.isShowing)
+    }
+
+    /// Both final claims fail for a passing reason: logged only, the account still holds the name.
+    func testLinkAnonymous_bothFinalClaimsFailTransientlyShowsNothing() async {
+        let (model, usernameService, _) = makeGuestUpgrade()
+        usernameService.claimError = UsernameServiceError.serviceUnavailable
+        usernameService.failingClaimCalls = [2, 3]
+
+        await model.linkAnonymousAccount(email: "user@example.com", password: "password", username: "newuser")
+
+        XCTAssertTrue(usernameService.releaseCalls.isEmpty)
+        XCTAssertEqual(usernameService.claimCalls.count, 3)
+        XCTAssertFalse(model.errorState.isShowing)
+    }
+
+    /// The name was taken while the app was suspended: the person must hear that the account exists
+    /// and that a username is still to choose. Retrying cannot help, so the claim is not repeated.
+    func testLinkAnonymous_nameTakenAfterLinkTellsThePersonToChooseOneInProfile() async {
+        let (model, usernameService, _) = makeGuestUpgrade()
+        usernameService.failingClaimCalls = [2, 3]
+
+        await model.linkAnonymousAccount(email: "user@example.com", password: "password", username: "newuser")
+
+        XCTAssertTrue(usernameService.releaseCalls.isEmpty)
+        XCTAssertEqual(usernameService.claimCalls.count, 2)
+        XCTAssertTrue(model.errorState.isShowing)
+        XCTAssertEqual(model.errorState.message, String(localized: "auth.error.usernameLostAfterUpgrade"))
     }
 
     func testSignUp_claimFailureReleasesTheNameBeforeDeletingTheAccount() async {

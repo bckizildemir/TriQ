@@ -152,7 +152,8 @@ function holds(name, ok, detail) {
   const db = fakeDb();
   await claim(db, "s", false);
   db.deleteUserDoc("s");
-  await claim(db, "o", false);
+  // Firebase Auth says the user is gone (index.js isAccountGoneOrAnonymous).
+  await claim(db, "o", false, { isReclaimableHolder: async (uid) => (uid === "s" ? "gone" : null) });
   holds(
     "NoOrphanAfterSignUp (release failed, account deleted)",
     db.doc("usernames", n)?.uid === "o",

@@ -183,10 +183,68 @@ test("claimUsername takes over a name held by an account whose user document is 
     usernames: { berke: { uid: "deleted", username: "Berke", email: "" } },
   });
 
-  await claimUsername(claimArgs(db, "user-2"));
+  await claimUsername(claimArgs(db, "user-2", { isReclaimableHolder: async () => "gone" }));
 
   assert.equal(db.getDocument("usernames", "berke").uid, "user-2");
   assert.equal(db.getDocument("users", "user-2").username, "Berke");
+});
+
+test("claimUsername keeps a name whose holder has no user document but a permanent Auth user", async () => {
+  const db = createFakeDb({
+    users: {},
+    usernames: { berke: { uid: "owner", username: "Berke", email: "" } },
+  });
+
+  await assert.rejects(
+    claimUsername(claimArgs(db, "user-2", { isReclaimableHolder: async () => null })),
+    /already taken/
+  );
+  await assert.rejects(claimUsername(claimArgs(db, "user-2")), /already taken/);
+  assert.equal(db.getDocument("usernames", "berke").uid, "owner");
+});
+
+test("claimUsername resets a taken-over profile that shows the name only in username", async () => {
+  const db = createFakeDb({
+    users: { guest: { username: "Berke", isAnonymous: true } },
+    usernames: { berke: { uid: "guest", username: "Berke" } },
+  });
+
+  await claimUsername(claimArgs(db, "user-2", { isReclaimableHolder: async () => "anonymous" }));
+
+  assert.equal(db.getDocument("users", "guest").username, "Guest User");
+});
+
+test("releaseUsername resets a profile whose usernameNormalized is stale but username matches", async () => {
+  const db = createFakeDb({
+    users: { "user-1": { username: "Berke", usernameNormalized: "other", isAnonymous: false } },
+    usernames: { berke: { uid: "user-1", username: "Berke" } },
+  });
+
+  await releaseUsername({
+    db,
+    user: { uid: "user-1" },
+    username: "Berke",
+    createServerTimestamp: () => SERVER_TIMESTAMP,
+  });
+
+  assert.equal(db.getDocument("users", "user-1").username, "User");
+});
+
+test("releaseUsername does not create a user document that does not exist", async () => {
+  const db = createFakeDb({
+    users: {},
+    usernames: { berke: { uid: "s", username: "Berke" } },
+  });
+
+  await releaseUsername({
+    db,
+    user: { uid: "s" },
+    username: "Berke",
+    createServerTimestamp: () => SERVER_TIMESTAMP,
+  });
+
+  assert.equal(db.getDocument("usernames", "berke"), undefined);
+  assert.equal(db.getDocument("users", "s"), undefined);
 });
 
 test("claimUsername takes over a name held by an anonymous account and resets that profile", async () => {

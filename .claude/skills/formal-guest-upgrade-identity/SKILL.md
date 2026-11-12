@@ -64,7 +64,7 @@ where a "saving fails" or "answer lost" arrow already lands); the model still ch
 3. Link succeeds, the rest fails: nothing is released after the link. The token refresh is logged, claim 2
    is tried twice; the account keeps the name it holds.
 4. Sign-up claim answer lost: `signUp` releases the name before deleting the account; if that fails,
-   `claimUsername` takes the name over from a holder whose users document or Auth user is gone.
+   `claimUsername` takes the name over from a holder whose Auth user is gone (a missing users document alone is not enough).
 
 Residual (not modelled as a break): a Guest killed between claim and link keeps showing the chosen name
 until someone reclaims it or the Guest tries again.

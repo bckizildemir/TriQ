@@ -170,7 +170,12 @@ final class LiveAuthUserDocumentManager: AuthUserDocumentManaging {
     nonisolated static func writePlan(existing data: [String: Any]?, isAnonymous: Bool) -> UserDocumentWrite {
         guard let data else { return .create }
         var patch: [String: Any] = [:]
-        if data["isAnonymous"] == nil { patch["isAnonymous"] = isAnonymous }
+        if data["isAnonymous"] == nil {
+            patch["isAnonymous"] = isAnonymous
+        } else if data["isAnonymous"] as? Bool == true, !isAnonymous {
+            // A failed final claim after linking leaves the Guest flag on a permanent account.
+            patch["isAnonymous"] = false
+        }
         if data["usernameNormalized"] == nil,
             let existingUsername = data["username"] as? String
         {

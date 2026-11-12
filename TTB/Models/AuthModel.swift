@@ -403,6 +403,11 @@ class AuthModel: ObservableObject {
           isAnonymous: false
         )
         return
+      } catch UsernameServiceError.usernameAlreadyExists {
+        // The name went to someone else while the app was suspended: a retry cannot help, so say so.
+        logger.error("Username taken after linking")
+        showError(message: String(localized: "auth.error.usernameLostAfterUpgrade"))
+        return
       } catch {
         logger.error("Final username claim \(attempt) after linking failed: \(error.localizedDescription)")
       }
