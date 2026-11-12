@@ -88,7 +88,7 @@ Coverage (each action's comment gives the lines):
 - `TTB/Views/Main/SharedQuestionListViews.swift`: the order preview -> Accept, and that Remove
   Shared List stays enabled while Send Answers is in flight.
 
-Sync commit: `2878987798d1e2eb70d686c54eaaf2730356a8ce` (2026-11-12).
+Sync commit: `4f4bfe3d445dc060ff0bf89f20458f9c3c4e6379` (2026-11-12).
 
 `check.sh` fails with exit 3 when a line the model stands on is gone (`anchor` lines in the script),
 and prints a NOTE when a covered file changed since the sync commit. Then: re-read the changed
