@@ -41,7 +41,7 @@ echo "$flags" | sed 's/^/  /'
 cp "$here/AIQuotaPools.tla" "$out/"
 
 # Expected result: "<cfg> <rule>" pairs that break today (SKILL.md, "Known findings").
-known_breaks="AIQuotaPools:UidWithinDailyLimit rollover:UidWithinDailyLimit deletion:UidWithinDailyLimit"
+known_breaks=""
 
 rules_all="UidWithinDailyLimit PoolWithinDailyLimit NoWrongLockout"
 status=0
@@ -84,6 +84,19 @@ for cfg in AIQuotaPools rollover deletion core; do
   done
   echo "$cfg: last run explored ${states:-?} distinct states"
 done
+
+# The model no longer holds the stale clock read (the day is read in the transaction), so the real
+# code is replayed too: a call that waits across midnight, and account deletion (TriQ#153).
+if [ -d "$root/functions/node_modules" ]; then
+  if node "$here/replay.cjs" > "$out/replay.out" 2>&1; then
+    echo "replay        real consumeDailyQuota  HOLDS   as expected"
+  else
+    echo "replay        real consumeDailyQuota  BREAKS  CHANGED (expected HOLDS). Read $out/replay.out"
+    status=1
+  fi
+else
+  echo "replay        skipped: run npm ci in functions/ first"
+fi
 
 echo "Output: $out"
 if [ "$status" -ne 0 ]; then

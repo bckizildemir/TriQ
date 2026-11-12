@@ -1,4 +1,5 @@
 const { HttpsError } = require("firebase-functions/v2/https");
+const { USAGE_COLLECTION, dayKeyFor } = require("./aiUsageLimit");
 const { FieldPath, FieldValue, Timestamp } = require("firebase-admin/firestore");
 
 // Firestore allows 500 writes in one batch. Stay under it.
@@ -55,7 +56,7 @@ async function deleteOwnAccountData({ db, bucket, auth, uid }) {
     db.collection("usernames").where("uid", "==", uid)
   );
 
-  await db.recursiveDelete(db.collection("aiUsageDaily").doc(uid));
+  await deleteAiUsageCounter({ db, uid });
   await deleteFilesWithPrefix(bucket, `profiles/${uid}/`);
 
   for (const name of ["aiQueries", "aiUsage", "notificationDevices"]) {
@@ -68,6 +69,31 @@ async function deleteOwnAccountData({ db, bucket, auth, uid }) {
   const authUserDeleted = await deleteAuthUser(auth, uid);
 
   return { success: true, profileImageURL, authUserDeleted, counts };
+}
+
+// MARK: - AI usage counter
+
+/**
+ * Removes the uid's per-user AI counter, except today's. The deleted uid's ID token stays valid
+ * for up to an hour (onCall does not check revocation), so deleting today's counter would give
+ * that token a fresh daily limit (TriQ#153). It holds only counts, no profile data, and the next
+ * UTC day replaces it anyway. In a transaction, so a call that counts at the same moment cannot
+ * be lost.
+ */
+async function deleteAiUsageCounter({ db, uid, now = new Date() }) {
+  const reference = db.collection(USAGE_COLLECTION).doc(uid);
+  const today = dayKeyFor(now);
+  await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(reference);
+    if (!snapshot.exists) {
+      return;
+    }
+    const storedDay = snapshot.data()?.dayKey;
+    if (typeof storedDay === "string" && storedDay >= today) {
+      return;
+    }
+    transaction.delete(reference);
+  });
 }
 
 // MARK: - Auth
@@ -459,6 +485,7 @@ function stringOrNull(value) {
 module.exports = {
   BATCH_WRITE_LIMIT,
   applyQuestionAnswerDeletion,
+  deleteAiUsageCounter,
   deleteOwnAccountData,
   purgeOwnAnswersForAccountDeletion,
 };

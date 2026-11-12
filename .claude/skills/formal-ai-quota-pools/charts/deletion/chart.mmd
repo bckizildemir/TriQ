@@ -3,45 +3,162 @@ title: "AI quota: one caller across a UTC midnight"
 ---
 stateDiagram-v2
   state "Legend" as legend {
-    lg0: Over the daily limit
-    lg1: Within the daily limit
-    lg2: Breaks UidWithinDailyLimit
-    lg3: Path to the UidWithinDailyLimit bug
+    lg0: Within the daily limit
   }
-  class lg0 orange
-  class lg1 blue
-  class lg2 breaks
-  class lg3 bugPath
+  class lg0 blue
   state "Day 1" as s0 {
     s1: Guest #183; answers: 0
     s2: Guest #183; answers: 0 #183; 1 in flight
-    s3: Guest #183; answers: 0 #183; 2 in flight
-    s4: Guest #183; answers: 1 #183; 1 in flight
-    s5: Guest, data deleted #183; answers: 1 #183; counter says 0 #183; 1 in flight
-    s6: Guest, data deleted #183; answers: 1 #183; counter says 1 #183; 1 in flight
-    s7: Guest, data deleted #183; answers: 2 #183; counter says 1
+    s3: Email account (unverified) #183; answers: 0
+    s4: Guest, data deleted #183; answers: 0
+    s5: Guest #183; answers: 0 #183; 2 in flight
+    s6: Email account (unverified) #183; answers: 0 #183; 1 in flight
+    s7: Verified account #183; answers: 0
+    s8: Guest, data deleted #183; answers: 0 #183; 1 in flight
+    s9: Email account (unverified), data deleted #183; answers: 0
+    s10: Guest #183; answers: 1
+    s11: Email account (unverified) #183; answers: 0 #183; 2 in flight
+    s12: Verified account #183; answers: 0 #183; 1 in flight
+    s13: Guest, data deleted #183; answers: 0 #183; 2 in flight
+    s14: Email account (unverified), data deleted #183; answers: 0 #183; 1 in flight
+    s15: Verified account, data deleted #183; answers: 0
+    s16: Guest #183; answers: 1 #183; 1 in flight
+    s17: Email account (unverified) #183; answers: 1
+    s18: Verified account #183; answers: 0 #183; 2 in flight
+    s19: Guest, data deleted #183; answers: 1
+    s20: Email account (unverified), data deleted #183; answers: 0 #183; 2 in flight
+    s21: Verified account, data deleted #183; answers: 0 #183; 1 in flight
+    s22: Email account (unverified) #183; answers: 1 #183; 1 in flight
+    s23: Verified account #183; answers: 1
+    s24: Guest, data deleted #183; answers: 1 #183; 1 in flight
+    s25: Email account (unverified), data deleted #183; answers: 1
+    s26: Verified account, data deleted #183; answers: 0 #183; 2 in flight
+    s27: Verified account #183; answers: 1 #183; 1 in flight
+    s28: Email account (unverified), data deleted #183; answers: 1 #183; 1 in flight
+    s29: Verified account, data deleted #183; answers: 1
+    s30: Email account (unverified) #183; answers: 2
+    s31: Verified account, data deleted #183; answers: 1 #183; 1 in flight
+    s32: Verified account #183; answers: 2
+    s33: Email account (unverified), data deleted #183; answers: 2
+    s34: Verified account, data deleted #183; answers: 2
   }
   [*] --> s1
   s1 --> s2: the app asks the AI
-  s2 --> s3: the app asks the AI
-  s3 --> s3: the server checks and counts the quota
-  s3 --> s4: the AI provider answers or fails (no refund)
-  s4 --> s5: the user deletes the account (token still valid)
-  s5 --> s6: the server checks and counts the quota
-  s6 --> s7: the AI provider answers or fails (no refund)
-  classDef breaks fill:#ffecee,stroke:#e72e3b,stroke-width:2.5px,color:#cd2834
+  s1 --> s3: the guest links an email
+  s1 --> s4: the user deletes the account (token still valid)
+  s2 --> s5: the app asks the AI
+  s2 --> s6: the guest links an email
+  s2 --> s8: the user deletes the account (token still valid)
+  s3 --> s6: the app asks the AI
+  s3 --> s7: the user verifies the email
+  s3 --> s9: the user deletes the account (token still valid)
+  s4 --> s8: the app asks the AI
+  s4 --> s9: the guest links an email
+  s5 --> s11: the guest links an email
+  s5 --> s13: the user deletes the account (token still valid)
+  s2 --> s10: the AI provider answers or fails (no refund)
+  s6 --> s11: the app asks the AI
+  s6 --> s12: the user verifies the email
+  s6 --> s14: the user deletes the account (token still valid)
+  s7 --> s12: the app asks the AI
+  s7 --> s15: the user deletes the account (token still valid)
+  s8 --> s13: the app asks the AI
+  s8 --> s14: the guest links an email
+  s9 --> s14: the app asks the AI
+  s9 --> s15: the user verifies the email
+  s10 --> s16: the app asks the AI
+  s10 --> s17: the guest links an email
+  s10 --> s19: the user deletes the account (token still valid)
+  s5 --> s16: the AI provider answers or fails (no refund)
+  s5 --> s2: the server checks and counts the quota
+  s11 --> s18: the user verifies the email
+  s11 --> s20: the user deletes the account (token still valid)
+  s6 --> s17: the AI provider answers or fails (no refund)
+  s12 --> s18: the app asks the AI
+  s12 --> s21: the user deletes the account (token still valid)
+  s13 --> s20: the guest links an email
+  s8 --> s19: the AI provider answers or fails (no refund)
+  s14 --> s20: the app asks the AI
+  s14 --> s21: the user verifies the email
+  s15 --> s21: the app asks the AI
+  s16 --> s10: the server checks and counts the quota
+  s16 --> s22: the guest links an email
+  s16 --> s24: the user deletes the account (token still valid)
+  s17 --> s22: the app asks the AI
+  s17 --> s23: the user verifies the email
+  s17 --> s25: the user deletes the account (token still valid)
+  s11 --> s22: the AI provider answers or fails (no refund)
+  s11 --> s6: the server checks and counts the quota
+  s18 --> s26: the user deletes the account (token still valid)
+  s12 --> s23: the AI provider answers or fails (no refund)
+  s19 --> s24: the app asks the AI
+  s19 --> s25: the guest links an email
+  s13 --> s24: the AI provider answers or fails (no refund)
+  s13 --> s8: the server checks and counts the quota
+  s20 --> s26: the user verifies the email
+  s14 --> s25: the AI provider answers or fails (no refund)
+  s21 --> s26: the app asks the AI
+  s22 --> s27: the user verifies the email
+  s22 --> s28: the user deletes the account (token still valid)
+  s22 --> s17: the server checks and counts the quota
+  s23 --> s27: the app asks the AI
+  s23 --> s29: the user deletes the account (token still valid)
+  s18 --> s27: the AI provider answers or fails (no refund)
+  s18 --> s12: the server checks and counts the quota
+  s24 --> s19: the server checks and counts the quota
+  s24 --> s28: the guest links an email
+  s25 --> s28: the app asks the AI
+  s25 --> s29: the user verifies the email
+  s20 --> s28: the AI provider answers or fails (no refund)
+  s20 --> s14: the server checks and counts the quota
+  s21 --> s29: the AI provider answers or fails (no refund)
+  s22 --> s30: the AI provider answers or fails (no refund)
+  s27 --> s31: the user deletes the account (token still valid)
+  s27 --> s23: the server checks and counts the quota
+  s28 --> s31: the user verifies the email
+  s28 --> s25: the server checks and counts the quota
+  s29 --> s31: the app asks the AI
+  s26 --> s31: the AI provider answers or fails (no refund)
+  s26 --> s21: the server checks and counts the quota
+  s30 --> s32: the user verifies the email
+  s30 --> s33: the user deletes the account (token still valid)
+  s27 --> s32: the AI provider answers or fails (no refund)
+  s28 --> s33: the AI provider answers or fails (no refund)
+  s31 --> s29: the server checks and counts the quota
+  s32 --> s34: the user deletes the account (token still valid)
+  s33 --> s34: the user verifies the email
+  s31 --> s34: the AI provider answers or fails (no refund)
   class s1 blue
-  class s1 bugPath
   class s2 blue
-  class s2 bugPath
   class s3 blue
-  class s3 bugPath
   class s4 blue
-  class s4 bugPath
   class s5 blue
-  class s5 bugPath
   class s6 blue
-  class s6 bugPath
-  class s7 orange
-  class s7 breaks
-  class s7 bugPath
+  class s7 blue
+  class s8 blue
+  class s9 blue
+  class s10 blue
+  class s11 blue
+  class s12 blue
+  class s13 blue
+  class s14 blue
+  class s15 blue
+  class s16 blue
+  class s17 blue
+  class s18 blue
+  class s19 blue
+  class s20 blue
+  class s21 blue
+  class s22 blue
+  class s23 blue
+  class s24 blue
+  class s25 blue
+  class s26 blue
+  class s27 blue
+  class s28 blue
+  class s29 blue
+  class s30 blue
+  class s31 blue
+  class s32 blue
+  class s33 blue
+  class s34 blue

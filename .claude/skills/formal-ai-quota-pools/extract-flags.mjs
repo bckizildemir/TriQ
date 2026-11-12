@@ -61,15 +61,23 @@ need(consume, "transaction.get(reference)", "the per-uid read is inside the tran
 need(consume, "transaction.get(projectReference)", "the pool read is inside the same transaction");
 need(consume, "transaction.set(reference,", "the per-uid write is inside the transaction");
 need(consume, "transaction.set(projectReference,", "the pool write is inside the same transaction");
-need(consume, "const dayKey = dayKeyFor(now);", "the day is read once, before the transaction (SendCall stamps it)");
+need(consume, "const clock = readClock();", "the clock is read inside the transaction (QuotaTransaction takes the current day)");
+need(consume, "const dayKey = laterKey(dayKeyFor(clock), stored?.dayKey);", "the day is the clock's, never behind the stored day");
 need(consume, "stored?.dayKey === dayKey ? { ...stored.counts } : {}", "a count under another dayKey counts as 0");
 need(consume, ".doc(dayKey)", "one pool document per UTC day");
+if (/dayKeyFor\(now\)/.test(consume.split("db.runTransaction(")[0])) {
+  problems.push("consumeDailyQuota reads the day before its transaction: the model reads it inside (TriQ#153)");
+}
 need(consume, "poolFor(isGuest)", "the pool comes from isGuest");
 need(wrapper, "isGuest: isGuestToken(request.auth?.token)", "isGuest comes from the ID token");
 need(wrapper, 'isAnonymous: request.auth?.token?.firebase?.sign_in_provider === "anonymous"', "the per-uid tier comes from sign_in_provider");
 need(guest, 'token?.firebase?.sign_in_provider === "anonymous" || token?.email_verified !== true', "isGuestToken: anonymous or unverified email");
 need(index, "onCall(AI_FUNCTION_OPTIONS, withSingleUseAppCheck(withDailyQuota({ db, group }, handler)))", "aiCallable wraps every AI handler in the quota");
-need(deletion, 'db.recursiveDelete(db.collection("aiUsageDaily").doc(uid))', "account deletion removes the per-uid counter (DeleteAccountData)");
+need(deletion, "await deleteAiUsageCounter({ db, uid });", "account deletion calls deleteAiUsageCounter (DeleteAccountData)");
+need(deletion, "storedDay >= today", "deleteAiUsageCounter keeps today's counter (DeleteAccountData)");
+if (/recursiveDelete\(db\.collection\("aiUsageDaily"\)/.test(deletion)) {
+  problems.push("account deletion deletes the per-uid counter outright: the model keeps today's (TriQ#153)");
+}
 need(rules, /match \/aiUsageDaily\/\{userId\} \{\s*allow read, write: if false;/, "firestore.rules: no client may touch aiUsageDaily (only the server moves the counter)");
 need(rules, /match \/aiUsageProjectDaily\/\{dayKey\} \{\s*allow read, write: if false;/, "firestore.rules: no client may touch aiUsageProjectDaily");
 if (/refund|FieldValue\.increment\(-/.test(limits)) {

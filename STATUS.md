@@ -16,6 +16,9 @@ Fix the three bugs the formal checks found (owner, 2026-11-12). Plan: each issue
 2026-11-12
 
 Last session:
+- #153 (per-user AI daily limit at midnight / after account delete): fix in a PR (fix/153-formal-bug): the clock is read
+  inside the quota transaction, the counter never moves back, account deletion keeps today's counter. Formal check
+  `formal-ai-quota-pools` holds on all four configs. Needs a functions deploy after the owner's yes.
 - Owner decisions: the jump to Home after a guest upgrade is intended (#136, closed; recorded in
   verify-triq `features/profile.md`). `CONTEXT.md` renamed to `GLOSSARY.md` (#143).
 - Merged: #149 (verify-triq check loop after deploys and merges + `features/changes.md`, closes #138),
