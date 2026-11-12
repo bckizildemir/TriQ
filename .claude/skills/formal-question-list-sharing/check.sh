@@ -14,7 +14,7 @@
 #       2 = the tool could not run
 set -u
 
-KNOWN="NoReplyAfterLeavingOrRevocation ReplacedLinkAdmitsNoOne"
+KNOWN=""
 
 here=$(cd "$(dirname "$0")" && pwd)
 repo=$(cd "$here/../../.." && pwd)
@@ -107,7 +107,7 @@ fi
 # 5. Replay the known findings on the real callables (fake Firestore from the functions tests).
 if [ $replay -eq 1 ]; then
   if [ ! -d "$repo/functions/node_modules" ]; then echo "run npm ci in functions/ first" >&2; exit 2; fi
-  WT="$repo" node --test "$here/replay/findings.replay.js" || { echo "replay did not reproduce a finding: suspect the model" >&2; exit 1; }
+  WT="$repo" node --test "$here/replay/findings.replay.js" || { echo "replay failed: a fixed finding is back, or the model is wrong" >&2; exit 1; }
 fi
 
 echo

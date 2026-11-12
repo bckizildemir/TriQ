@@ -633,6 +633,69 @@ test("source list deletion revokes active shares from that list", async () => {
   assert.equal(db.getDocument("questionListShares/share-2").status, "active");
 });
 
+test("accept refuses a link the owner regenerated between the code lookup and the transaction", async () => {
+  const db = createRaceDb();
+  const owner = { uid: "owner" };
+  const created = await createQuestionListShare({ db, user: owner, data: { listId: "list-1" }, createServerTimestamp: () => "now", createShareCode: () => "code1" });
+  const shareId = created.shareId;
+  const realRun = db.runTransaction.bind(db);
+  let once = true;
+  db.runTransaction = async (callback) => {
+    if (once) {
+      once = false;
+      await regenerateQuestionListShareLink({ db, user: owner, data: { shareId }, createServerTimestamp: () => "now", createShareCode: () => "code2" });
+    }
+    return realRun(callback);
+  };
+
+  await assert.rejects(
+    () => acceptQuestionListShare({ db, user: { uid: "r1" }, data: { shareCode: "code1" }, createServerTimestamp: () => "now" }),
+    (error) => error.code === "failed-precondition"
+  );
+  assert.equal(db.getDocument(`questionListShares/${shareId}/recipients/r1`), undefined);
+});
+
+for (const exit of ["leave", "revoke"]) {
+  test(`send answers saves no reply when ${exit} lands while it is in flight`, async () => {
+    const db = createRaceDb();
+    const owner = { uid: "owner" };
+    const recipient = { uid: "r1" };
+    const created = await createQuestionListShare({ db, user: owner, data: { listId: "list-1" }, createServerTimestamp: () => "now", createShareCode: () => "code1" });
+    const shareId = created.shareId;
+    await acceptQuestionListShare({ db, user: recipient, data: { shareCode: "code1" }, createServerTimestamp: () => "now" });
+    const realCollection = db.collection.bind(db);
+    let once = true;
+    db.collection = (name) => {
+      const collection = realCollection(name);
+      if (name !== "questions" || !once) return collection;
+      once = false;
+      return { doc: (id) => ({ collection: (n) => ({ doc: (u) => ({ get: async () => {
+        if (exit === "leave") await leaveQuestionListShare({ db, user: recipient, data: { shareId }, createServerTimestamp: () => "now" });
+        else await revokeQuestionListShare({ db, user: owner, data: { shareId }, createServerTimestamp: () => "now" });
+        return collection.doc(id).collection(n).doc(u).get();
+      } }) }) }) };
+    };
+
+    await assert.rejects(
+      () => sendQuestionListShareReply({ db, user: recipient, data: { shareId }, createServerTimestamp: () => "now" }),
+      (error) => error.code === "permission-denied" || error.code === "not-found"
+    );
+    const record = db.getDocument(`questionListShares/${shareId}/recipients/r1`);
+    assert.equal(record.status, exit === "leave" ? "left" : "revoked");
+    assert.notEqual(record.unreadByOwner, true);
+    assert.deepEqual(record.latestReplyAnswerSnapshots, {});
+  });
+}
+
+function createRaceDb() {
+  return createFakeDb({
+    "questionLists/list-1": { ownerId: "owner", name: "Trip", questionIds: ["q1"] },
+    "users/owner": { username: "owner" },
+    "users/r1": { username: "r1" },
+    "questions/q1/userAnswers/r1": { answers: ["a", "", ""] },
+  });
+}
+
 function createFakeDb(initialDocuments) {
   const documents = new Map(
     Object.entries(initialDocuments).map(([path, data]) => [path, structuredClone(data)])

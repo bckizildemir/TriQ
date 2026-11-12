@@ -1,7 +1,7 @@
-// Replays the model's two counterexamples on the real callables, with the fake Firestore
-// from functions/questionListShares.test.js. Run through check.sh --replay (sets WT to the
-// repo root). Each test passes when the finding still happens; when a finding is fixed,
-// its test fails here: delete that test and the rule from KNOWN in check.sh.
+// Replays the model's two former counterexamples on the real callables, with the fake
+// Firestore from functions/questionListShares.test.js. Run through check.sh --replay (sets
+// WT to the repo root). Both were fixed in #152; each test passes while the fix holds and
+// fails if a callable lets the old interleaving through again.
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -24,7 +24,7 @@ async function sharedDb() {
   return { db, shareId: created.shareId };
 }
 
-test("ReplacedLinkAdmitsNoOne: regenerate lands between accept's code lookup and its transaction", async () => {
+test("ReplacedLinkAdmitsNoOne holds: regenerate lands between accept's code lookup and its transaction", async () => {
   const { db, shareId } = await sharedDb();
   await Q.previewQuestionListShare({ db, user: r1, data: { shareCode: "code1" } });   // r1 opens link 1
   const realRun = db.runTransaction.bind(db);
@@ -35,17 +35,16 @@ test("ReplacedLinkAdmitsNoOne: regenerate lands between accept's code lookup and
     }
     return realRun(cb);
   };
-  await Q.acceptQuestionListShare({ db, user: r1, data: { shareCode: "code1" }, createServerTimestamp: ts });
+  await assert.rejects(() => Q.acceptQuestionListShare({ db, user: r1, data: { shareCode: "code1" }, createServerTimestamp: ts }),
+    (e) => e.code === "failed-precondition");
   db.runTransaction = realRun;
   assert.equal(db.getDocument(`questionListShares/${shareId}`).shareCode, "code2");
-  assert.equal(db.getDocument(`questionListShares/${shareId}/recipients/r1`).status, "accepted",
-    "r1 got in through link 1 after the owner replaced it");
-  // and a fresh accept through link 1 is refused, so only the race lets r1 in
-  await assert.rejects(() => Q.previewQuestionListShare({ db, user: { uid: "r2" }, data: { shareCode: "code1" } }));
+  assert.equal(db.getDocument(`questionListShares/${shareId}/recipients/r1`), undefined,
+    "r1 must not get in through link 1 after the owner replaced it");
 });
 
 for (const exit of ["leave", "revoke"]) {
-  test(`NoReplyAfterLeavingOrRevocation: ${exit} lands while Send Answers is in flight`, async () => {
+  test(`NoReplyAfterLeavingOrRevocation holds: ${exit} lands while Send Answers is in flight`, async () => {
     const { db, shareId } = await sharedDb();
     await Q.acceptQuestionListShare({ db, user: r1, data: { shareCode: "code1" }, createServerTimestamp: ts });
     const realCollection = db.collection.bind(db);
@@ -60,10 +59,10 @@ for (const exit of ["leave", "revoke"]) {
         return c.doc(id).collection(n).doc(u).get();
       } }) }) }) };
     };
-    await Q.sendQuestionListShareReply({ db, user: r1, data: { shareId }, createServerTimestamp: ts });
+    await assert.rejects(() => Q.sendQuestionListShareReply({ db, user: r1, data: { shareId }, createServerTimestamp: ts }));
     const rec = db.getDocument(`questionListShares/${shareId}/recipients/r1`);
     assert.equal(rec.status, exit === "leave" ? "left" : "revoked");
-    assert.equal(rec.unreadByOwner, true, "the owner gets a new unread reply after r1 left / after revoke");
-    assert.deepEqual(rec.latestReplyAnswerSnapshots, { q1: ["a", "", ""] });
+    assert.notEqual(rec.unreadByOwner, true, "no new unread reply after r1 left / after revoke");
+    assert.deepEqual(rec.latestReplyAnswerSnapshots, {});
   });
 }

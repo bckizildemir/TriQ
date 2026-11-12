@@ -190,6 +190,8 @@ accept time, or gate it behind `permanentUID(user)` and let preview return the s
 
 ### 4. `sendQuestionListShareReply` is not transactional
 
+> Fixed in #152: the write now runs in a transaction that re-reads share and recipient status. The same fix re-checks `shareCode` inside `acceptQuestionListShare`.
+
 Every other mutation in this module uses `db.runTransaction`. This one does not
 (`questionListShares.js:272-293`): the `share.status !== "active"` guard at `:274` and the recipient
 write at `:286` are separated by two awaited reads and an `answerSnapshotsForUser` fan-out. An owner

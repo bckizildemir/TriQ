@@ -175,14 +175,14 @@ RecipientTapsAccept(r) ==
   /\ UNCHANGED <<status, linkEnabled, code, rec, held, via, unread, revokeStep, revokeTargets, ghosts>>
 
 \* acceptQuestionListShare part 2, QLS:110-164: one transaction on the share
-\* reference. It re-reads status and isLinkEnabled, and counts accepted
-\* recipients, but it does not compare shareCode with the code r used.
+\* reference. It re-reads status, isLinkEnabled and shareCode (the code must
+\* still be the one r used, fix for #152), and counts accepted recipients.
 AcceptTransaction(r) ==
   /\ rpc[r] = "accepting"
   /\ rpc' = [rpc EXCEPT ![r] = "idle"]
   /\ IF rec[r] = "accepted" /\ status = "active"               \* QLS:127-129 no-op
        THEN UNCHANGED <<rec, admittedThroughReplacedLink, admittedThroughDisabledLink>>
-     ELSE IF ~Claimable \/ AcceptedCount >= Cap               \* QLS:131-147 refused
+     ELSE IF via[r] # code \/ ~Claimable \/ AcceptedCount >= Cap   \* refused: replaced link, disabled, or full
        THEN UNCHANGED <<rec, admittedThroughReplacedLink, admittedThroughDisabledLink>>
      ELSE /\ rec' = [rec EXCEPT ![r] = "accepted"]              \* QLS:149-163
           /\ admittedThroughReplacedLink' =
@@ -194,8 +194,9 @@ AcceptTransaction(r) ==
   /\ UNCHANGED <<status, linkEnabled, code, held, via, unread, revokeStep, revokeTargets,
                  everRevoked, replyAfterExit>>
 
-\* sendQuestionListShareReply, QLS:279-315: NOT one transaction.
-\* Part 1, QLS:291-295: read the share, require status "active". The app
+\* sendQuestionListShareReply: plain reads first, then ONE transaction that
+\* re-checks share status and recipient status before it writes (fix for #152).
+\* Part 1: read the share, require status "active". The app
 \* shows Send Answers only on a list r has accepted.
 RecipientTapsSendAnswers(r) ==
   /\ rpc[r] = "idle" /\ rec[r] = "accepted" /\ status = "active"
@@ -208,14 +209,14 @@ ReplyChecksRecipient(r) ==
   /\ rpc' = [rpc EXCEPT ![r] = IF rec[r] = "accepted" THEN "replyRecipientChecked" ELSE "idle"]
   /\ UNCHANGED <<status, linkEnabled, code, rec, held, via, unread, revokeStep, revokeTargets, ghosts>>
 
-\* Part 3, QLS:302-311: answer reads, then set(merge) of the reply snapshot
-\* with unreadByOwner true. It does not touch status, and checks nothing.
+\* Part 3: answer reads, then the transaction re-reads share and recipient and
+\* writes the reply snapshot with unreadByOwner true only if r is still an
+\* accepted recipient of an active share; otherwise it throws and writes nothing.
 ReplyWritten(r) ==
   /\ rpc[r] = "replyRecipientChecked"
   /\ rpc' = [rpc EXCEPT ![r] = "idle"]
-  /\ unread' = [unread EXCEPT ![r] = TRUE]
-  /\ replyAfterExit' =
-       IF rec[r] # "accepted" \/ status # "active" THEN replyAfterExit \cup {r} ELSE replyAfterExit
+  /\ unread' = [unread EXCEPT ![r] = IF rec[r] = "accepted" /\ status = "active" THEN TRUE ELSE unread[r]]
+  /\ replyAfterExit' = replyAfterExit
   /\ UNCHANGED <<status, linkEnabled, code, rec, held, via, revokeStep, revokeTargets,
                  everRevoked, admittedThroughReplacedLink, admittedThroughDisabledLink>>
 

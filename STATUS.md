@@ -8,7 +8,7 @@ Every PR or issue number goes with a plain title.
 Fix the three bugs the formal checks found (owner, 2026-11-12). Plan: each issue's text (counterexample steps) and
 `.claude/skills/formal-*/`. Items:
 - #151 (guest upgrade: a username gets stuck, shown twice or lost)
-- #152 (an old share link admits after Regenerate; a reply lands after Remove or Revoke)
+- #152 (an old share link admits after Regenerate; a reply lands after Remove or Revoke): fix in PR (fix/152-formal-bug), awaiting owner merge and deploy
 - #153 (the per-user AI daily limit is beaten at midnight or by deleting the account)
 
 ## Last updated

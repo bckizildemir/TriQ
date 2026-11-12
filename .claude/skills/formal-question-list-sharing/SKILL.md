@@ -31,22 +31,19 @@ Bounds: `QuestionListSharing.cfg` = owner + 2 recipients, one regenerate (`MaxCo
 `Cap = 1` so the cap can bind; about 205,000 states, about 15 s. `Chart.cfg` = one recipient, and
 no exploring past a saved reply (`SmallChartBound`), for the chart.
 
-## Known findings (sync commit below)
+## Known findings
 
-1. `ReplacedLinkAdmitsNoOne` breaks. Owner shares, sends link 1. Recipient opens link 1 and taps
-   Accept. `acceptQuestionListShare` finds the share by `shareCode` outside its transaction
-   (QLS:100). Owner taps Regenerate Link (link 2 live). The accept transaction re-reads `status`
-   and `isLinkEnabled` but never compares `shareCode`, so the recipient joins through the dead
-   link 1. Same with Disable then Regenerate in the gap. Harm: a link the owner regenerated
-   because it leaked can still let in the person who had it, who then reads the owner's answers.
-2. `NoReplyAfterLeavingOrRevocation` breaks. Recipient taps Send Answers;
-   `sendQuestionListShareReply` checks share status and recipient status in two plain reads, then
-   writes later with no transaction (QLS:291-311). Recipient taps Remove Shared List (or the owner
-   taps Revoke Share) in between; the reply is still saved with `unreadByOwner: true`. Harm: the
-   owner sees a new reply from someone who left, against the app's promise. This is
-   QUESTION_LIST_SHARING_AUDIT.md finding 4, now with a path.
+None open. Two were found and fixed in #152 (both in `functions/questionListShares.js`):
 
-`replay/findings.replay.js` replays both paths on the real callables (fake Firestore from
+1. `ReplacedLinkAdmitsNoOne`: `acceptQuestionListShare` found the share by `shareCode` outside its
+   transaction and never re-compared the code, so a recipient could join through a link the owner
+   had just regenerated. The transaction now re-checks `shareCode`.
+2. `NoReplyAfterLeavingOrRevocation` (QUESTION_LIST_SHARING_AUDIT.md finding 4):
+   `sendQuestionListShareReply` checked share and recipient status with plain reads, then wrote
+   later. The write now runs in a transaction that re-reads both and throws if the recipient left
+   or the share was revoked.
+
+`replay/findings.replay.js` replays both former paths on the real callables, and asserts the fix holds (fake Firestore from
 `functions/questionListShares.test.js`); `check.sh --replay` runs it.
 
 ## Run it
