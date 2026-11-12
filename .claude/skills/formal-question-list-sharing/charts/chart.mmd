@@ -1,0 +1,106 @@
+---
+title: "Owner shares a question list (one recipient)"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: start
+    lg1: shared
+    lg2: revoked
+    lg3: Breaks NoReplyAfterLeavingOrRevocation or ReplacedLinkAdmitsNoOne in some cases
+    lg4: Path to the NoReplyAfterLeavingOrRevocation or ReplacedLinkAdmitsNoOne bug
+  }
+  class lg0 tan
+  class lg1 blue
+  class lg2 orange
+  class lg3 mayBreak
+  class lg4 bugPath
+  s0: Not shared yet, no recipient
+  s1: First link live, no recipient
+  s2: Link turned off, no recipient
+  s3: New link live, no recipient
+  s4: Share revoked, nobody has access
+  s5: First link live, recipient joining
+  s6: Link turned off, recipient joining
+  s7: New link live, recipient joining
+  s8: First link live, recipient on the list
+  s9: Link turned off, recipient on the list
+  s10: New link live, recipient on the list
+  s11: First link live, recipient sending answers
+  s12: Link turned off, recipient sending answers
+  s13: New link live, recipient sending answers
+  s14: Share revoked, recipient sending answers
+  [*] --> s0
+  s0 --> s1: owner taps Share
+  s1 --> s2: owner taps Disable Link
+  s1 --> s1: owner sends the link
+  s1 --> s3: owner taps Regenerate Link
+  s1 --> s4: owner taps Revoke Share
+  s2 --> s3: owner taps Regenerate Link
+  s2 --> s4: owner taps Revoke Share
+  s1 --> s5: recipient opens the link
+  s3 --> s2: owner taps Disable Link
+  s3 --> s4: owner taps Revoke Share
+  s3 --> s7: recipient opens the link
+  s5 --> s5: recipient taps Accept
+  s5 --> s6: owner taps Disable Link
+  s5 --> s7: owner taps Regenerate Link
+  s5 --> s8: server lets the recipient in
+  s6 --> s7: owner taps Regenerate Link
+  s7 --> s3: recipient taps Accept
+  s7 --> s6: owner taps Disable Link
+  s6 --> s2: server refuses the accept or recipient taps Accept
+  s7 --> s10: server lets the recipient in
+  s8 --> s9: owner taps Disable Link
+  s8 --> s1: recipient taps Remove Shared List
+  s8 --> s11: recipient taps Send Answers
+  s8 --> s4: owner taps Revoke Share
+  s9 --> s4: owner taps Revoke Share
+  s9 --> s2: recipient taps Remove Shared List
+  s9 --> s12: recipient taps Send Answers
+  s10 --> s9: owner taps Disable Link
+  s10 --> s3: recipient taps Remove Shared List
+  s10 --> s13: recipient taps Send Answers
+  s10 --> s4: owner taps Revoke Share
+  s11 --> s14: owner taps Revoke Share
+  s12 --> s14: owner taps Revoke Share
+  s11 --> s1: server refuses the reply
+  s13 --> s14: owner taps Revoke Share
+  s14 --> s14: server checks the recipient
+  s12 --> s2: server refuses the reply
+  s13 --> s3: server refuses the reply
+  s14 --> s4: server saves the reply or server refuses the reply
+  classDef mayBreak fill:#fff3e6,stroke:#e8730c,stroke-width:2.5px,color:#b85a06
+  class s0 tan
+  class s0 bugPath
+  class s1 blue
+  class s1 bugPath
+  class s2 blue
+  class s2 mayBreak
+  class s3 blue
+  class s3 mayBreak
+  class s4 orange
+  class s4 mayBreak
+  class s4 bugPath
+  class s5 blue
+  class s5 bugPath
+  class s6 blue
+  class s6 mayBreak
+  class s7 blue
+  class s7 mayBreak
+  class s7 bugPath
+  class s8 blue
+  class s8 bugPath
+  class s9 blue
+  class s9 mayBreak
+  class s10 blue
+  class s10 mayBreak
+  class s10 bugPath
+  class s11 blue
+  class s11 bugPath
+  class s12 blue
+  class s12 mayBreak
+  class s13 blue
+  class s13 mayBreak
+  class s14 orange
+  class s14 mayBreak
+  class s14 bugPath
