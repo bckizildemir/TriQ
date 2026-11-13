@@ -107,7 +107,7 @@ keeps.
 
 **Bounds.** Limits scaled down: guest 1 / permanent 2 per uid, guest pool 2 / verified pool 2. Two
 UTC days. The caller under study (`FirstUid`) starts as a guest, sends 3 calls, and may link, verify
-and delete; a second caller of any account kind sends 1 call. About 730 000 states for the full
+and delete; a second caller of any account kind sends 1 call. About 304 000 states for the full
 config.
 
 **Left out.** `PROJECT_MINUTE_LIMIT` (fixed with finding 1 and covered by a unit test, not modelled); App Check single-use (it refuses before the quota and touches no counter); the other
@@ -140,7 +140,7 @@ Covered: `functions/aiUsageLimit.js` (`consumeDailyQuota`, `nextProjectDocument`
 only), `functions/accountDeletion.js` (`deleteOwnAccountData`, the `aiUsageDaily` delete),
 `firestore.rules` (`aiUsageDaily`, `aiUsageProjectDaily`).
 
-Sync commit: `b5b03d7` (2026-11-12, the #153 fix; model, flags and code confirmed together). Proved at this commit: two
+Sync commit: `1ccc937` (2026-11-12, after the #153 and #151 fixes; model, flags and code confirmed together on 2026-11-13). Proved at `b5b03d7` (the #153 fix): two
 scratch breaks in `functions/aiUsageLimit.js` were caught and dropped: `used > limit` in
 `nextProjectDocument` (`PoolWithinDailyLimit` CHANGED on all four configs) and calling the handler
 before `consumeDailyQuota` (`UidWithinDailyLimit` CHANGED on `core`).
