@@ -48,7 +48,8 @@ Last session:
 
 ## Next step
 
-1. Choose the next focus; candidates: #158 (Home scroll hides Profile), the question-list cleanup on account delete.
+1. Choose the next focus; candidate: the question-list cleanup on account delete. #158 (Home scroll hides
+   Profile and shrinks the tab bar) is closed: the owner made both on purpose (2026-11-13).
 2. Open an issue for the other client writes of server-owned stats that the rules refuse:
    `QuestionService.backfillBadgeProgressIfNeeded` and the `totalAnswered` write in `ProfileModel` (same kind of bug as #116).
 
