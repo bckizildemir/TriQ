@@ -87,6 +87,28 @@ bash Scripts/check_model_usage.sh Question
 ```
 - These manage Firestore seed data and model-impact checks.
 
+## Re-check everything
+
+Two steps prove the app without the owner. Run both after a server deploy or a merge a user can feel; run step 1
+alone after a change to code a formal check covers (each `formal-*` skill's description names its files).
+
+1. **All three formal checks** (guest upgrade identity, question list sharing, AI quota pools), from the repo root,
+   about 2 minutes. They are local and free. A new worktree needs `npm ci --prefix functions` once, for the replays.
+
+   ```sh
+   STATECHART=~/.claude/skills/statechart/scripts/statechart .claude/skills/formal-guest-upgrade-identity/check.sh \
+     && STATECHART=~/.claude/skills/statechart/scripts/statechart .claude/skills/formal-question-list-sharing/check.sh --replay \
+     && .claude/skills/formal-ai-quota-pools/run.sh
+   ```
+
+   Pass: each script exits 0 and prints no `NOTE`. A `NOTE` says covered code changed since the model's sync
+   commit: follow that skill's "Keep it in step" / "When the code changed" section. A broken rule: replay it as the
+   skill says; a real bug becomes an issue, a wrong model gets a model fix. `STATECHART` is the script of the
+   user-level `/statechart` skill; on a machine without it, load `/statechart` to find the path.
+2. **The verify-triq check loop**: dispatch the `sim-verifier` subagent with `verify-triq` and the section "After a
+   deploy or a merge (the check loop)" of `.claude/skills/verify-triq/SKILL.md`, plus the commit range or the
+   deployed function list. See "Verify trial" above for the hand-back rules.
+
 ## Coding Style & Naming Conventions
 - Follow Swift conventions: 4-space indentation, `PascalCase` for types, `camelCase` for properties/functions.
 - Keep naming consistent with existing patterns: `*View` for SwiftUI views, `*Model` for state/models, `*Service` for external/data operations.
