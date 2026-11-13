@@ -28,7 +28,7 @@ callable that has no transaction); the comment on each action names its lines.
 QLS:n below means line n of `functions/questionListShares.js` at the sync commit.
 
 Bounds: `QuestionListSharing.cfg` = owner + 2 recipients, one regenerate (`MaxCode = 2`),
-`Cap = 1` so the cap can bind; about 205,000 states, about 15 s. `Chart.cfg` = one recipient, and
+`Cap = 1` so the cap can bind; about 25,000 states, about 15 s. `Chart.cfg` = one recipient, and
 no exploring past a saved reply (`SmallChartBound`), for the chart.
 
 ## Known findings
@@ -85,7 +85,7 @@ Coverage (each action's comment gives the lines):
 - `TTB/Views/Main/SharedQuestionListViews.swift`: the order preview -> Accept, and that Remove
   Shared List stays enabled while Send Answers is in flight.
 
-Sync commit: `4f4bfe3d445dc060ff0bf89f20458f9c3c4e6379` (2026-11-12).
+Sync commit: `37303d7e3abe5200daaaa03f0ba5e278c207b6bf` (2026-11-12, the #152 fix; model and code confirmed together on 2026-11-13).
 
 `check.sh` fails with exit 3 when a line the model stands on is gone (`anchor` lines in the script),
 and prints a NOTE when a covered file changed since the sync commit. Then: re-read the changed
