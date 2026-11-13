@@ -15,6 +15,12 @@ Fix the three bugs the formal checks found (owner, 2026-11-12): done, 3/3. Next 
 2026-11-13
 
 Last session:
+- 2026-11-13 (verification upkeep): all three formal checks (guest upgrade identity, question list sharing, AI
+  quota pools) pass on `origin/main` after the fixes #159, #160, #161; no new bug. #169 (formal: sync commits and
+  line references after the fixes) moves the models' bookkeeping forward; it waits for the owner because it holds a
+  `.tla` file. `CLAUDE.md` has a new section "Re-check everything": the one command for all formal checks and the
+  verify-triq check loop step. #168 opened (client writes of server-owned answer stats are refused by the rules:
+  badge backfill, `totalAnswered` migration). #167 (STATUS.md, build 11 went to the external testers) merged.
 - 2026-11-13: #163 merged: the app shows as "TriQ" on the Home Screen (display name, photo permission text,
   3 strings), build number 11. App Store Connect name is now "TriQ: Answers in Threes". Left as "TTB": the
   `"TTB user"` fallback name in 5 Swift files and the list-share web page text in `functions/` (needs a deploy).
@@ -51,10 +57,14 @@ Last session:
 
 1. Choose the next focus; candidate: the question-list cleanup on account delete. #158 (Home scroll hides
    Profile and shrinks the tab bar) is closed: the owner made both on purpose (2026-11-13).
-2. Open an issue for the other client writes of server-owned stats that the rules refuse:
-   `QuestionService.backfillBadgeProgressIfNeeded` and the `totalAnswered` write in `ProfileModel` (same kind of bug as #116).
+2. Triage #168 (client writes of server-owned answer stats are refused by the rules): move each backfill to the
+   server or delete the client write; also check the `BadgeModel` client transaction it names.
 
 ## Waits for the owner
+
+- #166 (docs: apply the prompt audit's high-priority fixes) and #169 (formal: sync commits and line references
+  after the #159, #160, #161 fixes): both green, both comment-and-Markdown only, but each changes a `.tla` model
+  file, which "Safe merges" does not cover. Merge #166 first or second: they touch different lines.
 
 - #139 (before release, check that 1 copy per function is enough for launch traffic): `ready-for-human`.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): `ready-for-human`.
