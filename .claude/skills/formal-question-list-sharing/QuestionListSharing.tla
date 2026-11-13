@@ -11,7 +11,7 @@
 (* functions/questionListShares.js (QLS) and firestore.rules (RULES) at    *)
 (* the sync commit named in SKILL.md.                                      *)
 (*                                                                         *)
-(* Names come from CONTEXT.md (the repo glossary) and the code:            *)
+(* Names come from GLOSSARY.md (the repo glossary) and the code:            *)
 (*   status        questionListShares/{id}.status   "none" = not created   *)
 (*   linkEnabled   questionListShares/{id}.isLinkEnabled                   *)
 (*   code          questionListShares/{id}.shareCode, numbered 1, 2, ...   *)
@@ -250,9 +250,9 @@ Next ==
 Spec == Init /\ [][Next]_vars
 
 -----------------------------------------------------------------------------
-(* Rules. Each one is a promise from CONTEXT.md, ADR 0001 or the app copy. *)
+(* Rules. Each one is a promise from GLOSSARY.md, ADR 0001 or the app copy. *)
 
-\* CONTEXT.md "Share Link": a link admits new recipients only until it is
+\* GLOSSARY.md "Share Link": a link admits new recipients only until it is
 \* disabled. Regenerate turns a new link on; the old one stays dead.
 DisabledLinkAdmitsNoOne == admittedThroughDisabledLink = {}
 
@@ -260,11 +260,11 @@ DisabledLinkAdmitsNoOne == admittedThroughDisabledLink = {}
 \* working: no recipient gets in through a link the owner has replaced.
 ReplacedLinkAdmitsNoOne == admittedThroughReplacedLink = {}
 
-\* CONTEXT.md "Revocation" + RULES:306-314: once the owner revokes, no
+\* GLOSSARY.md "Revocation" + RULES:306-314: once the owner revokes, no
 \* recipient can read the shared list (snapshot and owner answers) again.
 RevokedShareStaysClosed == everRevoked => \A r \in Recipients : ~CanReadShare(r)
 
-\* CONTEXT.md "Share Link": the recipient cap holds.
+\* GLOSSARY.md "Share Link": the recipient cap holds.
 RecipientCapHolds == AcceptedCount <= Cap
 
 \* App copy on Remove Shared List: "The owner will no longer see future

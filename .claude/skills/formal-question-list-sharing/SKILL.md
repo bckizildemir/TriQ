@@ -5,7 +5,7 @@ description: TLA+ model check of question list sharing (share links, accept, dis
 
 # Formal check: question list sharing
 
-A Shared Question List (CONTEXT.md) is a snapshot an owner shares through a Share Link; Recipients
+A Shared Question List (GLOSSARY.md) is a snapshot an owner shares through a Share Link; Recipients
 accept it, reply to it, and leave it; the owner disables, regenerates or revokes it. Each callable
 runs on the server, and the server is the source of truth. Several callables are not one
 transaction, so their steps can interleave with another person's. Tests run one call at a time and
@@ -19,10 +19,10 @@ callable that has no transaction); the comment on each action names its lines.
 
 | Rule (INVARIANT) | The promise | Where it comes from |
 |---|---|---|
-| `DisabledLinkAdmitsNoOne` | No one gets in while the link is turned off. | CONTEXT.md "Share Link" |
+| `DisabledLinkAdmitsNoOne` | No one gets in while the link is turned off. | GLOSSARY.md "Share Link" |
 | `ReplacedLinkAdmitsNoOne` | No one gets in through a link the owner has regenerated away. | Regenerate Link exists to kill a link that reached the wrong person |
-| `RevokedShareStaysClosed` | After a revoke, no recipient can read the shared list (snapshot and owner answers). | CONTEXT.md "Revocation", ADR 0001, firestore.rules `isAcceptedShareRecipient` |
-| `RecipientCapHolds` | Accepted recipients never exceed `recipientCap`. | CONTEXT.md "Share Link" |
+| `RevokedShareStaysClosed` | After a revoke, no recipient can read the shared list (snapshot and owner answers). | GLOSSARY.md "Revocation", ADR 0001, firestore.rules `isAcceptedShareRecipient` |
+| `RecipientCapHolds` | Accepted recipients never exceed `recipientCap`. | GLOSSARY.md "Share Link" |
 | `NoReplyAfterLeavingOrRevocation` | No reply lands for the owner from someone who removed the list or was revoked. | App copy on Remove Shared List: "The owner will no longer see future replies from you." |
 
 QLS:n below means line n of `functions/questionListShares.js` at the sync commit.
@@ -38,7 +38,7 @@ None open. Two were found and fixed in #152 (both in `functions/questionListShar
 1. `ReplacedLinkAdmitsNoOne`: `acceptQuestionListShare` found the share by `shareCode` outside its
    transaction and never re-compared the code, so a recipient could join through a link the owner
    had just regenerated. The transaction now re-checks `shareCode`.
-2. `NoReplyAfterLeavingOrRevocation` (QUESTION_LIST_SHARING_AUDIT.md finding 4):
+2. `NoReplyAfterLeavingOrRevocation` (Documentation/QUESTION_LIST_SHARING_AUDIT.md finding 4):
    `sendQuestionListShareReply` checked share and recipient status with plain reads, then wrote
    later. The write now runs in a transaction that re-reads both and throws if the recipient left
    or the share was revoked.
