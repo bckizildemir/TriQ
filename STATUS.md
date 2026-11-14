@@ -12,9 +12,14 @@ Fix the three bugs the formal checks found (owner, 2026-11-12): done, 3/3. Next 
 
 ## Last updated
 
-2026-11-13
+2026-11-14
 
 Last session:
+- 2026-11-14 (verification upkeep, finished): #170 (docs: one place for the command that re-runs all formal checks
+  and the check loop) merged. The three formal checks ran again on the branch of #169 (formal: sync commits and line
+  references after the fixes): each exits 0, no `NOTE`, no broken rule. #169 and #166 stay open for the owner
+  (see below). #168 (client writes of server-owned answer stats are refused by the rules) was checked against
+  `origin/main` at `09a6029`: both writes it names still exist.
 - 2026-11-13 (verification upkeep): all three formal checks (guest upgrade identity, question list sharing, AI
   quota pools) pass on `origin/main` after the fixes #159, #160, #161; no new bug. #169 (formal: sync commits and
   line references after the fixes) moves the models' bookkeeping forward; it waits for the owner because it holds a
