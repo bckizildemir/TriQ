@@ -6,7 +6,8 @@ Every PR or issue number goes with a plain title.
 ## Focus
 
 #168 (client writes of server-owned answer stats are refused by the security rules), chosen by the owner
-2026-11-16. Triaged, not fixed. Still real on `origin/main` at `44e8551`:
+2026-11-16. The owner chose option A; the fix PR (branch `fix/168-drop-client-stat-writes`, "Closes #168") deletes
+writes 1-3 below and waits for the owner's review. Triage as found on `origin/main` at `44e8551`:
 - The rule: the `users/{userId}` owner update allowlist (`firestore.rules:202-207`) lists no stats field
   (`totalAnswered`, `dailyAnswers`, `weeklyAnswers`, `completedQuestionIds`, `categoryAnswers`, `currentStreak`,
   `badgeProgress`, `unlockedBadges`). The server writes them (`functions/questionMutations.js:204-242`).
@@ -47,6 +48,11 @@ Previous focus, done 3/3: #151 (guest upgrade username) fixed in #161; #152 (old
 2026-11-16
 
 Last session:
+- 2026-11-16 (#168 fix, option A): PR deletes the badge backfill at sign-in, the `totalAnswered` migration write in
+  `ProfileModel`, and the dead `BadgeModel` transaction paths with their `BadgeStoring` methods. Swift only, no
+  rules change, no deploy, no simulator run. Left for its own issue: `BadgeModel.ensureBadgeUserDocument` still
+  patches default stats onto an existing pre-stats document when the badge screen loads (refused; the screen
+  shows `badge.error.load`), first noted in #126.
 - 2026-11-16: merged #166 (docs: apply the prompt audit's high-priority fixes, `983afde`) and #169 (formal: sync
   commits and line references after the #159/#160/#161 fixes, `44e8551`), squash, owner's yes for both. Owner chose
   #168 as the focus; triage above. No build, no deploy.
@@ -95,14 +101,14 @@ Last session:
 
 ## Next step
 
-1. #168: the owner picks option A or B above (Focus). With A, one Swift PR through `swift-writer`; with B, the
-   deploy or live write needs the owner's yes first.
+1. #168: the owner reviews and merges the option A PR. Then decide on `BadgeModel.ensureBadgeUserDocument` (see
+   Last session).
 2. Later candidate: the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
    tab bar) is closed: the owner made both on purpose (2026-11-13).
 
 ## Waits for the owner
 
-- #168 fix option: A (delete the client writes, no deploy) or B (server backfill, needs a deploy).
+- #168 fix PR (option A, delete the client writes): review and merge.
 - #139 (before release, check that 1 copy per function is enough for launch traffic): `ready-for-human`.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): `ready-for-human`.
 - #68 (run the UI tests in CI): needs a grilling round.

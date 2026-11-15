@@ -233,17 +233,12 @@ actor MockAccountDeletionPerforming: AccountDeletionPerforming {
     }
 }
 
-struct MockBadgeProgressBackfill: BadgeProgressBackfilling {
-    func backfillBadgeProgressIfNeeded() async {}
-}
-
 @MainActor
 func makeAuthModelForTesting(
     auth: MockAuthProvider = MockAuthProvider(),
     usernameService: MockUsernameService = MockUsernameService(),
     userDocumentManager: MockUserDocumentManager? = nil,
     accountDeletionService: AccountDeletionPerforming = MockAccountDeletionPerforming(),
-    badgeBackfillService: BadgeProgressBackfilling = MockBadgeProgressBackfill(),
     registersAuthListener: Bool = false
 ) -> (AuthModel, MockAuthProvider, MockUsernameService, MockUserDocumentManager) {
     let resolvedUserDocumentManager = userDocumentManager ?? MockUserDocumentManager()
@@ -251,8 +246,7 @@ func makeAuthModelForTesting(
         auth: auth,
         usernameService: usernameService,
         userDocumentManager: resolvedUserDocumentManager,
-        accountDeletionService: accountDeletionService,
-        badgeBackfillService: badgeBackfillService
+        accountDeletionService: accountDeletionService
     )
     let model = AuthModel(
         dependencies: dependencies,

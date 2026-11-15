@@ -19,13 +19,6 @@ struct NoOpBadgeStore: BadgeStoring {
         []
     }
 
-    func runUserTransaction(
-        userId: String,
-        _ updates: @escaping @Sendable (BadgeUserTransaction) throws -> Any?
-    ) async throws -> Any? {
-        try updates(NoOpBadgeUserTransaction())
-    }
-
     func observeUserDocument(
         userId: String,
         onChange: @escaping (Result<[String: Any]?, Error>) -> Void
@@ -33,11 +26,6 @@ struct NoOpBadgeStore: BadgeStoring {
         onChange(.success(nil))
         return NoOpBadgeUserListening()
     }
-}
-
-private struct NoOpBadgeUserTransaction: BadgeUserTransaction {
-    func userDocumentData() throws -> [String: Any]? { nil }
-    func updateUserDocument(_ data: [String: Any]) {}
 }
 
 private struct NoOpBadgeUserListening: BadgeUserListening {
