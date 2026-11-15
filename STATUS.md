@@ -5,16 +5,51 @@ Every PR or issue number goes with a plain title.
 
 ## Focus
 
-Fix the three bugs the formal checks found (owner, 2026-11-12): done, 3/3. Next focus not chosen yet.
-- #151 (guest upgrade username): fixed in #161
-- #152 (old share link; late reply): fixed in #159
-- #153 (AI daily limit at midnight / after delete): fixed in #160
+#168 (client writes of server-owned answer stats are refused by the security rules), chosen by the owner
+2026-11-16. Triaged, not fixed. Still real on `origin/main` at `44e8551`:
+- The rule: the `users/{userId}` owner update allowlist (`firestore.rules:202-207`) lists no stats field
+  (`totalAnswered`, `dailyAnswers`, `weeklyAnswers`, `completedQuestionIds`, `categoryAnswers`, `currentStreak`,
+  `badgeProgress`, `unlockedBadges`). The server writes them (`functions/questionMutations.js:204-242`).
+- Write 1, live: `QuestionService.backfillBadgeProgressIfNeeded` (`TTB/Services/QuestionService.swift:327`, write
+  `setData(updates, merge: true)` at `:422`). `AuthModel.handleAuthenticatedUser` awaits it at
+  `TTB/Models/AuthModel.swift:166`, before `authState = .authenticated`. It runs for every permanent account whose
+  doc has `totalAnswered == 0`, no `completedQuestionIds` or no `badgeProgress`: a new user with no answers pays one
+  `userAnswers` collection-group query per sign-in; a user with answers also reads the whole `questions` collection,
+  then the write is refused. What the user sees: no error (the catch only logs "Badge backfill error"); sign-in
+  waits for those reads every time; the stats and badges never get the backfill.
+- Write 2, live: `ProfileModel.applyStatistics` (`TTB/Models/ProfileModel.swift:264-268`) writes `totalAnswered`
+  from the legacy `totalAnswers` with `try?`. Refused, error dropped. The screen still shows the legacy total, so
+  the user sees nothing; the doc is never migrated. The server already reads `totalAnswered || totalAnswers`
+  (`functions/questionMutations.js:204`), so the next answer fixes the total anyway.
+- Write 3, dead code: `BadgeModel.checkBadgeProgress` (`TTB/Models/BadgeModel.swift:157`, writes at `:210`, `:217`)
+  and `incrementAnswerCountIfNeeded` (`:242`, write at `:283`) have no caller in `TTB/` or `Tests/` (only
+  `:309`, inside `incrementAnswerCountIfNeeded`). Nothing refused at run time; delete them.
+
+Fix options (no rule widening: a user could then forge their own stats):
+- A (recommended), delete the client writes, as #126 (stop patching server-owned stats on old user documents)
+  did for #116: remove `backfillBadgeProgressIfNeeded` and its `badgeBackfillService` wiring (`QuestionService`,
+  `AuthModel`, `AuthModelDependencies`, `UITestAuthMocks`, their tests), the `setData` in
+  `ProfileModel.applyStatistics` (keep the legacy read), and the dead `BadgeModel` transaction paths and the
+  `BadgeStoring` methods only they use. Swift only, no deploy. Risk low: an old account with missing
+  `completedQuestionIds`/`categoryAnswers`/badges keeps them missing until it answers again; it never got them
+  before either. Also makes sign-in faster. Size: small, mostly deletions, one PR.
+- B, move the backfill to the server: a callable (or a one-time Admin SDK migration) that recomputes the stats
+  from `userAnswers`, plus the client call. Needs a Cloud Functions deploy, or a script that writes live
+  Firestore: both need the owner's yes. Risk medium: new server code, idempotency, read cost of the whole
+  `questions` collection, abuse limits. Size: medium. Worth it only if real accounts lack the fields; nobody has
+  counted them (a read-only query of live `users` would tell).
+
+Previous focus, done 3/3: #151 (guest upgrade username) fixed in #161; #152 (old share link; late reply) fixed in
+#159; #153 (AI daily limit at midnight / after delete) fixed in #160.
 
 ## Last updated
 
-2026-11-14
+2026-11-16
 
 Last session:
+- 2026-11-16: merged #166 (docs: apply the prompt audit's high-priority fixes, `983afde`) and #169 (formal: sync
+  commits and line references after the #159/#160/#161 fixes, `44e8551`), squash, owner's yes for both. Owner chose
+  #168 as the focus; triage above. No build, no deploy.
 - 2026-11-14 (verification upkeep, finished): #170 (docs: one place for the command that re-runs all formal checks
   and the check loop) merged. The three formal checks ran again on the branch of #169 (formal: sync commits and line
   references after the fixes): each exits 0, no `NOTE`, no broken rule. #169 and #166 stay open for the owner
@@ -60,17 +95,14 @@ Last session:
 
 ## Next step
 
-1. Choose the next focus; candidate: the question-list cleanup on account delete. #158 (Home scroll hides
-   Profile and shrinks the tab bar) is closed: the owner made both on purpose (2026-11-13).
-2. Triage #168 (client writes of server-owned answer stats are refused by the rules): move each backfill to the
-   server or delete the client write; also check the `BadgeModel` client transaction it names.
+1. #168: the owner picks option A or B above (Focus). With A, one Swift PR through `swift-writer`; with B, the
+   deploy or live write needs the owner's yes first.
+2. Later candidate: the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
+   tab bar) is closed: the owner made both on purpose (2026-11-13).
 
 ## Waits for the owner
 
-- #166 (docs: apply the prompt audit's high-priority fixes) and #169 (formal: sync commits and line references
-  after the #159, #160, #161 fixes): both green, both comment-and-Markdown only, but each changes a `.tla` model
-  file, which "Safe merges" does not cover. Merge #166 first or second: they touch different lines.
-
+- #168 fix option: A (delete the client writes, no deploy) or B (server backfill, needs a deploy).
 - #139 (before release, check that 1 copy per function is enough for launch traffic): `ready-for-human`.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): `ready-for-human`.
 - #68 (run the UI tests in CI): needs a grilling round.
