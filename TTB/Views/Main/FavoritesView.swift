@@ -9,6 +9,7 @@ struct FavoritesContentView: View {
     @EnvironmentObject private var questionModel: QuestionModel
 
     @State private var presentedQuestion: ExpandedQuestionState?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let expansionSourceID = "favorites"
 
@@ -105,8 +106,13 @@ struct FavoritesContentView: View {
                             )
                         }
                     )
+                    // A removed card fades (and, with full motion, shrinks a little) while the
+                    // cards below slide up into the gap.
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96)))
                 }
             }
+            // Keyed on the ids, so any add, remove or reorder animates, whatever caused it.
+            .animation(.spring(duration: 0.35, bounce: 0), value: questions.map(\.id))
             .padding(.vertical)
         }
         .background(Color.theme.background)
