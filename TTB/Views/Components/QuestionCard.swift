@@ -21,8 +21,10 @@ struct QuestionCard: View {
   @EnvironmentObject private var guestFavoriteModel: GuestFavoriteModel
   @EnvironmentObject private var questionListStore: QuestionListStore
   @Environment(\.toastCenter) private var toastCenter
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
   @State private var isShowingQuestionLists = false
+  @State private var favoriteTapCount = 0
 
   private var isFavorite: Bool {
     favoriteStore.state(of: question)
@@ -296,19 +298,24 @@ struct QuestionCard: View {
       Label(favoriteAccessibilityLabel, systemImage: isFavorite ? "star.fill" : "star")
         .labelStyle(.iconOnly)
         .foregroundStyle(isFavorite ? .yellow : .gray)
-        .animation(.easeInOut(duration: 0.2), value: isFavorite)
+        .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
+        .animation(.easeOut(duration: 0.2), value: isFavorite)
         .frame(
           width: compactActionButtonSize,
           height: compactActionButtonSize
         )
         .contentShape(Rectangle())
     }
+    .sensoryFeedback(.impact(weight: .light), trigger: favoriteTapCount)
     .accessibilityLabel(favoriteAccessibilityLabel)
     .accessibilityIdentifier("question-card-favorite-\(sourceID)-\(question.id)")
     .buttonStyle(.plain)
   }
 
   private func toggleFavorite() {
+    // A tap counter, not `isFavorite`: a server snapshot or a rollback must not play the haptic.
+    favoriteTapCount += 1
+    HapticLog.record("favorite-tap")
     Task {
       await toastCenter.toggleFavorite(question, using: favoriteStore)
     }
