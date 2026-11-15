@@ -12,7 +12,7 @@ account holding the chosen name, or leaves the Guest exactly as it was.
 **The harm when it breaks.** A name gets stuck on an account nobody can sign in to, so nobody can
 ever take it; or two people show the same name; or a person who just upgraded has no username.
 
-Terms follow `CONTEXT.md` (Guest, upgrade) and ADR 0012 (linking a Guest keeps the uid).
+Terms follow `GLOSSARY.md` (Guest, upgrade) and ADR 0012 (linking a Guest keeps the uid).
 
 ## Files
 

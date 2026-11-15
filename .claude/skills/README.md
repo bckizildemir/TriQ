@@ -1,9 +1,9 @@
 # Skill provenance
 
-This directory holds 37 agent skills. The table below covers the 10 that came from Firebase or were
-written here; "Matt Pocock skills" covers the other 27. Six of the 10 were vendored
+This directory holds 40 agent skills. The table below covers the 13 that came from Firebase or were
+written here; "Matt Pocock skills" covers the other 27. Six of the 13 were vendored
 — copied in from an upstream project. Five of those six were then edited locally, in `186b03c`,
-`85747e5` and `dfb0901`, to remove hazards and to pin the Firebase project. The other four are
+`85747e5` and `dfb0901`, to remove hazards and to pin the Firebase project. The other seven are
 first-party and were written here. A skill whose policy is `fork` must never be refreshed from
 upstream without first re-reading the local edits: the edits are deliberate, and a blind copy
 would silently revert them.
@@ -33,6 +33,8 @@ the clean history as evidence.
 | ttb-live-adapter-tests | first-party | `own` |
 | verify-triq | first-party (`/create-verification-skill`, 2026-10-15) | `own` |
 | formal-ai-quota-pools | first-party (`/create-formal-verification-skill`, 2026-11-12) | `own` |
+| formal-guest-upgrade-identity | first-party (`/create-formal-verification-skill`, 2026-11-12) | `own` |
+| formal-question-list-sharing | first-party (`/create-formal-verification-skill`, 2026-11-12) | `own` |
 
 ## Matt Pocock skills (`track`)
 

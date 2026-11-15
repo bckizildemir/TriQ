@@ -16,20 +16,12 @@ This is a zero-tolerance constraint. Using `FirebaseFirestoreSwift` is fundament
 # ⛔️ CRITICAL RULE: NO INLINE INITIALIZATION ⛔️
 NEVER write `let db = Firestore.firestore()` as an inline class or struct property if there is ANY chance the object is instantiated before `FirebaseApp.configure()` executes in the app root.
 - **FATAL CRASH:** `@Observable class DataManager { let db = Firestore.firestore() }` initialized as a `@State` in the App root.
-- **SAFE PATTERN:** Initialize `Firestore.firestore()` lazily (`lazy var db = Firestore.firestore()`) OR explicitly initialize the manager *after* `FirebaseApp.configure()` finishes.
+- **SAFE PATTERN:** Fetch `Firestore.firestore()` inside the method that uses it (TTB rule: `docs/agents/firebase-objects.md`).
 
-## ✅ TTB EXCEPTION — do not refactor these files
+## TTB rule
 
-TTB uses the inline `let db = Firestore.firestore()` property on purpose in:
-
-- `TTB/Models/AIModel.swift`
-- `TTB/Models/AuthModelDependencies.swift`
-- `TTB/Models/ProfileModel.swift`
-
-`TTBApp` calls `FirebaseApp.configure()` before it creates these types, so the
-pattern is safe here. This code works. Do NOT change it to `lazy var`, and do
-NOT report it as a crash. Apply the rule above only to NEW types whose
-initialization order you cannot prove.
+Fetch Firestore inside the method that uses it (`let db = Firestore.firestore()` as a local).
+Do not store it in a property, lazy or not. See `docs/agents/firebase-objects.md`.
 
 ## 1. Import and Initialize
 Ensure you have installed the `FirebaseFirestore` SDK. Use the `xcode-project-setup` skill to automate adding the SPM dependency to the Xcode project.

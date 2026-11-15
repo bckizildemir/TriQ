@@ -17,7 +17,7 @@ wrong refusal locks real users out of AI.
 
 Read `docs/adr/0006-app-check-and-server-owned-ai-quota.md` and
 `docs/adr/0011-project-wide-ai-pools-and-single-use-app-check.md` for why the quota looks like this.
-The glossary is `CONTEXT.md`; it has no quota terms, so the model's names come from the code and the
+The glossary is `GLOSSARY.md`; it has no quota terms, so the model's names come from the code and the
 ADRs: guest = anonymous sign-in, permanent account, guest pool / verified pool, attempt.
 
 ## Run

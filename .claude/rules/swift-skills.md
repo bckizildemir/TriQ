@@ -53,6 +53,6 @@ pass, or a review of image loading or body-read computed properties.
 - Deployment target is iOS 18.2, so iOS 26 API needs an availability guard. Three files
   already use Liquid Glass — follow the shim pattern they establish rather than a new one.
 - Both test frameworks are live under `Tests/`. Match the file you are editing; do not convert
-  XCTest files to Swift Testing as a drive-by. Swift Testing does not support UI tests, so all
-  14 files under `TTBUITests/` stay on XCTest.
+  XCTest files to Swift Testing as a drive-by. Swift Testing does not support UI tests, so every
+  file under `TTBUITests/` stays on XCTest.
 - UI-observed model types are `@MainActor` when they mutate published state.
