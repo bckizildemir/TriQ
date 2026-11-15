@@ -288,7 +288,7 @@ struct QuestionCardExpandedView: View {
         .overlay { savingOverlay }
         .draftDismissalGuard(
             hasUnsavedChanges: hasUnsavedChanges,
-            onSave: commitDraft
+            onSave: { _ = commitDraft() }
         )
         .task(id: question.id) {
             await loadQuickAnswerSuggestions()
@@ -1087,7 +1087,13 @@ struct QuestionCardExpandedView: View {
     private func saveAndClose() {
         guard !isUploading else { return }
 
-        commitDraft()
+        // `.success` belongs to a save that really started (#56); a tap with nothing changed stays
+        // silent. A UIKit generator, because this view is dismissed in the same call and a SwiftUI
+        // feedback trigger on a disappearing view may never fire.
+        if commitDraft() {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            HapticLog.record("save-success")
+        }
         dismissFullscreen()
     }
 
@@ -1097,7 +1103,8 @@ struct QuestionCardExpandedView: View {
     /// re-persist, the rollback and the orphan cleanup — lives in the store now, tested. What is left
     /// here is the editor's own business: reflect the handoff in local state. The iOS 27 sheet
     /// dismissal dialog calls this alone, because the system finishes that dismissal itself.
-    private func commitDraft() {
+    @discardableResult
+    private func commitDraft() -> Bool {
         uploadError = nil
 
         let started = answerDraftStore.save(draft, baseline: baseline, for: question.id, in: model)
@@ -1106,6 +1113,7 @@ struct QuestionCardExpandedView: View {
         if started, draft.hasPendingUploads {
             draft = draft.clearingPendingImages()
         }
+        return started
     }
 
     private func dismissFullscreen() {
