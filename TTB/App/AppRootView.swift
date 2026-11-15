@@ -8,16 +8,23 @@ struct AppRootView: View {
       switch authModel.authState {
       case .checking:
         LaunchLoadingView()
+          .transition(.opacity)
       case .authenticated:
         AuthenticatedRootView()
+          .transition(.opacity)
       case .signedOut:
         LoginView()
+          .transition(.opacity)
       }
     }
+    // Opacity only, so it stays on under Reduce Motion.
+    .animation(.easeOut(duration: 0.25), value: authModel.authState)
   }
 }
 
-private struct LaunchLoadingView: View {
+/// The app logo, shown from cold start until the app is ready. `AuthenticatedRootView` shows the
+/// same view while the onboarding state loads, so the logo stays up through both waits.
+struct LaunchLoadingView: View {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var isAnimating = false
 
@@ -39,6 +46,7 @@ private struct LaunchLoadingView: View {
         )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(String(localized: "common.loading"))
+        .accessibilityIdentifier("launch-loading-logo")
     }
     .onAppear {
       isAnimating = !reduceMotion
