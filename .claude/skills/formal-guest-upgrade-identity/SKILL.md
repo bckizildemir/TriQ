@@ -35,7 +35,7 @@ STATECHART=<the /statechart script> .claude/skills/formal-guest-upgrade-identity
 STATECHART=<the /statechart script> .claude/skills/formal-guest-upgrade-identity/check.sh --save   # also refresh charts/
 ```
 
-About 20 seconds, 193 model states. Exit 0: no rule breaks and every replay path holds on the server. Exit 1: something changed (read below).
+About 20 seconds, 85 model states. Exit 0: no rule breaks and every replay path holds on the server. Exit 1: something changed (read below).
 Exit 2: the tools did not finish; TLC killed with exit 143 under machine load is a reason to run
 again, not a result.
 

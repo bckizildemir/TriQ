@@ -67,7 +67,7 @@ Init ==
   /\ admittedThroughDisabledLink = {}
   /\ replyAfterExit = {}
 
-\* QLS:453 shareIsClaimable
+\* QLS:469-471 shareIsClaimable
 Claimable == status = "active" /\ linkEnabled
 
 AcceptedCount == Cardinality({r \in Recipients : rec[r] = "accepted"})
@@ -95,21 +95,21 @@ OwnerSendsLink(r) ==
   /\ held' = [held EXCEPT ![r] = code]
   /\ UNCHANGED <<status, linkEnabled, code, rec, via, rpc, unread, revokeStep, revokeTargets, ghosts>>
 
-\* disableQuestionListShare, QLS:180-187: one transaction.
+\* disableQuestionListShare, QLS:182-189: one transaction.
 OwnerDisablesLink ==
   /\ revokeStep = "idle" /\ status # "none" /\ linkEnabled
   /\ linkEnabled' = FALSE
   /\ UNCHANGED <<status, code, rec, held, via, rpc, unread, revokeStep, revokeTargets, ghosts>>
 
-\* regenerateQuestionListShareLink, QLS:206-216: one transaction. It checks
+\* regenerateQuestionListShareLink, QLS:208-218: one transaction. It checks
 \* ownership only, not status, and turns the link back on.
 OwnerRegeneratesLink ==
   /\ revokeStep = "idle" /\ status # "none" /\ code < MaxCode
   /\ code' = code + 1 /\ linkEnabled' = TRUE
   /\ UNCHANGED <<status, rec, held, via, rpc, unread, revokeStep, revokeTargets, ghosts>>
 
-\* revokeQuestionListShare -> revokeShareRef, QLS:367-395: NOT one
-\* transaction. Part 1, QLS:374-382: get + update of the share document.
+\* revokeQuestionListShare -> revokeShareRef, QLS:383-411: NOT one
+\* transaction. Part 1, QLS:390-398: get + update of the share document.
 OwnerRevokesShare ==
   /\ revokeStep = "idle" /\ status # "none"
   /\ status' = "revoked" /\ linkEnabled' = FALSE
@@ -118,14 +118,14 @@ OwnerRevokesShare ==
   /\ UNCHANGED <<code, rec, held, via, rpc, unread, revokeTargets,
                  admittedThroughReplacedLink, admittedThroughDisabledLink, replyAfterExit>>
 
-\* Part 2, QLS:384-393: read every recipient document, pick the accepted ones.
+\* Part 2, QLS:400-409: read every recipient document, pick the accepted ones.
 RevokeReadsRecipients ==
   /\ revokeStep = "shareMarked"
   /\ revokeTargets' = {r \in Recipients : rec[r] = "accepted"}
   /\ revokeStep' = "recipientsRead"
   /\ UNCHANGED <<status, linkEnabled, code, rec, held, via, rpc, unread, ghosts>>
 
-\* Part 3, QLS:394: the batch writes status "revoked" to the documents read.
+\* Part 3, QLS:410: the batch writes status "revoked" to the documents read.
 RevokeCommitsBatch ==
   /\ revokeStep = "recipientsRead"
   /\ rec' = [r \in Recipients |-> IF r \in revokeTargets THEN "revoked" ELSE rec[r]]
@@ -139,7 +139,7 @@ RevokeStopsHalfway ==
   /\ revokeStep' = "idle" /\ revokeTargets' = {}
   /\ UNCHANGED <<status, linkEnabled, code, rec, held, via, rpc, unread, ghosts>>
 
-\* markQuestionListShareReplySeen, QLS:330-338: one transaction.
+\* markQuestionListShareReplySeen, QLS:346-354: one transaction.
 OwnerOpensReply(r) ==
   /\ revokeStep = "idle" /\ unread[r]
   /\ unread' = [unread EXCEPT ![r] = FALSE]
@@ -155,7 +155,7 @@ OwnerOpensReply(r) ==
 \* error: neither changes server state, so only a claimable preview is a step.
 RecipientOpensLink(r) ==
   /\ rpc[r] = "idle" /\ held[r] # 0
-  /\ held[r] = code /\ status # "none"               \* QLS:401-411 query by shareCode
+  /\ held[r] = code /\ status # "none"               \* QLS:417-427 query by shareCode
   /\ ~(rec[r] = "accepted" /\ status = "active")    \* QLS:66-68 isAccepted
   /\ Claimable                                      \* QLS:75-77
   /\ rpc' = [rpc EXCEPT ![r] = "previewing"]
@@ -174,17 +174,17 @@ RecipientTapsAccept(r) ==
   /\ rpc' = [rpc EXCEPT ![r] = IF via[r] = code /\ status # "none" THEN "accepting" ELSE "idle"]
   /\ UNCHANGED <<status, linkEnabled, code, rec, held, via, unread, revokeStep, revokeTargets, ghosts>>
 
-\* acceptQuestionListShare part 2, QLS:110-164: one transaction on the share
+\* acceptQuestionListShare part 2, QLS:110-166: one transaction on the share
 \* reference. It re-reads status, isLinkEnabled and shareCode (the code must
 \* still be the one r used, fix for #152), and counts accepted recipients.
 AcceptTransaction(r) ==
   /\ rpc[r] = "accepting"
   /\ rpc' = [rpc EXCEPT ![r] = "idle"]
-  /\ IF rec[r] = "accepted" /\ status = "active"               \* QLS:127-129 no-op
+  /\ IF rec[r] = "accepted" /\ status = "active"               \* QLS:128-131 no-op
        THEN UNCHANGED <<rec, admittedThroughReplacedLink, admittedThroughDisabledLink>>
      ELSE IF via[r] # code \/ ~Claimable \/ AcceptedCount >= Cap   \* refused: replaced link, disabled, or full
        THEN UNCHANGED <<rec, admittedThroughReplacedLink, admittedThroughDisabledLink>>
-     ELSE /\ rec' = [rec EXCEPT ![r] = "accepted"]              \* QLS:149-163
+     ELSE /\ rec' = [rec EXCEPT ![r] = "accepted"]              \* QLS:151-165
           /\ admittedThroughReplacedLink' =
                IF via[r] # code THEN admittedThroughReplacedLink \cup {r}
                ELSE admittedThroughReplacedLink
@@ -203,7 +203,7 @@ RecipientTapsSendAnswers(r) ==
   /\ rpc' = [rpc EXCEPT ![r] = "replyShareChecked"]
   /\ UNCHANGED <<status, linkEnabled, code, rec, held, via, unread, revokeStep, revokeTargets, ghosts>>
 
-\* Part 2, QLS:297-300: read r's recipient document, require "accepted".
+\* Part 2, QLS:299-302: read r's recipient document, require "accepted".
 ReplyChecksRecipient(r) ==
   /\ rpc[r] = "replyShareChecked"
   /\ rpc' = [rpc EXCEPT ![r] = IF rec[r] = "accepted" THEN "replyRecipientChecked" ELSE "idle"]
@@ -220,7 +220,7 @@ ReplyWritten(r) ==
   /\ UNCHANGED <<status, linkEnabled, code, rec, held, via, revokeStep, revokeTargets,
                  everRevoked, admittedThroughReplacedLink, admittedThroughDisabledLink>>
 
-\* leaveQuestionListShare, QLS:251-274: one transaction. The Remove Shared
+\* leaveQuestionListShare, QLS:253-276: one transaction. The Remove Shared
 \* List button stays enabled while Send Answers is in flight
 \* (SharedQuestionListViews.swift, AcceptedSharedQuestionListDetailView).
 RecipientLeaves(r) ==
