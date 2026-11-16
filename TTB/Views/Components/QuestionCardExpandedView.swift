@@ -19,6 +19,8 @@ private struct PresentedAnswerImage: Identifiable {
 
     let id = UUID()
     let source: Source
+    /// The slot the image came from; the viewer zooms out of that slot's thumbnail.
+    let slotIndex: Int
 }
 
 struct QuestionCardExpandedView: View {
@@ -63,6 +65,7 @@ struct QuestionCardExpandedView: View {
     @State private var isConfirmingClose = false
 
     @State private var presentedAnswerImage: PresentedAnswerImage?
+    @Namespace private var answerImageZoomNamespace
     @State private var isShowingQuestionLists = false
     @State private var dismissedGuestWarningQuestionID: String?
 
@@ -281,6 +284,10 @@ struct QuestionCardExpandedView: View {
         }
         .fullScreenCover(item: $presentedAnswerImage) { presentedImage in
             AnswerImageFullscreenView(presentedImage: presentedImage)
+                .modifier(AnswerImageZoomTransition(
+                    sourceID: presentedImage.slotIndex,
+                    namespace: answerImageZoomNamespace
+                ))
         }
         .overlay { savingOverlay }
         .draftDismissalGuard(
@@ -725,6 +732,7 @@ struct QuestionCardExpandedView: View {
             .resizable()
             .frame(width: displayWidth, height: displayHeight)
             .clipShape(RoundedRectangle(cornerRadius: 14))
+            .matchedTransitionSource(id: index, in: answerImageZoomNamespace)
             .overlay(alignment: .topTrailing) {
                 Button {
                     // Whatever the slot held, removing it is one assignment. The caller used to have
@@ -880,23 +888,23 @@ struct QuestionCardExpandedView: View {
     private func presentedImage(at index: Int, fallbackImage: UIImage) -> PresentedAnswerImage {
         switch draft[index].image {
         case let .pendingLocal(localImage):
-            return PresentedAnswerImage(source: .local(localImage))
+            return PresentedAnswerImage(source: .local(localImage), slotIndex: index)
 
         case let .pendingSuggestion(suggestion):
             if let url = suggestion.previewImageURL {
-                return PresentedAnswerImage(source: .remote(url))
+                return PresentedAnswerImage(source: .remote(url), slotIndex: index)
             }
 
         case let .saved(urlString, _):
             if let url = URL(string: urlString) {
-                return PresentedAnswerImage(source: .remote(url))
+                return PresentedAnswerImage(source: .remote(url), slotIndex: index)
             }
 
         case .none:
             break
         }
 
-        return PresentedAnswerImage(source: .local(fallbackImage))
+        return PresentedAnswerImage(source: .local(fallbackImage), slotIndex: index)
     }
 
     private var shareText: String {
@@ -1116,6 +1124,24 @@ struct QuestionCardExpandedView: View {
             onClose()
         } else {
             dismiss()
+        }
+    }
+}
+
+/// Zooms the viewer out of its thumbnail. Reduce Motion drops the zoom: it cross-fades on
+/// iOS 27 (the same shim as the question card zoom) and keeps the plain cover before that.
+private struct AnswerImageZoomTransition: ViewModifier {
+    let sourceID: Int
+    let namespace: Namespace.ID
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if reduceMotion {
+            content.backport.crossFadeNavigationTransition()
+        } else {
+            content.navigationTransition(.zoom(sourceID: sourceID, in: namespace))
         }
     }
 }
