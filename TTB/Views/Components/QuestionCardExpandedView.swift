@@ -1124,7 +1124,9 @@ private struct AnswerImageFullscreenView: View {
     let presentedImage: PresentedAnswerImage
 
     @Environment(\.dismiss) private var dismiss
-    @GestureState private var zoomScale: CGFloat = 1.0
+    // The reset eases back over 0.3 s instead of teleporting when the fingers lift.
+    @GestureState(resetTransaction: Transaction(animation: .spring(duration: 0.3, bounce: 0)))
+    private var zoomScale: CGFloat = 1.0
     @State private var dragOffset: CGFloat = 0
 
     var body: some View {
@@ -1212,10 +1214,13 @@ private struct AnswerImageFullscreenView: View {
             }
             .onEnded { value in
                 guard zoomScale <= 1.0 else { return }
-                if abs(value.translation.height) > 100 {
+                if AnswerImageViewerDismissal.shouldDismiss(
+                    translation: value.translation.height,
+                    predictedEndTranslation: value.predictedEndTranslation.height
+                ) {
                     dismiss()
                 } else {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    withAnimation(.spring(duration: 0.3, bounce: 0)) {
                         dragOffset = 0
                     }
                 }
