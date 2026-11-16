@@ -155,7 +155,7 @@ struct FavoritesContentView: View {
         }
     }
 
-    private static let listChangeAnimation = Animation.spring(duration: 0.35, bounce: 0)
+    private static let listChangeAnimation = Motion.listSettle
 
     /// Lets the content shrink to its new height after a removal without a one-frame jump.
     ///

@@ -92,7 +92,7 @@ final class ToastCenter: ObservableObject {
     func show(_ toast: AppToast) {
         dismissalTask?.cancel()
 
-        withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) {
+        withAnimation(Motion.toastIn) {
             currentToast = toast
         }
 
@@ -174,7 +174,7 @@ final class ToastCenter: ObservableObject {
         dismissalTask?.cancel()
         dismissalTask = nil
 
-        withAnimation(.easeOut(duration: 0.18)) {
+        withAnimation(Motion.toastOut) {
             currentToast = nil
         }
     }
@@ -317,7 +317,7 @@ private struct AppToastView: View {
                 if shouldDismiss {
                     onDismiss()
                 } else {
-                    withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
+                    withAnimation(Motion.toastSnapBack) {
                         dragOffset = 0
                     }
                 }

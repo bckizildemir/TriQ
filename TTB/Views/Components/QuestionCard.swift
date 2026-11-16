@@ -300,7 +300,7 @@ struct QuestionCard: View {
         .labelStyle(.iconOnly)
         .foregroundStyle(isFavorite ? .yellow : .gray)
         .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
-        .animation(.easeOut(duration: 0.2), value: isFavorite)
+        .animation(Motion.quickFade, value: isFavorite)
         .frame(
           width: compactActionButtonSize,
           height: compactActionButtonSize

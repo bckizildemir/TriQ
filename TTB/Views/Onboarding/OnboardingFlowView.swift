@@ -42,7 +42,7 @@ struct OnboardingFlowView: View {
     .background(backgroundLayer)
     .onChange(of: viewModel.pendingStep) { _, step in
       guard let step else { return }
-      withAnimation(.spring(response: 0.32, dampingFraction: 0.88), completionCriteria: .logicallyComplete) {
+      withAnimation(Motion.stepChange, completionCriteria: .logicallyComplete) {
         viewModel.commit(step)
       } completion: {
         viewModel.finishStepChange()

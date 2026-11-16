@@ -48,7 +48,7 @@ struct SuggestionChipsContainer: View {
                             removal: .opacity
                         ))
                         .animation(
-                            reduceMotion ? nil : .easeOut.delay(Double(index) * 0.05),
+                            reduceMotion ? nil : Motion.chipStagger(index: index),
                             value: suggestions
                         )
                     }

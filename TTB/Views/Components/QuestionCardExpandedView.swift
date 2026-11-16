@@ -132,7 +132,7 @@ struct QuestionCardExpandedView: View {
             .labelStyle(.iconOnly)
             .foregroundStyle(isFavorite ? .yellow : .primary)
             .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
-            .animation(.easeOut(duration: 0.2), value: isFavorite)
+            .animation(Motion.quickFade, value: isFavorite)
         }
         .accessibilityIdentifier("question-card-fullscreen-favorite")
         .accessibilityLabel(
@@ -259,7 +259,7 @@ struct QuestionCardExpandedView: View {
                     .scrollDismissesKeyboard(.interactively)
                     .onChange(of: focusedField) { _, newValue in
                         if case let .slot(index) = newValue {
-                            withAnimation(.easeInOut(duration: 0.25)) {
+                            withAnimation(Motion.scrollToFocusedField) {
                                 proxy.scrollTo("slot_\(index)", anchor: .center)
                             }
                         }
@@ -1158,11 +1158,11 @@ private struct AnswerImageFullscreenView: View {
 
     @Environment(\.dismiss) private var dismiss
     // The reset eases back over 0.3 s instead of teleporting when the fingers lift.
-    @GestureState(resetTransaction: Transaction(animation: .spring(duration: 0.3, bounce: 0)))
+    @GestureState(resetTransaction: Transaction(animation: Motion.gestureReset))
     private var zoomScale: CGFloat = 1.0
     /// The finger's vertical drag. A `@GestureState`, so a cancelled drag (the system zoom-dismiss
     /// gesture takes the touch) or a drag released while zoomed eases back to rest by itself.
-    @GestureState(resetTransaction: Transaction(animation: .spring(duration: 0.3, bounce: 0)))
+    @GestureState(resetTransaction: Transaction(animation: Motion.gestureReset))
     private var dragOffset: CGFloat = 0
     /// Holds the drag's last offset once it closes the viewer, so the image does not snap back
     /// while the cover animates away.

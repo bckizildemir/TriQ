@@ -352,7 +352,7 @@ class ProfileModel: ObservableObject {
     let didUpload = await uploadProfileImage(image)
     guard didUpload else { return }
 
-    withAnimation(.easeInOut(duration: 0.2)) {
+    withAnimation(Motion.contentChange) {
       profileImage = image
     }
     tempImage = nil
@@ -431,7 +431,7 @@ class ProfileModel: ObservableObject {
     guard userId == removedUserId else { return }
     profileImageURL = nil
     tempImage = nil
-    withAnimation(.easeInOut(duration: 0.2)) {
+    withAnimation(Motion.contentChange) {
       profileImage = nil
     }
   }
