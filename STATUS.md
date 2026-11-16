@@ -5,9 +5,11 @@ Every PR or issue number goes with a plain title.
 
 ## Focus
 
-#168 (client writes of server-owned answer stats are refused by the security rules), chosen by the owner
-2026-11-16. The owner chose option A; the fix PR (branch `fix/168-drop-client-stat-writes`, "Closes #168") deletes
-writes 1-3 below and waits for the owner's review. Triage as found on `origin/main` at `44e8551`:
+No focus set. The owner picks the next one (candidates under "Next step").
+
+Previous focus, done 1/1: #168 (client writes of server-owned answer stats are refused by the security rules),
+chosen by the owner 2026-11-16, fixed with option A in #173 (merged 2026-11-16, issue closed). The triage below is
+kept for reference; it describes `origin/main` at `44e8551`, before the fix:
 - The rule: the `users/{userId}` owner update allowlist (`firestore.rules:202-207`) lists no stats field
   (`totalAnswered`, `dailyAnswers`, `weeklyAnswers`, `completedQuestionIds`, `categoryAnswers`, `currentStreak`,
   `badgeProgress`, `unlockedBadges`). The server writes them (`functions/questionMutations.js:204-242`).
@@ -48,7 +50,21 @@ Previous focus, done 3/3: #151 (guest upgrade username) fixed in #161; #152 (old
 2026-11-16
 
 Last session:
-- 2026-11-16 (#168 fix, option A): PR deletes the badge backfill at sign-in, the `totalAnswered` migration write in
+- 2026-11-16 (later, owner's yes for each after `/code-review`): merged, squash, in this order: #174 (five motion
+  fixes from the 2026-11-16 audit; review findings checked by a judge, none blocking), #173 (fix #168, see below;
+  the review found one more refused write, `ensureBadgeUserDocument`, removed before merge), #175 (a tapped
+  question card zooms into the answer editor; branch updated after #173/#174, CI green). #175 proof: with typed,
+  unsaved text a swipe-down keeps the editor open with the text; with no text it closes. PASS on iOS 27.0
+  (`~/verify-evidence/triq/2026-11-16-102231-1fba`) and iOS 18.5 (`2026-11-16-103258-2f95`), fast flick only
+  (`axe swipe ... --duration 0.25 --delta 5`); a slow interactive drag was not proved. Open follow-ups (minor, no
+  issue yet): #174 plays no save haptic in the iOS 27 dismissal dialog's Save path; #175 `DraftDismissalStyle`
+  `dialogAvailable: false` is never passed by app code. No deploy.
+  Check loop after the merges (range `b11da3c..4423778`): PASS, run `2026-11-16-104818-466d` (iOS 27.0, English):
+  launch logo hand-off with no flicker, card zoom open/close, Favorites remove animation with no gap, Profile badges
+  screen loads ("0 / 30", no error) on a permanent account; server log clean. Not proved: haptics (simulator), the
+  absence of the sign-in backfill (only that sign-in works), answer save. Live writes: one guest and the account
+  `verifytriq-104818-466d` (not deleted; clean before release).
+- 2026-11-16 (#168 fix, option A, merged as #173): PR deletes the badge backfill at sign-in, the `totalAnswered` migration write in
   `ProfileModel`, and the dead `BadgeModel` transaction paths with their `BadgeStoring` methods, plus
   `BadgeModel.ensureBadgeUserDocument` (a refused merge write that made the badge screen show `badge.error.load`
   for an old user document), `AnswerStreakCalculator`, `BadgeProgressCalculator` and two unused strings. Swift only,
@@ -101,13 +117,13 @@ Last session:
 
 ## Next step
 
-1. #168: the owner reviews and merges the option A PR.
-2. Later candidate: the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
+1. The owner picks the next focus.
+2. Candidate: the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
    tab bar) is closed: the owner made both on purpose (2026-11-13).
 
 ## Waits for the owner
 
-- #168 fix PR (option A, delete the client writes): review and merge.
+- The next focus.
 - #139 (before release, check that 1 copy per function is enough for launch traffic): `ready-for-human`.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): `ready-for-human`.
 - #68 (run the UI tests in CI): needs a grilling round.
