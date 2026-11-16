@@ -60,6 +60,7 @@ Last session:
     The run's account `verifytriq-152838-22f2` stays on the server for pre-release cleanup.
   - #179 (onboarding steps slide in the direction you move, softer Profile press, calmer page dots, AI disclosure
     stagger; plans 009, 010, findings 12, 13). Runs `2026-11-16-161722-2f1c`, `2026-11-16-162736-2e7c`.
+  - All three merged later the same day (owner's yes), squash, order #178, #179, #177.
   - Left from the audit: finding 11 (shared Motion tokens), after #177-#179 merge, since it touches their files.
 - 2026-11-16 (later, owner's yes for each after `/code-review`): merged, squash, in this order: #174 (five motion
   fixes from the 2026-11-16 audit; review findings checked by a judge, none blocking), #173 (fix #168, see below;
@@ -128,15 +129,23 @@ Last session:
 
 ## Next step
 
-1. The owner picks the next focus. Animation audit: after #177, #178, #179 merge, build finding 11 (shared
-   Motion tokens) and update `animation-audits/TriQ-2026-11-16/plans/README.md` (every plan still reads TODO).
+1. The owner picks the next focus. Postponed by the owner 2026-11-16 until their usage limit resets (start
+   trigger: the owner says go, or the next session after the reset):
+   - Finding 11 (shared Motion tokens) from the animation audit; then mark plans 001-010 done in
+     `animation-audits/TriQ-2026-11-16/plans/README.md` (every plan still reads TODO).
+   - Owner said yes: let a zoomed-in answer image be panned in the viewer (`QuestionCardExpandedView.swift`
+     has no pan code; found in #177).
+   - Owner said yes: add the 2026-11-16 simulator tricks to `.claude/skills/verify-triq/` tool traps: axe has no
+     pinch and carries no flick velocity; a true double tap is two parallel `axe touch --down --up` processes
+     (`axe batch` taps are 0.5-0.8 s apart); `simctl io recordVideo` is variable frame rate (3 s head-sleep,
+     `ffmpeg -ss/-to -fps_mode passthrough`), screenshots lag about 0.5 s; macOS has no `timeout`; wait on PIDs, not
+     `%N` jobs, when a recorder runs.
 2. Candidate: the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
    tab bar) is closed: the owner made both on purpose (2026-11-13).
 
 ## Waits for the owner
 
 - The next focus.
-- Merge of #177, #178, #179 (animation audit, see "Last session").
 - #139 (before release, check that 1 copy per function is enough for launch traffic): `ready-for-human`.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): `ready-for-human`.
 - #68 (run the UI tests in CI): needs a grilling round.
