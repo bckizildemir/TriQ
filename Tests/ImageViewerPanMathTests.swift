@@ -85,7 +85,67 @@ struct ImageViewerPanMathTests {
             at: 3,
             withMomentum: true
         )
-        #expect(result.width == 40 + 100 * ImageViewerPanMath.momentumFactor)
+        // 40 + (140 - 40) * 0.35
+        #expect(abs(result.width - 75) < 0.0001)
+    }
+
+    @Test func tapInsideTheFittedImageHitsIt() {
+        // 400x400 image centred in 400x800: y 200...600.
+        #expect(math.imageContains(CGPoint(x: 200, y: 400), at: 1, offset: .zero))
+        #expect(math.imageContains(CGPoint(x: 10, y: 210), at: 1, offset: .zero))
+    }
+
+    @Test func tapOnTheBlackBandsMissesTheImage() {
+        #expect(!math.imageContains(CGPoint(x: 200, y: 100), at: 1, offset: .zero))
+        #expect(!math.imageContains(CGPoint(x: 200, y: 700), at: 1, offset: .zero))
+    }
+
+    @Test func visibleImageFollowsZoomAndPan() {
+        // 2x: 800x800 around the centre (200, 400) is x -200...600, y 0...800.
+        #expect(math.imageContains(CGPoint(x: 5, y: 790), at: 2, offset: .zero))
+        // Panned 200 left: x -400...400; the right edge of the screen is now black.
+        let panned = CGSize(width: -200, height: 0)
+        #expect(!math.imageContains(CGPoint(x: 399.5 + 1, y: 400), at: 2, offset: panned))
+        #expect(math.imageContains(CGPoint(x: 399, y: 400), at: 2, offset: panned))
+    }
+
+    @Test func unmeasuredImageIsNeverHit() {
+        let unmeasured = ImageViewerPanMath(containerSize: .zero, fittedSize: .zero)
+        #expect(!unmeasured.imageContains(.zero, at: 1, offset: .zero))
+    }
+
+    @Test func glideStartsWithTheReleaseSpeedAsAShareOfItsDistance() {
+        // 100 points to go at 300 points per second: 3 distances per second.
+        let velocity = ImageViewerPanMath.initialVelocity(
+            from: .zero,
+            to: CGSize(width: 100, height: 0),
+            releaseVelocity: CGSize(width: 300, height: 0)
+        )
+        #expect(abs(velocity - 3) < 0.0001)
+    }
+
+    @Test func glideAgainstTheFingerOrWithNoDistanceStartsAtRest() {
+        let against = ImageViewerPanMath.initialVelocity(
+            from: .zero,
+            to: CGSize(width: -100, height: 0),
+            releaseVelocity: CGSize(width: 300, height: 0)
+        )
+        #expect(against == 0)
+        let none = ImageViewerPanMath.initialVelocity(
+            from: CGSize(width: 50, height: 0),
+            to: CGSize(width: 50, height: 0),
+            releaseVelocity: CGSize(width: 300, height: 0)
+        )
+        #expect(none == 0)
+    }
+
+    @Test func glideStartSpeedIsCapped() {
+        let velocity = ImageViewerPanMath.initialVelocity(
+            from: .zero,
+            to: CGSize(width: 2, height: 0),
+            releaseVelocity: CGSize(width: 5000, height: 0)
+        )
+        #expect(velocity == Double(ImageViewerPanMath.maximumInitialVelocity))
     }
 
     @Test func momentumTargetIsClamped() {

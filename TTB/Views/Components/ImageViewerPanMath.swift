@@ -51,6 +51,39 @@ struct ImageViewerPanMath: Equatable {
         return clamp(CGSize(width: offset.width * ratio, height: offset.height * ratio), at: newScale)
     }
 
+    /// The screen rectangle the image covers at `scale` and `offset`: the fitted image scaled around
+    /// the container's centre, then moved by the offset.
+    func visibleImageRect(at scale: CGFloat, offset: CGSize) -> CGRect {
+        let size = CGSize(width: fittedSize.width * scale, height: fittedSize.height * scale)
+        return CGRect(
+            x: containerSize.width / 2 + offset.width - size.width / 2,
+            y: containerSize.height / 2 + offset.height - size.height / 2,
+            width: size.width,
+            height: size.height
+        )
+    }
+
+    /// Whether a touch at `point` (in the container's space) lands on the visible image.
+    func imageContains(_ point: CGPoint, at scale: CGFloat, offset: CGSize) -> Bool {
+        visibleImageRect(at: scale, offset: offset).contains(point)
+    }
+
+    /// The release speed as a share of the glide's distance per second, the unit
+    /// `Animation.interpolatingSpring(initialVelocity:)` takes: the velocity's component along the
+    /// glide divided by its length. Zero when the glide is too short to matter or runs against
+    /// the finger.
+    static func initialVelocity(from current: CGSize, to target: CGSize, releaseVelocity: CGSize) -> Double {
+        let dx = target.width - current.width
+        let dy = target.height - current.height
+        let distanceSquared = dx * dx + dy * dy
+        guard distanceSquared > 1 else { return 0 }
+        let along = (releaseVelocity.width * dx + releaseVelocity.height * dy) / distanceSquared
+        return Double(min(max(along, 0), maximumInitialVelocity))
+    }
+
+    /// A cap so a very short glide does not start with an absurd speed.
+    static let maximumInitialVelocity: CGFloat = 20
+
     /// Where a drag released at `offset + translation` settles. `predictedEndTranslation` folds in
     /// the release velocity; a share of its extra travel carries on, and the result is clamped.
     /// Without momentum (Reduce Motion) the drag only settles inside the clamp.
