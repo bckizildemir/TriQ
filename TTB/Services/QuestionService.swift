@@ -31,17 +31,6 @@ actor QuestionService {
         subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
         category: "QuestionService")
 
-    private struct BadgeDefinition: Decodable {
-        let id: String
-        let targetCount: Int
-        let type: String
-        let category: String?
-
-        var badgeType: BadgeType {
-            BadgeType(rawValue: type) ?? .total
-        }
-    }
-
     init() {
         let appName = Firestore.firestore().app.name
         logger.debug("QuestionService initialized with Firestore app \(appName)")
@@ -324,107 +313,6 @@ actor QuestionService {
         }
     }
 
-    func backfillBadgeProgressIfNeeded() async {
-        guard let currentUser = Auth.auth().currentUser, !currentUser.isAnonymous else { return }
-        let userId = currentUser.uid
-
-        let db = Firestore.firestore()
-        let userRef = db.collection("users").document(userId)
-
-        do {
-            let userSnapshot = try await userRef.getDocument()
-            let userData = userSnapshot.data() ?? [:]
-            let storedTotal = userData["totalAnswered"] as? Int
-                ?? userData["totalAnswers"] as? Int
-                ?? 0
-            let storedCompletedQuestions = userData["completedQuestionIds"] as? [String] ?? []
-            let storedProgress = Self.doubleMap(from: userData["badgeProgress"])
-            let needsBackfill = storedTotal == 0
-                || storedCompletedQuestions.isEmpty
-                || storedProgress.isEmpty
-
-            guard needsBackfill else { return }
-
-            let answersSnapshot = try await db.collectionGroup("userAnswers")
-                .whereField("userId", isEqualTo: userId)
-                .getDocuments()
-
-            let completedAnswers: [(questionId: String, answeredAt: Date)] = answersSnapshot.documents.compactMap { document in
-                let questionId = Self.questionId(fromUserAnswerPath: document.reference.path)
-                let answers = document.data()["answers"] as? [String] ?? []
-                guard !questionId.isEmpty, answers.filter({ !$0.isEmpty }).count == 3 else {
-                    return nil
-                }
-                let answeredAt = (document.data()["answeredAt"] as? Timestamp)?.dateValue() ?? Date()
-                return (questionId: questionId, answeredAt: answeredAt)
-            }
-
-            guard !completedAnswers.isEmpty else { return }
-
-            let questionsSnapshot = try await db.collection("questions").getDocuments()
-            let categoriesByQuestionId: [String: String] = questionsSnapshot.documents.reduce(into: [:]) { result, document in
-                result[document.documentID] = document.data()["category"] as? String ?? ""
-            }
-
-            var categoryAnswers: [String: Int] = [:]
-            for completedAnswer in completedAnswers {
-                let category = categoriesByQuestionId[completedAnswer.questionId] ?? ""
-                guard !category.isEmpty else { continue }
-                categoryAnswers[category] = (categoryAnswers[category] ?? 0) + 1
-            }
-
-            let totalAnswered = completedAnswers.count
-            let dailyAnswers = completedAnswers.filter { Calendar.current.isDateInToday($0.answeredAt) }.count
-            let weeklyAnswers = completedAnswers.filter {
-                guard let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -6, to: Date()) else {
-                    return false
-                }
-                return $0.answeredAt >= Calendar.current.startOfDay(for: sevenDaysAgo)
-            }.count
-            let lastAnsweredDate = completedAnswers.map(\.answeredAt).max()
-            let currentStreak = AnswerStreakCalculator.currentStreak(
-                from: completedAnswers.map(\.answeredAt),
-                calendar: .current
-            )
-            let badgeDefinitions = await fetchBadgeDefinitions()
-
-            var badgeProgress: [String: Double] = [:]
-            var unlockedBadges: [String] = []
-            for badgeDefinition in badgeDefinitions {
-                let progress = Self.progress(
-                    for: badgeDefinition,
-                    totalAnswered: totalAnswered,
-                    categoryAnswers: categoryAnswers,
-                    currentStreak: currentStreak
-                )
-                badgeProgress[badgeDefinition.id] = progress
-                if progress >= 1.0 {
-                    unlockedBadges.append(badgeDefinition.id)
-                }
-            }
-
-            var updates: [String: Any] = [
-                "totalAnswered": totalAnswered,
-                "dailyAnswers": dailyAnswers,
-                "weeklyAnswers": weeklyAnswers,
-                "completedQuestionIds": completedAnswers.map(\.questionId),
-                "categoryAnswers": categoryAnswers,
-                "currentStreak": currentStreak,
-            ]
-            if let lastAnsweredDate {
-                updates["lastAnsweredDate"] = Timestamp(date: lastAnsweredDate)
-            }
-            if !badgeProgress.isEmpty {
-                updates["badgeProgress"] = badgeProgress
-                updates["unlockedBadges"] = unlockedBadges
-            }
-
-            try await userRef.setData(updates, merge: true)
-        } catch {
-            logger.error("Badge backfill error: \(error.localizedDescription)")
-        }
-    }
-
     // MARK: - Listeners
     //
     // Each listener fetches `Firestore` in the method (see `docs/agents/firebase-objects.md`). A registration
@@ -643,31 +531,6 @@ actor QuestionService {
         return formatter.string(from: date)
     }
 
-    private func fetchBadgeDefinitions() async -> [BadgeDefinition] {
-        if let snapshot = try? await Firestore.firestore().collection("badges").getDocuments() {
-            let remoteDefinitions = snapshot.documents.compactMap { document -> BadgeDefinition? in
-                let data = document.data()
-                return BadgeDefinition(
-                    id: document.documentID,
-                    targetCount: data["targetCount"] as? Int ?? 0,
-                    type: data["type"] as? String ?? "total",
-                    category: data["category"] as? String
-                )
-            }
-            if !remoteDefinitions.isEmpty {
-                return remoteDefinitions
-            }
-        }
-
-        guard let url = Bundle.main.url(forResource: "BadgeDefinitions", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let bundledDefinitions = try? JSONDecoder().decode([BadgeDefinition].self, from: data)
-        else {
-            return []
-        }
-        return bundledDefinitions
-    }
-
     private func currentUsername(for userId: String) async throws -> String? {
         let snapshot = try await Firestore.firestore().collection("users").document(userId).getDocument()
         let username = (snapshot.data()?["username"] as? String)?
@@ -726,35 +589,6 @@ actor QuestionService {
         return Array(parsed.prefix(3))
     }
 
-    /// The id of the question that owns a `userAnswers` document, read from its path
-    /// (`questions/<id>/userAnswers/<uid>`). Returns "" when the path has no parent document.
-    nonisolated static func questionId(fromUserAnswerPath path: String) -> String {
-        let components = path.split(separator: "/")
-        guard components.count >= 4 else { return "" }
-        return String(components[components.count - 3])
-    }
-
-    private static func doubleMap(from value: Any?) -> [String: Double] {
-        if let typed = value as? [String: Double] {
-            return typed
-        }
-        guard let raw = value as? [String: Any] else {
-            return [:]
-        }
-
-        var parsed: [String: Double] = [:]
-        for (key, value) in raw {
-            if let doubleValue = value as? Double {
-                parsed[key] = doubleValue
-            } else if let intValue = value as? Int {
-                parsed[key] = Double(intValue)
-            } else if let number = value as? NSNumber {
-                parsed[key] = number.doubleValue
-            }
-        }
-        return parsed
-    }
-
     private func latestRemainingAnsweredAt(
         questionRef: DocumentReference,
         excludingUserId userId: String
@@ -771,38 +605,6 @@ actor QuestionService {
         }
 
         return nil
-    }
-
-    private static func progress(
-        for badge: BadgeDefinition,
-        totalAnswered: Int,
-        categoryAnswers: [String: Int],
-        currentStreak: Int
-    ) -> Double {
-        guard badge.targetCount > 0 else {
-            return 0.0
-        }
-
-        switch badge.badgeType {
-        case .total:
-            return BadgeProgressCalculator.progress(
-                currentCount: totalAnswered,
-                targetCount: badge.targetCount
-            )
-        case .category:
-            guard let category = badge.category else {
-                return 0.0
-            }
-            return BadgeProgressCalculator.progress(
-                currentCount: categoryAnswers[category] ?? 0,
-                targetCount: badge.targetCount
-            )
-        case .streak:
-            return BadgeProgressCalculator.progress(
-                currentCount: currentStreak,
-                targetCount: badge.targetCount
-            )
-        }
     }
 }
 

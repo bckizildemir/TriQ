@@ -7768,40 +7768,6 @@
         }
       }
     },
-    "badge.error.progress" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Badge progress could not be updated: %@"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Badge progress güncellenirken hata oluştu: %@"
-          }
-        }
-      }
-    },
-    "badge.error.updateAnswerCount" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The answer count could not be updated: %@"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cevap sayısı güncellenirken hata oluştu: %@"
-          }
-        }
-      }
-    },
     "badge.progress.daysFormat" : {
       "extractionState" : "manual",
       "localizations" : {
