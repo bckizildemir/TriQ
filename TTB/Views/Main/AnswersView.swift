@@ -35,7 +35,7 @@ struct AnswersContentView: View {
         .refreshable {
             await answerModel.fetchStatistics()
         }
-        .fullScreenCover(item: $presentedQuestion) { expandedState in
+        .questionCardZoomCover(item: $presentedQuestion, cardSourceID: expansionSourceID) { expandedState in
             QuestionDetailModalShell(
                 expandedState: expandedState,
                 model: questionModel,

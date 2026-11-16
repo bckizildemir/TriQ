@@ -60,7 +60,7 @@ struct AIView: View {
             .environmentObject(authModel)
             .accessibilityIdentifier("trio-create-question-sheet")
         }
-        .fullScreenCover(item: $presentedQuestion) { expandedState in
+        .questionCardZoomCover(item: $presentedQuestion, cardSourceID: expansionSourceID) { expandedState in
             QuestionDetailModalShell(
                 expandedState: expandedState,
                 model: questionModel,

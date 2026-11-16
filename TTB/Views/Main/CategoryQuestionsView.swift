@@ -26,7 +26,7 @@ struct CategoryQuestionsView: View {
         // Inline, never `.large`: on iOS 27 a large-title screen pushed from a screen whose
         // navigation bar is minimized (Home) hangs in a layout loop (#101).
         .navigationBarTitleDisplayMode(.inline)
-        .fullScreenCover(item: $presentedQuestion) { expandedState in
+        .questionCardZoomCover(item: $presentedQuestion, cardSourceID: expansionSourceID) { expandedState in
             QuestionDetailModalShell(
                 expandedState: expandedState,
                 model: model,

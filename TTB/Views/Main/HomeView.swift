@@ -40,6 +40,7 @@ struct HomeView: View {
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                         } else {
                             if !model.todaysQuestions.isEmpty {
+                                let todaySourceID = "home.today"
                                 CategorySection(
                                     title: String(localized: "main.home.todayQuestions"),
                                     icon: "calendar",
@@ -47,18 +48,20 @@ struct HomeView: View {
                                     model: model,
                                     badgeModel: badgeModel,
                                     categoryColor: categoryModel.color(for: "Daily"),
-                                    sourceID: "home.today",
+                                    sourceID: todaySourceID,
                                     maximumCardHeight: maximumCardHeight,
                                     onQuestionTap: { question in
                                         presentedQuestion = ExpandedQuestionState(
                                             question: question,
-                                            headerStyle: .plain
+                                            headerStyle: .plain,
+                                            cardSourceID: todaySourceID
                                         )
                                     }
                                 )
                             }
 
                             ForEach(homeCategories) { category in
+                                let categorySourceID = "home.category.\(category.id)"
                                 CategorySection(
                                     title: category.displayName,
                                     icon: category.iconSystemName,
@@ -67,12 +70,13 @@ struct HomeView: View {
                                     badgeModel: badgeModel,
                                     categoryKey: category.id,
                                     categoryColor: category.colorToken.color,
-                                    sourceID: "home.category.\(category.id)",
+                                    sourceID: categorySourceID,
                                     maximumCardHeight: maximumCardHeight,
                                     onQuestionTap: { question in
                                         presentedQuestion = ExpandedQuestionState(
                                             question: question,
-                                            headerStyle: .plain
+                                            headerStyle: .plain,
+                                            cardSourceID: categorySourceID
                                         )
                                     }
                                 )
@@ -142,7 +146,8 @@ struct HomeView: View {
             navigationPath = [.acceptedQuestionListShareDetail(request.shareId)]
             deepLinkRouter.consumeAcceptedQuestionListShareDetail(request)
         }
-        .fullScreenCover(item: $presentedQuestion) { expandedState in
+        // Two kinds of card list (today, each category): each tap names its own in the state.
+        .questionCardZoomCover(item: $presentedQuestion) { expandedState in
             QuestionDetailModalShell(
                 expandedState: expandedState,
                 model: model,

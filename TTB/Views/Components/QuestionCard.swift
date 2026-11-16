@@ -60,6 +60,8 @@ struct QuestionCard: View {
         .padding(.horizontal, QuestionCardLayoutMetrics.compactContentPadding)
         .padding(.bottom, QuestionCardLayoutMetrics.compactContentPadding)
     }
+    // The whole card, footer included, is what grows into the answer editor.
+    .questionCardZoomSource(cardSourceID: sourceID, questionID: question.id)
     .opacity(isSelected ? 0 : 1)
     .allowsHitTesting(!isSelected)
     .accessibilityElement(children: .contain)
