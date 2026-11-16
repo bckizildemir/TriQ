@@ -30,6 +30,7 @@ struct QuestionCardExpandedView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.answerDraftStore) private var answerDraftStore
     @Environment(\.toastCenter) private var toastCenter
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Read rather than built. The editor used to ask `UITestLaunchOptions` whether it was allowed
     /// to construct one, which made a production view aware of the test harness. `nil` still means
     /// the app's no-AI mode, and it still comes from whoever wired the app.
@@ -127,7 +128,8 @@ struct QuestionCardExpandedView: View {
             )
             .labelStyle(.iconOnly)
             .foregroundStyle(isFavorite ? .yellow : .primary)
-            .animation(.easeInOut(duration: 0.2), value: isFavorite)
+            .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
+            .animation(.easeOut(duration: 0.2), value: isFavorite)
         }
         .accessibilityIdentifier("question-card-fullscreen-favorite")
         .accessibilityLabel(
@@ -136,6 +138,8 @@ struct QuestionCardExpandedView: View {
     }
 
     private func toggleFavorite() {
+        // On the tap, not on `isFavorite`: a server snapshot or a rollback stays silent.
+        Haptics.playLightImpact(for: "favorite-tap")
         Task {
             await toastCenter.toggleFavorite(currentQuestion, using: favoriteStore)
         }
@@ -281,7 +285,7 @@ struct QuestionCardExpandedView: View {
         .overlay { savingOverlay }
         .draftDismissalGuard(
             hasUnsavedChanges: hasUnsavedChanges,
-            onSave: commitDraft
+            onSave: { _ = commitDraft() }
         )
         .task(id: question.id) {
             await loadQuickAnswerSuggestions()
@@ -1080,7 +1084,11 @@ struct QuestionCardExpandedView: View {
     private func saveAndClose() {
         guard !isUploading else { return }
 
-        commitDraft()
+        // `.success` belongs to a save that really started (#56); a tap with nothing changed stays
+        // silent. A UIKit generator, because this view is dismissed in the same call.
+        if commitDraft() {
+            Haptics.playSuccess(for: "save-success")
+        }
         dismissFullscreen()
     }
 
@@ -1090,7 +1098,8 @@ struct QuestionCardExpandedView: View {
     /// re-persist, the rollback and the orphan cleanup — lives in the store now, tested. What is left
     /// here is the editor's own business: reflect the handoff in local state. The iOS 27 sheet
     /// dismissal dialog calls this alone, because the system finishes that dismissal itself.
-    private func commitDraft() {
+    @discardableResult
+    private func commitDraft() -> Bool {
         uploadError = nil
 
         let started = answerDraftStore.save(draft, baseline: baseline, for: question.id, in: model)
@@ -1099,6 +1108,7 @@ struct QuestionCardExpandedView: View {
         if started, draft.hasPendingUploads {
             draft = draft.clearingPendingImages()
         }
+        return started
     }
 
     private func dismissFullscreen() {

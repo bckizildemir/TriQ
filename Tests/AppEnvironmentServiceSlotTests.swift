@@ -75,17 +75,11 @@ final class AppEnvironmentServiceSlotTests: XCTestCase {
     /// The store comes off `harnessEnvironment().badgeModel`, not from a fresh `NoOpBadgeStore()`,
     /// so this fails the moment `AppEnvironment.uiTest` wires a live store or drops the argument and
     /// falls back to `LiveBadgeStore` — the exact regression FIX-6 exists to catch. It then proves
-    /// that store never reaches Firestore: every read comes back empty, every write is discarded,
-    /// and `observeUserDocument` calls back once, synchronously, with no data, instead of leaving a
+    /// that store never reaches Firestore: every read comes back empty, and
+    /// `observeUserDocument` calls back once, synchronously, with no data, instead of leaving a
     /// live listener registered.
     func testAHarnessEnvironmentBadgeStoreTouchesNoFirestore() async throws {
         let store = harnessEnvironment().badgeModel.storeForTesting
-
-        let userDocument = try await store.getUserDocument(userId: "service-slot-test-user")
-        XCTAssertFalse(userDocument.exists)
-        XCTAssertTrue(userDocument.data.isEmpty)
-
-        try await store.setUserDocument(userId: "service-slot-test-user", data: ["a": 1], merge: true)
 
         let definitions = try await store.getBadgeDefinitionDocuments()
         XCTAssertTrue(definitions.isEmpty)

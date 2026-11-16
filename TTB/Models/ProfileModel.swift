@@ -167,7 +167,7 @@ class ProfileModel: ObservableObject {
 
         // The statistics live on this same document, and every caller loads both — so read them
         // here rather than making `loadStatistics()` fetch `users/{uid}` a second time.
-        await applyStatistics(from: data)
+        applyStatistics(from: data)
 
         await applyProfilePhoto(storedValue: data["profileImageURL"])
       }
@@ -235,7 +235,7 @@ class ProfileModel: ObservableObject {
     guard !userId.isEmpty else { return }
     do {
       let document = try await db.collection("users").document(userId).getDocument()
-      await applyStatistics(from: document.data())
+      applyStatistics(from: document.data())
     } catch {
       alertMessage = String(
         format: String(localized: "profile.error.loadStatistics"),
@@ -246,27 +246,18 @@ class ProfileModel: ObservableObject {
     }
   }
 
+  /// Read-only: the answer counters are server-owned (`saveAnswer`), and the rules refuse a client
+  /// write of any of them (#168). An old document with only the legacy `totalAnswers` shows that
+  /// value until the next answer, when the server writes `totalAnswered` from it.
   @MainActor
-  private func applyStatistics(from data: [String: Any]?) async {
-    let db = Firestore.firestore()
+  private func applyStatistics(from data: [String: Any]?) {
     guard let data else { return }
 
     statistics.daily = data["dailyAnswers"] as? Int ?? 0
     statistics.weekly = data["weeklyAnswers"] as? Int ?? 0
-
-    if let totalAnswered = data["totalAnswered"] as? Int {
-      statistics.total = totalAnswered
-      return
-    }
-
-    let legacyTotal = data["totalAnswers"] as? Int ?? 0
-    statistics.total = legacyTotal
-    if data["totalAnswers"] != nil {
-      try? await db.collection("users").document(userId).setData(
-        [
-          "totalAnswered": legacyTotal
-        ], merge: true)
-    }
+    statistics.total = data["totalAnswered"] as? Int
+      ?? data["totalAnswers"] as? Int
+      ?? 0
   }
 
   @MainActor

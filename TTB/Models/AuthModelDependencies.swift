@@ -68,18 +68,11 @@ protocol AuthUserDocumentManaging: Sendable {
     func deleteUserAndAuth(user: AuthModelUser) async
 }
 
-protocol BadgeProgressBackfilling: Sendable {
-    func backfillBadgeProgressIfNeeded() async
-}
-
-extension QuestionService: BadgeProgressBackfilling {}
-
 struct AuthModelDependencies {
     let auth: AuthModelAuthProviding
     let usernameService: UsernameServiceProtocol
     let userDocumentManager: AuthUserDocumentManaging
     let accountDeletionService: AccountDeletionPerforming
-    let badgeBackfillService: BadgeProgressBackfilling
 
     @MainActor
     static var live: AuthModelDependencies {
@@ -87,8 +80,7 @@ struct AuthModelDependencies {
             auth: LiveAuthModelAuthProvider(),
             usernameService: UsernameService(),
             userDocumentManager: LiveAuthUserDocumentManager(),
-            accountDeletionService: AccountDeletionService(),
-            badgeBackfillService: QuestionService()
+            accountDeletionService: AccountDeletionService()
         )
     }
 }

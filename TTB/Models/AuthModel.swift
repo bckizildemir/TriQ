@@ -163,11 +163,6 @@ class AuthModel: ObservableObject {
       return
     }
 
-    await dependencies.badgeBackfillService.backfillBadgeProgressIfNeeded()
-    guard shouldCommitAuthenticatedUser(user, expectedGeneration: expectedGeneration) else {
-      return
-    }
-
     authState = .authenticated
     logger.info("User is signed in: \(user.uid)")
     let sixMonthsInSeconds: TimeInterval = 180 * 24 * 60 * 60

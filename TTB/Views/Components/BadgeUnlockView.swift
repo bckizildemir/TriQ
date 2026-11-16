@@ -4,10 +4,12 @@ struct BadgeUnlockView: View {
     let badge: Badge
     let onDismiss: () -> Void
     
-    @State private var scale: CGFloat = 0.5
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Starts at the full-motion scale; `onAppear` sets it from `BadgeUnlockMotion`.
+    @State private var badgeScale: CGFloat = 0.85
+    @State private var badgeOpacity: Double = 0
     @State private var opacity: Double = 0
-    @State private var rotation: Double = -180
-    
+
     var body: some View {
         ZStack {
             // Background
@@ -46,8 +48,8 @@ struct BadgeUnlockView: View {
                                 .stroke(Color.accentColor, lineWidth: 3)
                         )
                 }
-                .scaleEffect(scale)
-                .rotationEffect(.degrees(rotation))
+                .scaleEffect(badgeScale)
+                .opacity(badgeOpacity)
                 
                 VStack(spacing: 12) {
                     Text(String(localized: "badge.unlock.title"))
@@ -83,20 +85,22 @@ struct BadgeUnlockView: View {
             .padding()
         }
         .onAppear {
-            // Haptic feedback
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
-            
-            // Animate badge appearance
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.6)) {
-                scale = 1.0
-                rotation = 0
+            Haptics.playSuccess(for: "badge-unlock-success")
+
+            // Set without animation: under Reduce Motion the badge starts at full size and only fades.
+            let motion = BadgeUnlockMotion(reduceMotion: reduceMotion)
+            badgeScale = motion.initialBadgeScale
+
+            withAnimation(motion.badgeAnimation) {
+                badgeScale = 1.0
+                badgeOpacity = 1.0
             }
-            
-            withAnimation(.easeIn(duration: 0.3).delay(0.2)) {
+
+            withAnimation(motion.textAnimation) {
                 opacity = 1.0
             }
         }
+        .accessibilityIdentifier("badge-unlock")
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
             String(
@@ -108,15 +112,9 @@ struct BadgeUnlockView: View {
         .accessibilityHint(badge.description)
     }
     
+    /// Closes in one move: the sheet's own slide-down is the exit.
     private func dismiss() {
-        withAnimation(.easeOut(duration: 0.2)) {
-            scale = 0.8
-            opacity = 0
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            onDismiss()
-        }
+        onDismiss()
     }
 }
 

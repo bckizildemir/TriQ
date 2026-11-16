@@ -18,19 +18,6 @@ struct DocumentPathParsingTests {
         #expect(AnswerProgressService.questionId(fromUserAnswerPath: path).isEmpty)
     }
 
-    @Test(arguments: [
-        ("questions/q1/userAnswers/u1", "q1"),
-        ("questions/q1/userAnswers/u1/", "q1"),
-    ])
-    func questionServiceReadsTheQuestionId(path: String, expected: String) {
-        #expect(QuestionService.questionId(fromUserAnswerPath: path) == expected)
-    }
-
-    @Test(arguments: ["", "/", "questions", "questions/q1", "questions/q1/userAnswers"])
-    func questionServiceReturnsEmptyForAPathWithoutAParentDocument(path: String) {
-        #expect(QuestionService.questionId(fromUserAnswerPath: path).isEmpty)
-    }
-
     @Test func shareServiceReadsTheShareId() {
         #expect(QuestionListShareService.shareId(fromRecipientPath: "questionListShares/s1/recipients/r1") == "s1")
     }

@@ -319,9 +319,8 @@ sites.
 dictionary built in a local scope be sent once. A payload is flagged only when it comes from
 isolated state:
 
-- `Models/BadgeModel.swift:68` — `initialData` comes from the main-actor method
-  `defaultBadgeUserFields()`, so it is in the main-actor region when it goes to `store.setUserDocument`.
-- `Models/BadgeModel.swift:79` — `patch` merges values read from a document the store returned.
+- (Removed in #168.) `Models/BadgeModel.swift` used to build two payloads for `store.setUserDocument`; that
+  method and its caller are deleted, because the user document's stats are server-owned.
 - `Services/AIService.swift:337` — `payload` is a parameter of an actor method, so it is in the
   actor's region when it goes to `HTTPSCallable.call(_:)`.
 
@@ -332,8 +331,8 @@ the model encoders become main-actor.
 the `HTTPSCallable` receiver (category D). Re-measure this category after D is fixed, because the
 payload at the same call can report once the receiver no longer does.
 
-Fix direction: keep the encoders pure and `nonisolated` (`defaultBadgeUserFields()`,
-`toFirestore()`), so each call builds a fresh dictionary in a disconnected region, and pass
+Fix direction: keep the encoders pure and `nonisolated` (`toFirestore()`), so each call
+builds a fresh dictionary in a disconnected region, and pass
 `sending [String: Any]` where a payload must go through an actor method. The deeper fix — `Codable`
 `Sendable` request and response structs with Firebase's typed `Callable` and Firestore's
 `Codable` support — removes `[String: Any]` from the boundary. It is larger than this migration

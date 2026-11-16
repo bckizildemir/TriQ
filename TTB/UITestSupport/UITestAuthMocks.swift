@@ -139,10 +139,6 @@ struct UITestUserDocumentManager: AuthUserDocumentManaging {
     }
 }
 
-struct UITestBadgeProgressBackfill: BadgeProgressBackfilling {
-    func backfillBadgeProgressIfNeeded() async {}
-}
-
 actor UITestAccountDeletionService: AccountDeletionPerforming {
     func deleteCurrentAccount(password: String?) async throws {
         _ = password
@@ -165,8 +161,7 @@ enum UITestAuthModelFactory {
             ),
             usernameService: UITestUsernameService(),
             userDocumentManager: UITestUserDocumentManager(),
-            accountDeletionService: UITestAccountDeletionService(),
-            badgeBackfillService: UITestBadgeProgressBackfill()
+            accountDeletionService: UITestAccountDeletionService()
         )
         return AuthModel(dependencies: dependencies, registersAuthListener: true)
     }
@@ -178,8 +173,7 @@ enum UITestAuthModelFactory {
             ),
             usernameService: UITestUsernameService(),
             userDocumentManager: UITestUserDocumentManager(),
-            accountDeletionService: UITestAccountDeletionService(),
-            badgeBackfillService: UITestBadgeProgressBackfill()
+            accountDeletionService: UITestAccountDeletionService()
         )
         return AuthModel(dependencies: dependencies, registersAuthListener: true)
     }
