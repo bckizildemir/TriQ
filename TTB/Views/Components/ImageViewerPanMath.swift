@@ -101,11 +101,6 @@ struct ImageViewerPanMath: Equatable {
         )
     }
 
-    /// Whether a touch at `point` (in the container's space) lands on the visible image.
-    func imageContains(_ point: CGPoint, at scale: CGFloat, offset: CGSize) -> Bool {
-        visibleImageRect(at: scale, offset: offset).contains(point)
-    }
-
     /// The release speed as a share of the glide's distance per second, the unit
     /// `Animation.interpolatingSpring(initialVelocity:)` takes: the velocity's component along the
     /// glide divided by its length. Zero when the glide is too short to matter or runs against

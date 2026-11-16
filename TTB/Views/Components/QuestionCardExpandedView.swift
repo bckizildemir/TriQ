@@ -1217,27 +1217,36 @@ private struct AnswerImageFullscreenView: View {
 
     var body: some View {
         ZStack {
+            // The measure sits inside `ignoresSafeArea`, so it sees the full screen (the modifier
+            // order matters: measured outside it, the frame is the safe-area rect).
             Color.black
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { containerFrame = $0 }
                 .ignoresSafeArea()
+                // A tap on the black closes the viewer. The image view is only as big as the image,
+                // so a tap outside it lands here. Zoomed, it does nothing: it would throw the zoom away.
+                .onTapGesture {
+                    debugLog("black tap isZoomed=\(isZoomed)")
+                    guard !isZoomed else { return }
+                    closeViewer()
+                }
 
             // Measures the safe-area region the image is fitted to, away from the transforms below.
             Color.clear
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { imageAreaFrame = $0 }
+                .allowsHitTesting(false)
 
             imageContent
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Once measured, the view is exactly the fitted image: its hit area is the image.
+                .frame(
+                    width: fittedSize == .zero ? nil : fittedSize.width,
+                    height: fittedSize == .zero ? nil : fittedSize.height
+                )
                 .scaleEffect(zoomScale)
                 .offset(x: panOffset.width, y: panOffset.height + totalOffset)
-                .accessibilityHidden(true)
-
-            // One static, full-screen layer takes every gesture, so the transforms above never move
-            // the touch area. A tap outside the visible image closes the viewer (not while zoomed);
-            // a double tap on it zooms.
-            Color.clear
-                .contentShape(.rect)
-                .ignoresSafeArea()
-                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { containerFrame = $0 }
-                .gesture(tapGesture)
+                .onTapGesture(count: 2) {
+                    debugLog("double tap zoomScale=\(zoomScale)")
+                    toggleZoom()
+                }
                 .gesture(magnifyGesture)
                 .gesture(dragGesture)
                 .accessibilityElement(children: .ignore)
@@ -1397,30 +1406,6 @@ private struct AnswerImageFullscreenView: View {
         dismiss()
     }
 
-    /// A double tap on the image toggles the zoom; a single tap outside it closes the viewer.
-    /// The system waits a moment after a first tap to see if a second follows, so a close tap
-    /// lands about 0.3 s late, as in Photos. Zoomed, a tap outside the image closes nothing: it
-    /// would throw the zoom away. Zoom out, or use the Close button.
-    private var tapGesture: some Gesture {
-        SpatialTapGesture(count: 2)
-            .onEnded { value in
-                let inside = panMath.imageContains(value.location, at: zoomScale, offset: panOffset)
-                debugLog("count-2 onEnded location=\(value.location.debugDescription) inside=\(inside) zoomScale=\(zoomScale)")
-                guard inside else { return }
-                toggleZoom()
-            }
-            .exclusively(
-                before: SpatialTapGesture()
-                    .onEnded { value in
-                        let inside = panMath.imageContains(value.location, at: zoomScale, offset: panOffset)
-                        debugLog("count-1 onEnded location=\(value.location.debugDescription) inside=\(inside) zoomScale=\(zoomScale)")
-                        guard !inside, !isZoomed
-                        else { return }
-                        closeViewer()
-                    }
-            )
-    }
-
     /// Pinch zooms around the current offset: the offset scales with the zoom and is re-clamped.
     private var magnifyGesture: some Gesture {
         MagnifyGesture()
@@ -1438,7 +1423,9 @@ private struct AnswerImageFullscreenView: View {
     }
 
     private var dragGesture: some Gesture {
-        DragGesture()
+        // Global space: the view this sits on moves with the pan, and a local translation would
+        // feed that movement back into itself.
+        DragGesture(coordinateSpace: .global)
             .updating($isDragging) { _, state, _ in state = true }
             .updating($dragOffset) { value, state, _ in
                 // Only a drag that began at 1x and has seen no pinch feeds the dismiss offset.

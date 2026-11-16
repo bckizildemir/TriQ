@@ -89,29 +89,17 @@ struct ImageViewerPanMathTests {
         #expect(abs(result.width - 75) < 0.0001)
     }
 
-    @Test func tapInsideTheFittedImageHitsIt() {
+    @Test func visibleRectAtOneTimesIsTheFittedImageCentered() {
         // 400x400 image centred in 400x800: y 200...600.
-        #expect(math.imageContains(CGPoint(x: 200, y: 400), at: 1, offset: .zero))
-        #expect(math.imageContains(CGPoint(x: 10, y: 210), at: 1, offset: .zero))
+        #expect(math.visibleImageRect(at: 1, offset: .zero) == CGRect(x: 0, y: 200, width: 400, height: 400))
     }
 
-    @Test func tapOnTheBlackBandsMissesTheImage() {
-        #expect(!math.imageContains(CGPoint(x: 200, y: 100), at: 1, offset: .zero))
-        #expect(!math.imageContains(CGPoint(x: 200, y: 700), at: 1, offset: .zero))
-    }
-
-    @Test func visibleImageFollowsZoomAndPan() {
+    @Test func visibleRectFollowsZoomAndPan() {
         // 2x: 800x800 around the centre (200, 400) is x -200...600, y 0...800.
-        #expect(math.imageContains(CGPoint(x: 5, y: 790), at: 2, offset: .zero))
-        // Panned 200 left: x -400...400; the right edge of the screen is now black.
-        let panned = CGSize(width: -200, height: 0)
-        #expect(!math.imageContains(CGPoint(x: 400.5, y: 400), at: 2, offset: panned))
-        #expect(math.imageContains(CGPoint(x: 399, y: 400), at: 2, offset: panned))
-    }
-
-    @Test func unmeasuredImageIsNeverHit() {
-        let unmeasured = ImageViewerPanMath(containerSize: .zero, fittedSize: .zero)
-        #expect(!unmeasured.imageContains(.zero, at: 1, offset: .zero))
+        #expect(math.visibleImageRect(at: 2, offset: .zero) == CGRect(x: -200, y: 0, width: 800, height: 800))
+        // Panned 200 left: x -400...400.
+        let panned = math.visibleImageRect(at: 2, offset: CGSize(width: -200, height: 0))
+        #expect(panned == CGRect(x: -400, y: 0, width: 800, height: 800))
     }
 
     @Test func glideStartsWithTheReleaseSpeedAsAShareOfItsDistance() {
@@ -168,11 +156,9 @@ struct ImageViewerPanMathTests {
         #expect(shifted.clamp(CGSize(width: 0, height: 100), at: 2).height == 0)
     }
 
-    @Test func shiftMovesTheTapTestWithTheImage() {
+    @Test func shiftMovesTheVisibleRect() {
         // At 1x the image spans y 206.5...606.5.
-        #expect(shifted.imageContains(CGPoint(x: 200, y: 606), at: 1, offset: .zero))
-        #expect(!shifted.imageContains(CGPoint(x: 200, y: 607), at: 1, offset: .zero))
-        #expect(!shifted.imageContains(CGPoint(x: 200, y: 206), at: 1, offset: .zero))
+        #expect(shifted.visibleImageRect(at: 1, offset: .zero) == CGRect(x: 0, y: 206.5, width: 400, height: 400))
     }
 
     // MARK: Drag mode and zoom steps
