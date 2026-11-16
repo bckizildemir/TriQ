@@ -9,6 +9,8 @@ final class OnboardingViewModel: ObservableObject {
   @Published private(set) var shouldShowOnboarding = false
   @Published private(set) var isLoading = true
   @Published var currentStep: OnboardingStep = .welcome
+  /// True while the last step change went backwards; the flow view slides the other way.
+  @Published private(set) var isMovingBack = false
   @Published var hasAcceptedLegal = false
   @Published private(set) var notificationStatus: OnboardingPermissionStatus = .notDetermined
   @Published private(set) var photoStatus: OnboardingPermissionStatus = .notDetermined
@@ -82,6 +84,7 @@ final class OnboardingViewModel: ObservableObject {
   func goToNextStep() {
     guard let nextStep = currentStep.next else { return }
     withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
+      isMovingBack = false
       currentStep = nextStep
     }
   }
@@ -89,6 +92,7 @@ final class OnboardingViewModel: ObservableObject {
   func goBack() {
     guard let previousStep = currentStep.previous else { return }
     withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
+      isMovingBack = true
       currentStep = previousStep
     }
   }
@@ -96,6 +100,7 @@ final class OnboardingViewModel: ObservableObject {
   func skipToPermissions() {
     guard currentStep.canSkip else { return }
     withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
+      isMovingBack = false
       currentStep = .permissions
     }
   }

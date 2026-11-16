@@ -22,4 +22,28 @@ struct OnboardingViewModelTests {
 
         #expect(viewModel.isPrimaryActionEnabled)
     }
+
+    @Test func movingForwardAndSkippingAreNotBackwards() {
+        let viewModel = OnboardingViewModel()
+
+        viewModel.goToNextStep()
+        #expect(viewModel.currentStep == .example)
+        #expect(viewModel.isMovingBack == false)
+
+        viewModel.skipToPermissions()
+        #expect(viewModel.currentStep == .permissions)
+        #expect(viewModel.isMovingBack == false)
+    }
+
+    @Test func goingBackSetsTheDirectionAndNextClearsIt() {
+        let viewModel = OnboardingViewModel()
+        viewModel.currentStep = .value
+
+        viewModel.goBack()
+        #expect(viewModel.currentStep == .example)
+        #expect(viewModel.isMovingBack)
+
+        viewModel.goToNextStep()
+        #expect(viewModel.isMovingBack == false)
+    }
 }
