@@ -19,6 +19,8 @@ private struct PresentedAnswerImage: Identifiable {
 
     let id = UUID()
     let source: Source
+    /// The slot the image came from; the viewer zooms out of that slot's thumbnail.
+    let slotIndex: Int
 }
 
 struct QuestionCardExpandedView: View {
@@ -63,6 +65,7 @@ struct QuestionCardExpandedView: View {
     @State private var isConfirmingClose = false
 
     @State private var presentedAnswerImage: PresentedAnswerImage?
+    @Namespace private var answerImageZoomNamespace
     @State private var isShowingQuestionLists = false
     @State private var dismissedGuestWarningQuestionID: String?
 
@@ -281,6 +284,10 @@ struct QuestionCardExpandedView: View {
         }
         .fullScreenCover(item: $presentedAnswerImage) { presentedImage in
             AnswerImageFullscreenView(presentedImage: presentedImage)
+                .modifier(AnswerImageZoomTransition(
+                    sourceID: presentedImage.slotIndex,
+                    namespace: answerImageZoomNamespace
+                ))
         }
         .overlay { savingOverlay }
         .draftDismissalGuard(
@@ -725,6 +732,7 @@ struct QuestionCardExpandedView: View {
             .resizable()
             .frame(width: displayWidth, height: displayHeight)
             .clipShape(RoundedRectangle(cornerRadius: 14))
+            .matchedTransitionSource(id: index, in: answerImageZoomNamespace)
             .overlay(alignment: .topTrailing) {
                 Button {
                     // Whatever the slot held, removing it is one assignment. The caller used to have
@@ -880,23 +888,23 @@ struct QuestionCardExpandedView: View {
     private func presentedImage(at index: Int, fallbackImage: UIImage) -> PresentedAnswerImage {
         switch draft[index].image {
         case let .pendingLocal(localImage):
-            return PresentedAnswerImage(source: .local(localImage))
+            return PresentedAnswerImage(source: .local(localImage), slotIndex: index)
 
         case let .pendingSuggestion(suggestion):
             if let url = suggestion.previewImageURL {
-                return PresentedAnswerImage(source: .remote(url))
+                return PresentedAnswerImage(source: .remote(url), slotIndex: index)
             }
 
         case let .saved(urlString, _):
             if let url = URL(string: urlString) {
-                return PresentedAnswerImage(source: .remote(url))
+                return PresentedAnswerImage(source: .remote(url), slotIndex: index)
             }
 
         case .none:
             break
         }
 
-        return PresentedAnswerImage(source: .local(fallbackImage))
+        return PresentedAnswerImage(source: .local(fallbackImage), slotIndex: index)
     }
 
     private var shareText: String {
@@ -1120,12 +1128,47 @@ struct QuestionCardExpandedView: View {
     }
 }
 
+/// Zooms the viewer out of its thumbnail. Reduce Motion drops the zoom: it cross-fades on
+/// iOS 27 (the same shim as the question card zoom) and keeps the plain cover before that.
+private struct AnswerImageZoomTransition: ViewModifier {
+    let sourceID: Int
+    let namespace: Namespace.ID
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// The setting the viewer opened with: a change while it is open must not swap the branch
+    /// below and rebuild the viewer.
+    @State private var reduceMotionAtOpen: Bool?
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        Group {
+            if reduceMotionAtOpen ?? reduceMotion {
+                content.backport.crossFadeNavigationTransition()
+            } else {
+                content.navigationTransition(.zoom(sourceID: sourceID, in: namespace))
+            }
+        }
+        .onAppear { reduceMotionAtOpen = reduceMotion }
+    }
+}
+
 private struct AnswerImageFullscreenView: View {
     let presentedImage: PresentedAnswerImage
 
     @Environment(\.dismiss) private var dismiss
-    @GestureState private var zoomScale: CGFloat = 1.0
-    @State private var dragOffset: CGFloat = 0
+    // The reset eases back over 0.3 s instead of teleporting when the fingers lift.
+    @GestureState(resetTransaction: Transaction(animation: .spring(duration: 0.3, bounce: 0)))
+    private var zoomScale: CGFloat = 1.0
+    /// The finger's vertical drag. A `@GestureState`, so a cancelled drag (the system zoom-dismiss
+    /// gesture takes the touch) or a drag released while zoomed eases back to rest by itself.
+    @GestureState(resetTransaction: Transaction(animation: .spring(duration: 0.3, bounce: 0)))
+    private var dragOffset: CGFloat = 0
+    /// Holds the drag's last offset once it closes the viewer, so the image does not snap back
+    /// while the cover animates away.
+    @State private var dismissOffset: CGFloat = 0
+
+    private var totalOffset: CGFloat { dragOffset + dismissOffset }
 
     var body: some View {
         ZStack {
@@ -1138,7 +1181,7 @@ private struct AnswerImageFullscreenView: View {
             imageContent
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .scaleEffect(max(1.0, zoomScale))
-                .offset(y: dragOffset)
+                .offset(y: totalOffset)
                 .gesture(
                     MagnifyGesture()
                         .updating($zoomScale) { value, state, _ in
@@ -1152,7 +1195,7 @@ private struct AnswerImageFullscreenView: View {
 
             closeButton
         }
-        .opacity(1 - (abs(dragOffset) / 300.0))
+        .opacity(1 - (abs(totalOffset) / 300.0))
         .accessibilityAddTraits(.isModal)
     }
 
@@ -1164,21 +1207,19 @@ private struct AnswerImageFullscreenView: View {
                 .resizable()
                 .scaledToFit()
         case let .remote(url):
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case let .success(image):
+            // Nuke, like the thumbnail: the zoom carries the picture the thumbnail already cached.
+            LazyImage(url: url) { state in
+                if let image = state.image {
                     image
                         .resizable()
                         .scaledToFit()
-                case .failure:
+                } else if state.error != nil {
                     Image(systemName: "photo")
                         .font(.system(size: 60))
-                        .foregroundColor(.secondary)
-                case .empty:
+                        .foregroundStyle(.secondary)
+                } else {
                     ProgressView()
                         .tint(.white)
-                @unknown default:
-                    EmptyView()
                 }
             }
         }
@@ -1206,19 +1247,19 @@ private struct AnswerImageFullscreenView: View {
 
     private var dragGesture: some Gesture {
         DragGesture()
-            .onChanged { value in
-                guard zoomScale <= 1.0 else { return }
-                dragOffset = value.translation.height
+            .updating($dragOffset) { value, state, _ in
+                // A drag during a pinch does not move the image.
+                state = zoomScale <= 1.0 ? value.translation.height : 0
             }
             .onEnded { value in
-                guard zoomScale <= 1.0 else { return }
-                if abs(value.translation.height) > 100 {
-                    dismiss()
-                } else {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        dragOffset = 0
-                    }
-                }
+                guard zoomScale <= 1.0,
+                      AnswerImageViewerDismissal.shouldDismiss(
+                        translation: value.translation.height,
+                        predictedEndTranslation: value.predictedEndTranslation.height
+                      )
+                else { return }  // `dragOffset` eases back to 0 on its own
+                dismissOffset = value.translation.height
+                dismiss()
             }
     }
 }
