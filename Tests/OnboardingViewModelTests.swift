@@ -23,27 +23,37 @@ struct OnboardingViewModelTests {
         #expect(viewModel.isPrimaryActionEnabled)
     }
 
-    @Test func movingForwardAndSkippingAreNotBackwards() {
+    @Test func movingForwardAndSkippingAreNotBackwards() async {
         let viewModel = OnboardingViewModel()
 
-        viewModel.goToNextStep()
+        await viewModel.goToNextStep()
         #expect(viewModel.currentStep == .example)
         #expect(viewModel.isMovingBack == false)
 
-        viewModel.skipToPermissions()
+        await viewModel.skipToPermissions()
         #expect(viewModel.currentStep == .permissions)
         #expect(viewModel.isMovingBack == false)
     }
 
-    @Test func goingBackSetsTheDirectionAndNextClearsIt() {
+    @Test func goingBackSetsTheDirectionAndNextClearsIt() async {
         let viewModel = OnboardingViewModel()
         viewModel.currentStep = .value
 
-        viewModel.goBack()
+        await viewModel.goBack()
         #expect(viewModel.currentStep == .example)
         #expect(viewModel.isMovingBack)
 
-        viewModel.goToNextStep()
+        await viewModel.goToNextStep()
         #expect(viewModel.isMovingBack == false)
+    }
+
+    @Test func aTapDuringAStepChangeIsIgnored() async {
+        let viewModel = OnboardingViewModel()
+
+        async let first: Void = viewModel.goToNextStep()
+        async let second: Void = viewModel.goToNextStep()
+        _ = await (first, second)
+
+        #expect(viewModel.currentStep == .example)
     }
 }

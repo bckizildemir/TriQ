@@ -21,6 +21,7 @@ final class OnboardingViewModel: ObservableObject {
   private let logger = Logger(
     subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
     category: "Onboarding")
+  private var isChangingStep = false
   private var currentUserId: String?
   private(set) var isAnonymousUser = false
 
@@ -81,27 +82,33 @@ final class OnboardingViewModel: ObservableObject {
     isLoading = false
   }
 
-  func goToNextStep() {
+  func goToNextStep() async {
     guard let nextStep = currentStep.next else { return }
-    withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
-      isMovingBack = false
-      currentStep = nextStep
-    }
+    await change(to: nextStep, movingBack: false)
   }
 
-  func goBack() {
+  func goBack() async {
     guard let previousStep = currentStep.previous else { return }
-    withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
-      isMovingBack = true
-      currentStep = previousStep
-    }
+    await change(to: previousStep, movingBack: true)
   }
 
-  func skipToPermissions() {
+  func skipToPermissions() async {
     guard currentStep.canSkip else { return }
+    await change(to: .permissions, movingBack: false)
+  }
+
+  /// SwiftUI removes a view with the transition from its last render. So the direction goes out
+  /// first, in its own update, and the step changes one frame later: the old step then already
+  /// carries the right exit transition. A tap that arrives meanwhile is ignored.
+  private func change(to step: OnboardingStep, movingBack: Bool) async {
+    guard !isChangingStep else { return }
+    isChangingStep = true
+    defer { isChangingStep = false }
+
+    isMovingBack = movingBack
+    try? await Task.sleep(for: .milliseconds(20))
     withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
-      isMovingBack = false
-      currentStep = .permissions
+      currentStep = step
     }
   }
 

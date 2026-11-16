@@ -9,14 +9,19 @@ struct OnboardingFlowView: View {
     VStack(spacing: 24) {
       header
 
-      ScrollView {
-        stepContent
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .padding(.bottom, viewModel.currentStep.isFinalStep ? 16 : 8)
-          .id(viewModel.currentStep)
-          .transition(stepTransition)
+      // The ScrollView itself is the transitioning view: a `.move` on a child of a ScrollView's
+      // content did not travel. The ZStack lets the old and new step overlap while they slide.
+      ZStack(alignment: .topLeading) {
+        ScrollView {
+          stepContent
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, viewModel.currentStep.isFinalStep ? 16 : 8)
+        }
+        .id(viewModel.currentStep)
+        .transition(stepTransition)
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .clipped()
     }
     .padding(.horizontal, 24)
     .padding(.top, 12)
@@ -53,7 +58,7 @@ struct OnboardingFlowView: View {
       HStack {
         if viewModel.canGoBack {
           Button {
-            viewModel.goBack()
+            Task { await viewModel.goBack() }
           } label: {
             Image(systemName: "chevron.left")
               .font(.headline)
@@ -70,7 +75,7 @@ struct OnboardingFlowView: View {
 
         if viewModel.currentStep.canSkip {
           Button(String(localized: "onboarding.nav.skip")) {
-            viewModel.skipToPermissions()
+            Task { await viewModel.skipToPermissions() }
           }
           .font(.subheadline.weight(.semibold))
           .foregroundStyle(.secondary)
@@ -367,7 +372,7 @@ struct OnboardingFlowView: View {
     if viewModel.currentStep.isFinalStep {
       Task { await viewModel.completeOnboarding() }
     } else {
-      viewModel.goToNextStep()
+      Task { await viewModel.goToNextStep() }
     }
   }
 
