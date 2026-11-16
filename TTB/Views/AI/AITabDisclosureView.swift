@@ -30,14 +30,14 @@ struct AITabDisclosureView: View {
         .onAppear {
             guard !hasAppeared else { return }
 
-            if reduceMotion {
-                hasAppeared = true
-            } else {
-                withAnimation(.spring(response: 0.56, dampingFraction: 0.86)) {
-                    hasAppeared = true
-                }
-            }
+            // Each section animates itself (see `appearAnimation(delay:)`), so they can stagger.
+            hasAppeared = true
         }
+    }
+
+    /// The entrance spring, started `delay` seconds late. Reduce Motion: no animation, no stagger.
+    private func appearAnimation(delay: Double) -> Animation? {
+        reduceMotion ? nil : .spring(response: 0.56, dampingFraction: 0.86).delay(delay)
     }
 
     private var backgroundLayer: some View {
@@ -95,6 +95,7 @@ struct AITabDisclosureView: View {
         .frame(height: 220)
         .scaleEffect(hasAppeared ? 1 : 0.92)
         .opacity(hasAppeared ? 1 : 0.0)
+        .animation(appearAnimation(delay: 0), value: hasAppeared)
         .accessibilityHidden(true)
     }
 
@@ -138,6 +139,7 @@ struct AITabDisclosureView: View {
         .frame(maxWidth: 520)
         .opacity(hasAppeared ? 1 : 0.0)
         .offset(y: hasAppeared ? 0 : 10)
+        .animation(appearAnimation(delay: 0.06), value: hasAppeared)
     }
 
     private var noteSection: some View {
@@ -157,6 +159,7 @@ struct AITabDisclosureView: View {
         .frame(maxWidth: 560)
         .opacity(hasAppeared ? 1 : 0.0)
         .offset(y: hasAppeared ? 0 : 12)
+        .animation(appearAnimation(delay: 0.12), value: hasAppeared)
     }
 
     private func noteCard(text: String, systemImage: String, tint: Color) -> some View {

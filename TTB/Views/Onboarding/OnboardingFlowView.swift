@@ -3,17 +3,25 @@ import UIKit
 
 struct OnboardingFlowView: View {
   @ObservedObject var viewModel: OnboardingViewModel
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
   var body: some View {
     VStack(spacing: 24) {
       header
 
-      ScrollView {
-        stepContent
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .padding(.bottom, viewModel.currentStep.isFinalStep ? 16 : 8)
+      // The ScrollView itself is the transitioning view: a `.move` on a child of a ScrollView's
+      // content did not travel. The ZStack lets the old and new step overlap while they slide.
+      ZStack(alignment: .topLeading) {
+        ScrollView {
+          stepContent
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, viewModel.currentStep.isFinalStep ? 16 : 8)
+        }
+        .id(viewModel.currentStep)
+        .transition(stepTransition)
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .clipped()
     }
     .padding(.horizontal, 24)
     .padding(.top, 12)
@@ -32,6 +40,14 @@ struct OnboardingFlowView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(backgroundLayer)
+    .onChange(of: viewModel.pendingStep) { _, step in
+      guard let step else { return }
+      withAnimation(.spring(response: 0.32, dampingFraction: 0.88), completionCriteria: .logicallyComplete) {
+        viewModel.commit(step)
+      } completion: {
+        viewModel.finishStepChange()
+      }
+    }
     .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) {
       _ in
       Task { await viewModel.refreshPermissionStatuses() }
@@ -86,6 +102,21 @@ struct OnboardingFlowView: View {
         Color.theme.background
           .ignoresSafeArea(edges: .top)
       }
+  }
+
+  /// Slides with the direction of travel; Reduce Motion keeps the plain crossfade.
+  private var stepTransition: AnyTransition {
+    if reduceMotion { return .opacity }
+    if viewModel.isMovingBack {
+      return .asymmetric(
+        insertion: .move(edge: .leading).combined(with: .opacity),
+        removal: .move(edge: .trailing).combined(with: .opacity)
+      )
+    }
+    return .asymmetric(
+      insertion: .move(edge: .trailing).combined(with: .opacity),
+      removal: .move(edge: .leading).combined(with: .opacity)
+    )
   }
 
   @ViewBuilder

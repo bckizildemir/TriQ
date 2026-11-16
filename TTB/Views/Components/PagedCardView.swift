@@ -7,6 +7,8 @@ struct PageIndicator: View {
   let count: Int
   let current: Int
 
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
   private let maxVisibleDots = 9
   private let activeDotSize: CGFloat = 8
   private let defaultDotSize: CGFloat = 6
@@ -19,7 +21,7 @@ struct PageIndicator: View {
         Circle()
           .fill(index == current ? Color.primary : Color.secondary.opacity(0.4))
           .frame(width: dotSize(for: index), height: dotSize(for: index))
-          .animation(.spring(response: 0.3, dampingFraction: 0.7), value: current)
+          .animation(reduceMotion ? nil : .snappy(duration: 0.25), value: current)
       }
     }
     .frame(height: activeDotSize)
