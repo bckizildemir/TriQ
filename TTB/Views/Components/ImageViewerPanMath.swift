@@ -1,0 +1,74 @@
+import CoreGraphics
+
+/// The clamp and momentum math for panning a zoomed answer image.
+///
+/// The image is laid out aspect-fit inside the container (`fittedSize`), scaled around its
+/// centre, then offset in screen points. The offset is clamped so the scaled image always
+/// covers the area it covered at its fitted size: an axis where the scaled image is still
+/// smaller than the container stays centred.
+struct ImageViewerPanMath: Equatable {
+    static let minimumScale: CGFloat = 1
+    static let maximumScale: CGFloat = 5
+    /// Zoom a double tap jumps to.
+    static let doubleTapScale: CGFloat = 2.5
+    /// A pinch released below this snaps back to exactly 1x.
+    static let restScaleTolerance: CGFloat = 1.05
+    /// The share of the release's predicted extra travel that the settle carries.
+    static let momentumFactor: CGFloat = 0.35
+
+    /// The area the image may fill (the viewer's size).
+    var containerSize: CGSize
+    /// The image's size at 1x, after aspect-fit.
+    var fittedSize: CGSize
+
+    static func clampedScale(_ scale: CGFloat) -> CGFloat {
+        min(max(scale, minimumScale), maximumScale)
+    }
+
+    /// The farthest the image may move from centre on each axis at `scale`.
+    func maxOffset(at scale: CGFloat) -> CGSize {
+        guard scale > Self.minimumScale else { return .zero }
+        return CGSize(
+            width: max(0, (fittedSize.width * scale - containerSize.width) / 2),
+            height: max(0, (fittedSize.height * scale - containerSize.height) / 2)
+        )
+    }
+
+    /// `offset` limited to the image's pan range. At 1x the range is zero.
+    func clamp(_ offset: CGSize, at scale: CGFloat) -> CGSize {
+        let limit = maxOffset(at: scale)
+        return CGSize(
+            width: min(max(offset.width, -limit.width), limit.width),
+            height: min(max(offset.height, -limit.height), limit.height)
+        )
+    }
+
+    /// The offset after a pinch changes the zoom from `oldScale` to `newScale`: the image point
+    /// that sat at the centre stays there, then the result is clamped.
+    func rescaledOffset(_ offset: CGSize, from oldScale: CGFloat, to newScale: CGFloat) -> CGSize {
+        guard oldScale > 0 else { return .zero }
+        let ratio = newScale / oldScale
+        return clamp(CGSize(width: offset.width * ratio, height: offset.height * ratio), at: newScale)
+    }
+
+    /// Where a drag released at `offset + translation` settles. `predictedEndTranslation` folds in
+    /// the release velocity; a share of its extra travel carries on, and the result is clamped.
+    /// Without momentum (Reduce Motion) the drag only settles inside the clamp.
+    func settledOffset(
+        offset: CGSize,
+        translation: CGSize,
+        predictedEndTranslation: CGSize,
+        at scale: CGFloat,
+        withMomentum: Bool
+    ) -> CGSize {
+        var target = CGSize(
+            width: offset.width + translation.width,
+            height: offset.height + translation.height
+        )
+        if withMomentum {
+            target.width += (predictedEndTranslation.width - translation.width) * Self.momentumFactor
+            target.height += (predictedEndTranslation.height - translation.height) * Self.momentumFactor
+        }
+        return clamp(target, at: scale)
+    }
+}
