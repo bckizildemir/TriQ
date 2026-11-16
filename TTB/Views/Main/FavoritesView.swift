@@ -56,7 +56,7 @@ struct FavoritesContentView: View {
         )
         .navigationTitle(String(localized: "main.favorites.title"))
         .toolbarTitleDisplayMode(.inline)
-        .fullScreenCover(item: $presentedQuestion) { expandedState in
+        .questionCardZoomCover(item: $presentedQuestion, cardSourceID: expansionSourceID) { expandedState in
             QuestionDetailModalShell(
                 expandedState: expandedState,
                 model: questionModel

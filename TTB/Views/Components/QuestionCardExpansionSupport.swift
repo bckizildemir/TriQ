@@ -29,6 +29,9 @@ enum ExpandedQuestionHeaderStyle: Equatable {
 struct ExpandedQuestionState: Identifiable {
     let question: Question
     let headerStyle: ExpandedQuestionHeaderStyle
+    /// The `sourceID` of the card list the question was tapped in, for the zoom. Set it only on
+    /// a screen with more than one card list; see `questionCardZoomCover`.
+    var cardSourceID: String? = nil
 
     var id: String {
         question.id

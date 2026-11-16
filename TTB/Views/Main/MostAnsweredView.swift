@@ -115,6 +115,8 @@ struct MostAnsweredQuestionCard: View {
                 .padding(.horizontal, QuestionCardLayoutMetrics.compactContentPadding)
                 .padding(.bottom, QuestionCardLayoutMetrics.compactContentPadding)
         }
+        // The whole card, footer included, is what grows into the answer editor.
+        .questionCardZoomSource(cardSourceID: sourceID, questionID: item.question.id)
         .accessibilityElement(children: .contain)
     }
 
@@ -444,8 +446,9 @@ struct MostAnsweredView: View {
             )
             .backport.minimizesNavigationBarOnScrollDown()
         }
-        .fullScreenCover(
-            item: $presentedQuestion
+        .questionCardZoomCover(
+            item: $presentedQuestion,
+            cardSourceID: expansionSourceID
         ) { expandedState in
             QuestionDetailModalShell(
                 expandedState: expandedState,

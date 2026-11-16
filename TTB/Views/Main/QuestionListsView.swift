@@ -317,12 +317,16 @@ struct QuestionListDetailView: View {
                     .disabled(list == nil)
                 }
             }
-            .fullScreenCover(item: $presentedQuestion) { expandedState in
+            .questionCardZoomCover(item: $presentedQuestion, cardSourceID: cardSourceID) { expandedState in
                 QuestionDetailModalShell(
                     expandedState: expandedState,
                     model: questionModel
                 )
             }
+    }
+
+    private var cardSourceID: String {
+        "questionList.\(listID)"
     }
 
     @ViewBuilder
@@ -362,7 +366,7 @@ struct QuestionListDetailView: View {
                     question: question,
                     model: questionModel,
                     headerStyle: .plain,
-                    sourceID: "questionList.\(listID)",
+                    sourceID: cardSourceID,
                     onTap: {
                         presentedQuestion = ExpandedQuestionState(
                             question: question,

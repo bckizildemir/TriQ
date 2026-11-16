@@ -1,12 +1,15 @@
 import SwiftUI
 
 extension View {
-    /// Keeps a swipe down on an enclosing sheet from dropping an unsaved answer draft.
+    /// Keeps a swipe that would close the editor from dropping an unsaved answer draft.
     ///
-    /// Below iOS 27 the sheet springs back while there are changes. From iOS 27 the swipe asks to
-    /// save or drop instead; interactive dismissal must stay enabled there, or the dialog never
-    /// fires. Both reach the nearest sheet, so they do nothing in a pushed or full-screen editor.
-    /// `onSave` must not dismiss: the dialog's actions let the system finish the dismissal.
+    /// In a sheet below iOS 27 the sheet springs back while there are changes. In a sheet from
+    /// iOS 27 the swipe asks to save or drop instead; interactive dismissal must stay enabled
+    /// there, or the dialog never fires. In the card-zoom `fullScreenCover` (see
+    /// `questionCardZoomCover`), whose zoom brings a swipe-down to close, the swipe is refused
+    /// while there are changes on every iOS: the Close button asks to save or drop. A pushed
+    /// editor has no swipe to guard. `onSave` must not dismiss: the dialog's actions let the
+    /// system finish the dismissal.
     func draftDismissalGuard(
         hasUnsavedChanges: Bool,
         onSave: @escaping () -> Void
@@ -19,11 +22,14 @@ private struct DraftDismissalGuard: ViewModifier {
     let hasUnsavedChanges: Bool
     let onSave: () -> Void
 
+    @Environment(\.isInQuestionCardZoomCover) private var isInZoomCover
+
     func body(content: Content) -> some View {
         // The iOS 26 SDK marks this API unavailable on iOS, so `#available` alone cannot hide it
         // from an Xcode 26 build (CI). Swift 6.4 ships with Xcode 27, the first SDK that has it.
         #if compiler(>=6.4)
-        if #available(iOS 27, *) {
+        if #available(iOS 27, *),
+           DraftDismissalStyle.resolve(isInZoomCover: isInZoomCover, dialogAvailable: true) == .confirmationDialog {
             content
                 .dismissalConfirmationDialog(
                     "question.expanded.unsavedChangesTitle",
