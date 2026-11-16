@@ -323,8 +323,17 @@ deleted) by the next `start` of either project. `Scripts/slim-sim.sh slots` list
 - **axe has one finger and no velocity** (2026-11-16, #177). No pinch: zoom with a double tap where the screen
   has one, and name pinch as not proved. A swipe carries no flick speed beyond its own path, so a "fast flick" is
   `axe swipe ... --duration 0.25 --delta 5`; a slow interactive drag stays unproved.
-- **A true double tap is two parallel processes.** `axe batch` taps land 0.5-0.8 s apart, too slow for
-  a double tap. Start two `axe touch -x X -y Y --down --up --udid <UDID> &` at once, then `wait` on both PIDs.
+- **A true double tap is two parallel `axe touch` processes.** Start two
+  `axe touch -x X -y Y --down --up --udid <UDID> &` at the same instant, then `wait` on both PIDs. Two
+  parallel `axe tap` calls and `axe batch` taps never register as a double tap (2026-11-16, PR #184: four
+  runs read that as an app bug). The recipe toggles about 1 in 2 to 4 in 6 times: shot after each try and
+  retry until the state changes. Tell zoomed from 1× by the shot's file size or by eye; `cmp` always
+  differs (the clock).
+- **`axe touch --down --up` beats `axe tap` in full-screen covers.** In the answer image viewer, bare
+  `axe tap --tap-style physical` calls were dropped silently, five in a row; `axe touch` always landed.
+  A fast `axe swipe` needs `--delta 5`, or it can arrive as no drag at all.
+- **Read app logs by start time.** `log show --start "<local time>"` from a mark taken before the action;
+  `--last 4s` misses lines written during a slow screenshot.
 - **Video is variable frame rate.** `xcrun simctl io <UDID> recordVideo` drops the first frames: sleep
   3 s after starting it, before the action. Cut with `ffmpeg -ss <a> -to <b> -fps_mode passthrough`
   so frames keep their real times. `vt shot` lags the screen by about 0.5 s: wait before a shot of an
