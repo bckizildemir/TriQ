@@ -25,6 +25,11 @@ struct AnswerImageViewerDismissalTests {
         #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: 150, predictedEndTranslation: -20))
     }
 
+    @Test func longDragFlickedMostlyBackStaysOpen() {
+        #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: 150, predictedEndTranslation: 40))
+        #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: -150, predictedEndTranslation: -40))
+    }
+
     @Test func fastFlickAgainstTheDragStaysOpen() {
         #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: 60, predictedEndTranslation: -300))
         #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: -60, predictedEndTranslation: 300))
