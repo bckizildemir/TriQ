@@ -149,12 +149,20 @@ private struct ProgressiveSuggestionText: View {
     }
 
     var body: some View {
-        Text(visibleText)
-            .lineLimit(nil)
-            .fixedSize(horizontal: false, vertical: true)
-            .task(id: text) {
-                await reveal()
-            }
+        ZStack(alignment: .topLeading) {
+            // Lays out the full text so the row has its final height from the first frame;
+            // the typing text below draws over it without moving the rows underneath.
+            Text(text)
+                .hidden()
+            Text(visibleText)
+        }
+        .lineLimit(nil)
+        .fixedSize(horizontal: false, vertical: true)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(text)
+        .task(id: text) {
+            await reveal()
+        }
     }
 
     @MainActor
