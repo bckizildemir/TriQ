@@ -11,6 +11,10 @@ final class OnboardingViewModel: ObservableObject {
   @Published var currentStep: OnboardingStep = .welcome
   /// True while the last step change went backwards; the flow view slides the other way.
   @Published private(set) var isMovingBack = false
+  /// The step a request has chosen but not yet shown. The flow view commits it one render later.
+  @Published private(set) var pendingStep: OnboardingStep?
+  /// True from a step request until its slide ends; further requests are dropped meanwhile.
+  private(set) var isChangingStep = false
   @Published var hasAcceptedLegal = false
   @Published private(set) var notificationStatus: OnboardingPermissionStatus = .notDetermined
   @Published private(set) var photoStatus: OnboardingPermissionStatus = .notDetermined
@@ -21,7 +25,6 @@ final class OnboardingViewModel: ObservableObject {
   private let logger = Logger(
     subsystem: Bundle.main.bundleIdentifier ?? "com.ttb.app",
     category: "Onboarding")
-  private var isChangingStep = false
   private var currentUserId: String?
   private(set) var isAnonymousUser = false
 
@@ -60,6 +63,9 @@ final class OnboardingViewModel: ObservableObject {
     currentUserId = userId
     isAnonymousUser = isAnonymous
     currentStep = .welcome
+    pendingStep = nil
+    isChangingStep = false
+    isMovingBack = false
     hasAcceptedLegal = false
     errorMessage = nil
     isLoading = true
@@ -82,34 +88,42 @@ final class OnboardingViewModel: ObservableObject {
     isLoading = false
   }
 
-  func goToNextStep() async {
+  func goToNextStep() {
     guard let nextStep = currentStep.next else { return }
-    await change(to: nextStep, movingBack: false)
+    requestStep(nextStep, movingBack: false)
   }
 
-  func goBack() async {
+  func goBack() {
     guard let previousStep = currentStep.previous else { return }
-    await change(to: previousStep, movingBack: true)
+    requestStep(previousStep, movingBack: true)
   }
 
-  func skipToPermissions() async {
+  func skipToPermissions() {
     guard currentStep.canSkip else { return }
-    await change(to: .permissions, movingBack: false)
+    requestStep(.permissions, movingBack: false)
   }
 
-  /// SwiftUI removes a view with the transition from its last render. So the direction goes out
-  /// first, in its own update, and the step changes one frame later: the old step then already
-  /// carries the right exit transition. A tap that arrives meanwhile is ignored.
-  private func change(to step: OnboardingStep, movingBack: Bool) async {
+  /// Step 1 of a step change: publish the direction and the target together, without moving.
+  /// SwiftUI removes a view with the transition from its last render, so the view has to render
+  /// the new direction once before the step changes. The flow view reacts to `pendingStep` in
+  /// `onChange`, which runs after that render, and calls `commit(_:)` inside `withAnimation`.
+  /// A request is dropped while another change is in flight, until `finishStepChange()`.
+  private func requestStep(_ step: OnboardingStep, movingBack: Bool) {
     guard !isChangingStep else { return }
     isChangingStep = true
-    defer { isChangingStep = false }
-
     isMovingBack = movingBack
-    try? await Task.sleep(for: .milliseconds(20))
-    withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) {
-      currentStep = step
-    }
+    pendingStep = step
+  }
+
+  /// Step 2: show the requested step. Call it inside `withAnimation`.
+  func commit(_ step: OnboardingStep) {
+    pendingStep = nil
+    currentStep = step
+  }
+
+  /// Step 3: the slide ended; taps are accepted again.
+  func finishStepChange() {
+    isChangingStep = false
   }
 
   func refreshPermissionStatuses() async {

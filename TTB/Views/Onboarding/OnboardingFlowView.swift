@@ -40,6 +40,14 @@ struct OnboardingFlowView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(backgroundLayer)
+    .onChange(of: viewModel.pendingStep) { _, step in
+      guard let step else { return }
+      withAnimation(.spring(response: 0.32, dampingFraction: 0.88), completionCriteria: .logicallyComplete) {
+        viewModel.commit(step)
+      } completion: {
+        viewModel.finishStepChange()
+      }
+    }
     .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) {
       _ in
       Task { await viewModel.refreshPermissionStatuses() }
@@ -58,7 +66,7 @@ struct OnboardingFlowView: View {
       HStack {
         if viewModel.canGoBack {
           Button {
-            Task { await viewModel.goBack() }
+            viewModel.goBack()
           } label: {
             Image(systemName: "chevron.left")
               .font(.headline)
@@ -75,7 +83,7 @@ struct OnboardingFlowView: View {
 
         if viewModel.currentStep.canSkip {
           Button(String(localized: "onboarding.nav.skip")) {
-            Task { await viewModel.skipToPermissions() }
+            viewModel.skipToPermissions()
           }
           .font(.subheadline.weight(.semibold))
           .foregroundStyle(.secondary)
@@ -372,7 +380,7 @@ struct OnboardingFlowView: View {
     if viewModel.currentStep.isFinalStep {
       Task { await viewModel.completeOnboarding() }
     } else {
-      Task { await viewModel.goToNextStep() }
+      viewModel.goToNextStep()
     }
   }
 
