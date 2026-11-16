@@ -33,7 +33,8 @@ enum Motion {
 
     // MARK: - Settle
 
-    /// `snappy` over 0.25 s. Moving between pages of the card pager (`PagedCardView`).
+    /// `snappy` over 0.25 s. The page indicator dots resizing when the current page changes
+    /// (`PagedCardView`). The pages themselves do not move with it. Nil under Reduce Motion.
     static let pageSwitch = Animation.snappy(duration: 0.25)
 
     /// Spring, response 0.35 and damping 0.85. The card pager resizing to the height of the
@@ -57,10 +58,10 @@ enum Motion {
 
     // MARK: - Toast
 
-    /// Spring, response 0.36 and damping 0.82. A toast appearing (`AppToastCenter.show`).
+    /// Spring, response 0.36 and damping 0.82. A toast appearing (`ToastCenter.show`).
     static let toastIn = Animation.spring(response: 0.36, dampingFraction: 0.82)
 
-    /// `easeOut` over 0.18 s. A toast leaving (`AppToastCenter.dismiss`).
+    /// `easeOut` over 0.18 s. A toast leaving (`ToastCenter.dismiss`).
     static let toastOut = Animation.easeOut(duration: 0.18)
 
     /// Spring, response 0.28 and damping 0.86. A toast dragged up that did not pass the dismiss
