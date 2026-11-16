@@ -20,9 +20,46 @@ struct ImageViewerPanMath: Equatable {
     var containerSize: CGSize
     /// The image's size at 1x, after aspect-fit.
     var fittedSize: CGSize
+    /// How far the image's resting centre sits from the container's centre. The image is fitted to
+    /// the safe area, the container is the full screen: with a notch and no home bar the two
+    /// centres differ.
+    var restCenterShift: CGSize = .zero
+
+    /// What one finger's drag does, decided when it begins and kept until it ends.
+    enum DragMode: Equatable {
+        /// No drag running.
+        case idle
+        /// A drag at 1x: it may close the viewer.
+        case dismiss
+        /// A drag that began zoomed: it pans and never closes.
+        case pan
+        /// A drag that saw a pinch, or began during one: it does nothing.
+        case ignored
+    }
+
+    /// The mode a drag starts in.
+    static func dragMode(isZoomed: Bool, isPinching: Bool) -> DragMode {
+        if isZoomed { return .pan }
+        return isPinching ? .ignored : .dismiss
+    }
 
     static func clampedScale(_ scale: CGFloat) -> CGFloat {
         min(max(scale, minimumScale), maximumScale)
+    }
+
+    /// The zoom a VoiceOver zoom step moves to: 1x, then the double-tap zoom, then the maximum.
+    static func steppedScale(from scale: CGFloat, zoomingIn: Bool) -> CGFloat {
+        let steps = [minimumScale, doubleTapScale, maximumScale]
+        let epsilon: CGFloat = 0.01
+        if zoomingIn {
+            return steps.first { $0 > scale + epsilon } ?? maximumScale
+        }
+        return steps.last { $0 < scale - epsilon } ?? minimumScale
+    }
+
+    private static func clampAxis(_ value: CGFloat, overhang: CGFloat, shift: CGFloat) -> CGFloat {
+        guard overhang > 0 else { return 0 }
+        return min(max(value, -overhang - shift), overhang - shift)
     }
 
     /// The farthest the image may move from centre on each axis at `scale`.
@@ -34,12 +71,13 @@ struct ImageViewerPanMath: Equatable {
         )
     }
 
-    /// `offset` limited to the image's pan range. At 1x the range is zero.
+    /// `offset` limited so the scaled image keeps covering the container's edges. An axis with no
+    /// overhang, and any offset at 1x, stays at rest (zero).
     func clamp(_ offset: CGSize, at scale: CGFloat) -> CGSize {
-        let limit = maxOffset(at: scale)
+        let overhang = maxOffset(at: scale)
         return CGSize(
-            width: min(max(offset.width, -limit.width), limit.width),
-            height: min(max(offset.height, -limit.height), limit.height)
+            width: Self.clampAxis(offset.width, overhang: overhang.width, shift: restCenterShift.width),
+            height: Self.clampAxis(offset.height, overhang: overhang.height, shift: restCenterShift.height)
         )
     }
 
@@ -52,12 +90,12 @@ struct ImageViewerPanMath: Equatable {
     }
 
     /// The screen rectangle the image covers at `scale` and `offset`: the fitted image scaled around
-    /// the container's centre, then moved by the offset.
+    /// its resting centre, then moved by the offset.
     func visibleImageRect(at scale: CGFloat, offset: CGSize) -> CGRect {
         let size = CGSize(width: fittedSize.width * scale, height: fittedSize.height * scale)
         return CGRect(
-            x: containerSize.width / 2 + offset.width - size.width / 2,
-            y: containerSize.height / 2 + offset.height - size.height / 2,
+            x: containerSize.width / 2 + restCenterShift.width + offset.width - size.width / 2,
+            y: containerSize.height / 2 + restCenterShift.height + offset.height - size.height / 2,
             width: size.width,
             height: size.height
         )

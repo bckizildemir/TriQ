@@ -12697,13 +12697,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Swipe down or use the close button to dismiss."
+            "value" : "Use the Close button to dismiss. Zoom with the VoiceOver zoom rotor."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kapatmak icin asagi surukle veya kapat dugmesine dokun."
+            "value" : "Kapatmak icin Kapat dugmesini kullan. Yakinlastirmak icin VoiceOver zum rotorunu kullan."
           }
         }
       }

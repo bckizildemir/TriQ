@@ -105,7 +105,7 @@ struct ImageViewerPanMathTests {
         #expect(math.imageContains(CGPoint(x: 5, y: 790), at: 2, offset: .zero))
         // Panned 200 left: x -400...400; the right edge of the screen is now black.
         let panned = CGSize(width: -200, height: 0)
-        #expect(!math.imageContains(CGPoint(x: 399.5 + 1, y: 400), at: 2, offset: panned))
+        #expect(!math.imageContains(CGPoint(x: 400.5, y: 400), at: 2, offset: panned))
         #expect(math.imageContains(CGPoint(x: 399, y: 400), at: 2, offset: panned))
     }
 
@@ -145,7 +145,57 @@ struct ImageViewerPanMathTests {
             to: CGSize(width: 2, height: 0),
             releaseVelocity: CGSize(width: 5000, height: 0)
         )
-        #expect(velocity == Double(ImageViewerPanMath.maximumInitialVelocity))
+        #expect(velocity == 20)
+    }
+
+    // MARK: Safe-area centre shift
+
+    /// Top inset 47, bottom inset 34: the image rests 6.5 points below the screen's centre.
+    private let shifted = ImageViewerPanMath(
+        containerSize: CGSize(width: 400, height: 800),
+        fittedSize: CGSize(width: 400, height: 400),
+        restCenterShift: CGSize(width: 0, height: 6.5)
+    )
+
+    @Test func shiftedRangeStillCoversBothScreenEdges() {
+        // 3x: 1200 tall, 200 overhang each side, then moved by the 6.5 shift.
+        #expect(shifted.clamp(CGSize(width: 0, height: 1000), at: 3).height == 193.5)
+        #expect(shifted.clamp(CGSize(width: 0, height: -1000), at: 3).height == -206.5)
+    }
+
+    @Test func shiftedAxisWithNoOverhangStaysAtRest() {
+        // 2x: 800 tall fills the 800 screen exactly: no vertical pan, shift or not.
+        #expect(shifted.clamp(CGSize(width: 0, height: 100), at: 2).height == 0)
+    }
+
+    @Test func shiftMovesTheTapTestWithTheImage() {
+        // At 1x the image spans y 206.5...606.5.
+        #expect(shifted.imageContains(CGPoint(x: 200, y: 606), at: 1, offset: .zero))
+        #expect(!shifted.imageContains(CGPoint(x: 200, y: 607), at: 1, offset: .zero))
+        #expect(!shifted.imageContains(CGPoint(x: 200, y: 206), at: 1, offset: .zero))
+    }
+
+    // MARK: Drag mode and zoom steps
+
+    @Test func dragThatBeginsZoomedPans() {
+        #expect(ImageViewerPanMath.dragMode(isZoomed: true, isPinching: false) == .pan)
+        #expect(ImageViewerPanMath.dragMode(isZoomed: true, isPinching: true) == .pan)
+    }
+
+    @Test func dragAtOneTimesDismissesUnlessAPinchRuns() {
+        #expect(ImageViewerPanMath.dragMode(isZoomed: false, isPinching: false) == .dismiss)
+        #expect(ImageViewerPanMath.dragMode(isZoomed: false, isPinching: true) == .ignored)
+    }
+
+    @Test func zoomStepsGoThroughOneTwoAndAHalfAndFive() {
+        #expect(ImageViewerPanMath.steppedScale(from: 1, zoomingIn: true) == 2.5)
+        #expect(ImageViewerPanMath.steppedScale(from: 2.5, zoomingIn: true) == 5)
+        #expect(ImageViewerPanMath.steppedScale(from: 5, zoomingIn: true) == 5)
+        #expect(ImageViewerPanMath.steppedScale(from: 5, zoomingIn: false) == 2.5)
+        #expect(ImageViewerPanMath.steppedScale(from: 2.5, zoomingIn: false) == 1)
+        #expect(ImageViewerPanMath.steppedScale(from: 1, zoomingIn: false) == 1)
+        #expect(ImageViewerPanMath.steppedScale(from: 1.7, zoomingIn: true) == 2.5)
+        #expect(ImageViewerPanMath.steppedScale(from: 1.7, zoomingIn: false) == 1)
     }
 
     @Test func momentumTargetIsClamped() {
