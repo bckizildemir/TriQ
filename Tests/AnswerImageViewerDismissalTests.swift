@@ -8,8 +8,8 @@ struct AnswerImageViewerDismissalTests {
     }
 
     @Test func shortFastFlickDismisses() {
-        #expect(AnswerImageViewerDismissal.shouldDismiss(translation: 60, predictedEndTranslation: 300))
-        #expect(AnswerImageViewerDismissal.shouldDismiss(translation: -60, predictedEndTranslation: -300))
+        #expect(AnswerImageViewerDismissal.shouldDismiss(translation: 60, predictedEndTranslation: 400))
+        #expect(AnswerImageViewerDismissal.shouldDismiss(translation: -60, predictedEndTranslation: -400))
     }
 
     @Test func shortSlowDragSnapsBack() {
@@ -17,6 +17,16 @@ struct AnswerImageViewerDismissalTests {
     }
 
     @Test func thresholdsAreExclusive() {
-        #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: 100, predictedEndTranslation: 240))
+        #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: 100, predictedEndTranslation: 200))
+    }
+
+    @Test func longDragFlickedBackStaysOpen() {
+        #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: 150, predictedEndTranslation: 0))
+        #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: 150, predictedEndTranslation: -20))
+    }
+
+    @Test func fastFlickAgainstTheDragStaysOpen() {
+        #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: 60, predictedEndTranslation: -300))
+        #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: -60, predictedEndTranslation: 300))
     }
 }
