@@ -53,39 +53,6 @@ class BadgeModel: ObservableObject {
         }
     }
 
-    private nonisolated func defaultBadgeUserFields() -> [String: Any] {
-        [
-            "dailyAnswers": 0,
-            "weeklyAnswers": 0,
-            "totalAnswered": 0,
-            "completedQuestionIds": [String](),
-            "categoryAnswers": [String: Int](),
-            "currentStreak": 0,
-            "unlockedBadges": [String](),
-            "badgeProgress": [String: Double]()
-        ]
-    }
-
-    private func ensureBadgeUserDocument(userId: String) async throws {
-        let (exists, data) = try await store.getUserDocument(userId: userId)
-        if !exists {
-            var initialData = defaultBadgeUserFields()
-            initialData["updatedAt"] = FieldValue.serverTimestamp()
-            try await store.setUserDocument(userId: userId, data: initialData, merge: true)
-            return
-        }
-
-        var patch: [String: Any] = [:]
-        for (key, value) in defaultBadgeUserFields() where data[key] == nil {
-            patch[key] = value
-        }
-
-        if !patch.isEmpty {
-            patch["updatedAt"] = FieldValue.serverTimestamp()
-            try await store.setUserDocument(userId: userId, data: patch, merge: true)
-        }
-    }
-
     private func loadBundledBadgeDefinitions() -> [BadgeDefinition] {
         guard let url = Bundle.main.url(forResource: "BadgeDefinitions", withExtension: "json"),
               let data = try? Data(contentsOf: url),
@@ -169,20 +136,6 @@ class BadgeModel: ObservableObject {
         // compiler flags a weak inner capture under an implicit strong outer one.
         Task { @MainActor [weak self] in
             guard let self else { return }
-            do {
-                try await ensureBadgeUserDocument(userId: userId)
-            } catch {
-                showError(
-                    String(
-                        format: String(localized: "badge.error.load"),
-                        locale: AppLocalization.currentLocale,
-                        error.localizedDescription
-                    )
-                )
-                isLoading = false
-                return
-            }
-
             // Listen for user document changes
             userListener = store.observeUserDocument(userId: userId) { [weak self] result in
                 guard let self = self else { return }

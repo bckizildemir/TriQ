@@ -49,10 +49,10 @@ Previous focus, done 3/3: #151 (guest upgrade username) fixed in #161; #152 (old
 
 Last session:
 - 2026-11-16 (#168 fix, option A): PR deletes the badge backfill at sign-in, the `totalAnswered` migration write in
-  `ProfileModel`, and the dead `BadgeModel` transaction paths with their `BadgeStoring` methods. Swift only, no
-  rules change, no deploy, no simulator run. Left for its own issue: `BadgeModel.ensureBadgeUserDocument` still
-  patches default stats onto an existing pre-stats document when the badge screen loads (refused; the screen
-  shows `badge.error.load`), first noted in #126.
+  `ProfileModel`, and the dead `BadgeModel` transaction paths with their `BadgeStoring` methods, plus
+  `BadgeModel.ensureBadgeUserDocument` (a refused merge write that made the badge screen show `badge.error.load`
+  for an old user document), `AnswerStreakCalculator`, `BadgeProgressCalculator` and two unused strings. Swift only,
+  no rules change, no deploy, no simulator run.
 - 2026-11-16: merged #166 (docs: apply the prompt audit's high-priority fixes, `983afde`) and #169 (formal: sync
   commits and line references after the #159/#160/#161 fixes, `44e8551`), squash, owner's yes for both. Owner chose
   #168 as the focus; triage above. No build, no deploy.
@@ -101,8 +101,7 @@ Last session:
 
 ## Next step
 
-1. #168: the owner reviews and merges the option A PR. Then decide on `BadgeModel.ensureBadgeUserDocument` (see
-   Last session).
+1. #168: the owner reviews and merges the option A PR.
 2. Later candidate: the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
    tab bar) is closed: the owner made both on purpose (2026-11-13).
 

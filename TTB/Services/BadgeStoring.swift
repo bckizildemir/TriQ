@@ -7,13 +7,11 @@ protocol BadgeUserListening {
 
 /// `BadgeModel`'s Firestore surface, as a seam.
 ///
-/// Four operations: read the user document, write it, list badge definitions, and observe the user
-/// document. The answer counters and badge progress are server-owned (`saveAnswer` writes them), so
-/// the seam has no transaction over them: the client-side transaction that used to be here wrote
-/// fields the rules refuse (#168). This seam carries only the network calls.
+/// Two operations: list badge definitions and observe the user document. The answer counters and
+/// badge progress are server-owned (`saveAnswer` writes them), so the seam has no write over the
+/// user document: the client-side writes that used to be here hit fields the rules refuse (#168).
+/// This seam carries only the network calls.
 protocol BadgeStoring: Sendable {
-    func getUserDocument(userId: String) async throws -> (exists: Bool, data: [String: Any])
-    func setUserDocument(userId: String, data: sending [String: Any], merge: Bool) async throws
     func getBadgeDefinitionDocuments() async throws -> [(id: String, data: [String: Any])]
     func observeUserDocument(
         userId: String,
@@ -27,15 +25,6 @@ protocol BadgeStoring: Sendable {
 /// this struct being `Sendable`. `Firestore.firestore()` returns the same cached default instance
 /// on every call.
 struct LiveBadgeStore: BadgeStoring {
-    func getUserDocument(userId: String) async throws -> (exists: Bool, data: [String: Any]) {
-        let snapshot = try await Firestore.firestore().collection("users").document(userId).getDocument()
-        return (snapshot.exists, snapshot.data() ?? [:])
-    }
-
-    func setUserDocument(userId: String, data: sending [String: Any], merge: Bool) async throws {
-        try await Firestore.firestore().collection("users").document(userId).setData(data, merge: merge)
-    }
-
     func getBadgeDefinitionDocuments() async throws -> [(id: String, data: [String: Any])] {
         let snapshot = try await Firestore.firestore().collection("badges").getDocuments()
         return snapshot.documents.map { ($0.documentID, $0.data()) }

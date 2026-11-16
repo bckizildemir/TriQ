@@ -246,27 +246,6 @@ final class BadgeEngineTests: XCTestCase {
 
         XCTAssertNil(badge.progressPresentation(preferredLanguageCodes: ["en"]))
     }
-    func testBadgeProgressCalculatorClampsInvalidAndBoundaryCounts() {
-        let cases: [(current: Int, target: Int, expected: Double)] = [
-            (-1, 10, 0),
-            (5, 0, 0),
-            (0, 10, 0),
-            (5, 10, 0.5),
-            (10, 10, 1),
-            (Int.max, 10, 1),
-        ]
-
-        for testCase in cases {
-            XCTAssertEqual(
-                BadgeProgressCalculator.progress(
-                    currentCount: testCase.current,
-                    targetCount: testCase.target
-                ),
-                testCase.expected,
-                accuracy: 0.000_001
-            )
-        }
-    }
 
     func testAnswerCounterIncrementNormalizesCorruptionAndSaturatesOverflow() {
         let cases: [(stored: Int, expected: Int)] = [
@@ -283,59 +262,5 @@ final class BadgeEngineTests: XCTestCase {
                 testCase.expected
             )
         }
-    }
-
-    func testCurrentStreakDeduplicatesDaysAndStopsAtGapAcrossDST() throws {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
-        let latest = try XCTUnwrap(
-            calendar.date(from: DateComponents(year: 2026, month: 3, day: 9, hour: 1))
-        )
-        let previous = try XCTUnwrap(
-            calendar.date(from: DateComponents(year: 2026, month: 3, day: 8, hour: 23))
-        )
-        let gap = try XCTUnwrap(
-            calendar.date(from: DateComponents(year: 2026, month: 3, day: 6, hour: 12))
-        )
-
-        let streak = AnswerStreakCalculator.currentStreak(
-            from: [gap, previous, latest, latest],
-            calendar: calendar
-        )
-
-        XCTAssertEqual(streak, 2)
-    }
-
-    func testUpdatedStreakUsesCalendarDaysAndSaturatesCorruptedCount() throws {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Europe/Istanbul"))
-        let beforeMidnight = try XCTUnwrap(
-            calendar.date(from: DateComponents(
-                year: 2026,
-                month: 7,
-                day: 26,
-                hour: 23,
-                minute: 59
-            ))
-        )
-        let afterMidnight = try XCTUnwrap(
-            calendar.date(from: DateComponents(
-                year: 2026,
-                month: 7,
-                day: 27,
-                hour: 0,
-                minute: 1
-            ))
-        )
-
-        XCTAssertEqual(
-            AnswerStreakCalculator.updatedStreak(
-                from: beforeMidnight,
-                currentStreak: .max,
-                now: afterMidnight,
-                calendar: calendar
-            ),
-            .max
-        )
     }
 }

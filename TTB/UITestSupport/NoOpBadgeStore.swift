@@ -1,20 +1,13 @@
 import Foundation
 
 #if DEBUG
-/// A harness's `BadgeStoring`: every read comes back empty, every write is discarded, and no
-/// listener ever reaches Firestore.
+/// A harness's `BadgeStoring`: every read comes back empty and no listener ever reaches Firestore.
 ///
 /// `observeUserDocument` still calls `onChange` once, synchronously, with no data — the same shape
 /// `loadBadges()` gets when a real user document has nothing in it yet. That completes the loading
 /// flow (`isLoading` goes back to `false`, `badges` fills in from the bundled definitions file)
 /// instead of leaving a harness screen spinning forever.
 struct NoOpBadgeStore: BadgeStoring {
-    func getUserDocument(userId: String) async throws -> (exists: Bool, data: [String: Any]) {
-        (false, [:])
-    }
-
-    func setUserDocument(userId: String, data: sending [String: Any], merge: Bool) async throws {}
-
     func getBadgeDefinitionDocuments() async throws -> [(id: String, data: [String: Any])] {
         []
     }
