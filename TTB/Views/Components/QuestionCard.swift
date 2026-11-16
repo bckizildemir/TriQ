@@ -21,6 +21,7 @@ struct QuestionCard: View {
   @EnvironmentObject private var guestFavoriteModel: GuestFavoriteModel
   @EnvironmentObject private var questionListStore: QuestionListStore
   @Environment(\.toastCenter) private var toastCenter
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
   @State private var isShowingQuestionLists = false
 
@@ -296,7 +297,8 @@ struct QuestionCard: View {
       Label(favoriteAccessibilityLabel, systemImage: isFavorite ? "star.fill" : "star")
         .labelStyle(.iconOnly)
         .foregroundStyle(isFavorite ? .yellow : .gray)
-        .animation(.easeInOut(duration: 0.2), value: isFavorite)
+        .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
+        .animation(.easeOut(duration: 0.2), value: isFavorite)
         .frame(
           width: compactActionButtonSize,
           height: compactActionButtonSize
@@ -309,6 +311,9 @@ struct QuestionCard: View {
   }
 
   private func toggleFavorite() {
+    // Played here, on the tap, not on `isFavorite`: a server snapshot or a rollback stays silent.
+    // A UIKit generator, because on Favorites the unstarred card leaves in this same update.
+    Haptics.playLightImpact(for: "favorite-tap")
     Task {
       await toastCenter.toggleFavorite(question, using: favoriteStore)
     }
