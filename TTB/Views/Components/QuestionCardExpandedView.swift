@@ -58,8 +58,6 @@ struct QuestionCardExpandedView: View {
     @State private var isUploading = false
     /// Bumped each time the answer becomes ready to save; replays the haptic and, before iOS 26, the tick's bounce.
     @State private var saveTickReplayCount = 0
-    /// Bumped on each star tap only, so a server snapshot or a rollback plays no haptic.
-    @State private var favoriteTapCount = 0
     @State private var uploadError: String?
     /// Raised when X is tapped with unsaved changes; drives the save-or-drop dialog on X.
     @State private var isConfirmingClose = false
@@ -133,7 +131,6 @@ struct QuestionCardExpandedView: View {
             .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
             .animation(.easeOut(duration: 0.2), value: isFavorite)
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: favoriteTapCount)
         .accessibilityIdentifier("question-card-fullscreen-favorite")
         .accessibilityLabel(
             String(localized: isFavorite ? "common.favorite.remove" : "common.favorite.add")
@@ -141,8 +138,8 @@ struct QuestionCardExpandedView: View {
     }
 
     private func toggleFavorite() {
-        favoriteTapCount += 1
-        HapticLog.record("favorite-tap")
+        // On the tap, not on `isFavorite`: a server snapshot or a rollback stays silent.
+        Haptics.playLightImpact(for: "favorite-tap")
         Task {
             await toastCenter.toggleFavorite(currentQuestion, using: favoriteStore)
         }
@@ -1088,11 +1085,9 @@ struct QuestionCardExpandedView: View {
         guard !isUploading else { return }
 
         // `.success` belongs to a save that really started (#56); a tap with nothing changed stays
-        // silent. A UIKit generator, because this view is dismissed in the same call and a SwiftUI
-        // feedback trigger on a disappearing view may never fire.
+        // silent. A UIKit generator, because this view is dismissed in the same call.
         if commitDraft() {
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            HapticLog.record("save-success")
+            Haptics.playSuccess(for: "save-success")
         }
         dismissFullscreen()
     }

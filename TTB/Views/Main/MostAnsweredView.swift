@@ -91,9 +91,6 @@ struct MostAnsweredQuestionCard: View {
     @Environment(\.toastCenter) private var toastCenter
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// Bumped on each star tap only, so a server snapshot or a rollback plays no haptic.
-    @State private var favoriteTapCount = 0
-
     private var isFavorite: Bool {
         favoriteStore.state(of: item.question)
     }
@@ -340,15 +337,14 @@ struct MostAnsweredQuestionCard: View {
             .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
             .animation(.easeOut(duration: 0.2), value: isFavorite)
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: favoriteTapCount)
         .accessibilityLabel(String(localized: isFavorite ? "common.favorite.remove" : "common.favorite.add"))
         .accessibilityIdentifier("question-card-favorite-\(sourceID)-\(item.question.id)")
         .buttonStyle(.plain)
     }
 
     private func toggleFavorite() {
-        favoriteTapCount += 1
-        HapticLog.record("favorite-tap")
+        // On the tap, not on `isFavorite`: a server snapshot or a rollback stays silent.
+        Haptics.playLightImpact(for: "favorite-tap")
         Task {
             await toastCenter.toggleFavorite(item.question, using: favoriteStore)
         }

@@ -24,7 +24,6 @@ struct QuestionCard: View {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
   @State private var isShowingQuestionLists = false
-  @State private var favoriteTapCount = 0
 
   private var isFavorite: Bool {
     favoriteStore.state(of: question)
@@ -306,16 +305,15 @@ struct QuestionCard: View {
         )
         .contentShape(Rectangle())
     }
-    .sensoryFeedback(.impact(weight: .light), trigger: favoriteTapCount)
     .accessibilityLabel(favoriteAccessibilityLabel)
     .accessibilityIdentifier("question-card-favorite-\(sourceID)-\(question.id)")
     .buttonStyle(.plain)
   }
 
   private func toggleFavorite() {
-    // A tap counter, not `isFavorite`: a server snapshot or a rollback must not play the haptic.
-    favoriteTapCount += 1
-    HapticLog.record("favorite-tap")
+    // Played here, on the tap, not on `isFavorite`: a server snapshot or a rollback stays silent.
+    // A UIKit generator, because on Favorites the unstarred card leaves in this same update.
+    Haptics.playLightImpact(for: "favorite-tap")
     Task {
       await toastCenter.toggleFavorite(question, using: favoriteStore)
     }

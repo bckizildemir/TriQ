@@ -85,10 +85,7 @@ struct BadgeUnlockView: View {
             .padding()
         }
         .onAppear {
-            // Haptic feedback
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
-            HapticLog.record("badge-unlock-success")
+            Haptics.playSuccess(for: "badge-unlock-success")
 
             // Set without animation: under Reduce Motion the badge starts at full size and only fades.
             let motion = BadgeUnlockMotion(reduceMotion: reduceMotion)
