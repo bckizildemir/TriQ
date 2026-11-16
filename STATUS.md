@@ -50,6 +50,17 @@ Previous focus, done 3/3: #151 (guest upgrade username) fixed in #161; #152 (old
 2026-11-16
 
 Last session:
+- 2026-11-16 (latest): the owner approved the rest of the 2026-11-16 animation audit (outside the repo,
+  `iOS Dev/animation-audits/TriQ-2026-11-16/`). Three PRs, each reviewed, fixed after review, CI green and proved
+  on the simulator (iOS 27); none merged yet (app code: owner's merge):
+  - #177 (answer image viewer zooms out of its thumbnail, a flick closes it, the zoom eases back; plans 004 + 008).
+    Runs `2026-11-16-151446-0cd5`, `2026-11-16-154714-24ec`. Not proved: pinch (axe has one finger), iOS 18.5.
+    Gap found, not in scope: a zoomed-in image cannot be panned (no pan code).
+  - #178 (Trio suggestions keep their full row height while they type in; plan 007). Run `2026-11-16-152838-22f2`.
+    The run's account `verifytriq-152838-22f2` stays on the server for pre-release cleanup.
+  - #179 (onboarding steps slide in the direction you move, softer Profile press, calmer page dots, AI disclosure
+    stagger; plans 009, 010, findings 12, 13). Runs `2026-11-16-161722-2f1c`, `2026-11-16-162736-2e7c`.
+  - Left from the audit: finding 11 (shared Motion tokens), after #177-#179 merge, since it touches their files.
 - 2026-11-16 (later, owner's yes for each after `/code-review`): merged, squash, in this order: #174 (five motion
   fixes from the 2026-11-16 audit; review findings checked by a judge, none blocking), #173 (fix #168, see below;
   the review found one more refused write, `ensureBadgeUserDocument`, removed before merge), #175 (a tapped
@@ -117,13 +128,15 @@ Last session:
 
 ## Next step
 
-1. The owner picks the next focus.
+1. The owner picks the next focus. Animation audit: after #177, #178, #179 merge, build finding 11 (shared
+   Motion tokens) and update `animation-audits/TriQ-2026-11-16/plans/README.md` (every plan still reads TODO).
 2. Candidate: the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
    tab bar) is closed: the owner made both on purpose (2026-11-13).
 
 ## Waits for the owner
 
 - The next focus.
+- Merge of #177, #178, #179 (animation audit, see "Last session").
 - #139 (before release, check that 1 copy per function is enough for launch traffic): `ready-for-human`.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): `ready-for-human`.
 - #68 (run the UI tests in CI): needs a grilling round.
