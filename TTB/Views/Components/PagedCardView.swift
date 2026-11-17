@@ -21,7 +21,7 @@ struct PageIndicator: View {
         Circle()
           .fill(index == current ? Color.primary : Color.secondary.opacity(0.4))
           .frame(width: dotSize(for: index), height: dotSize(for: index))
-          .animation(reduceMotion ? nil : .snappy(duration: 0.25), value: current)
+          .animation(reduceMotion ? nil : Motion.pageSwitch, value: current)
       }
     }
     .frame(height: activeDotSize)
@@ -145,7 +145,7 @@ struct PagedCardView: View {
       .frame(width: geometry.size.width)
     }
     .frame(height: resolvedCardHeight)
-    .animation(.spring(response: 0.35, dampingFraction: 0.85), value: resolvedCardHeight)
+    .animation(Motion.cardHeightSettle, value: resolvedCardHeight)
     .onPreferenceChange(QuestionCardHeightPreferenceKey.self) { heights in
       measuredCardHeights.merge(heights, uniquingKeysWith: { _, new in new })
     }

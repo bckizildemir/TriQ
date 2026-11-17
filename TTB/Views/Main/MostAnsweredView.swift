@@ -337,7 +337,7 @@ struct MostAnsweredQuestionCard: View {
             .frame(width: compactActionButtonSize, height: compactActionButtonSize)
             .contentShape(Rectangle())
             .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
-            .animation(.easeOut(duration: 0.2), value: isFavorite)
+            .animation(Motion.quickFade, value: isFavorite)
         }
         .accessibilityLabel(String(localized: isFavorite ? "common.favorite.remove" : "common.favorite.add"))
         .accessibilityIdentifier("question-card-favorite-\(sourceID)-\(item.question.id)")

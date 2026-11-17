@@ -110,7 +110,7 @@ struct RegistrationView: View {
           }
 
           DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(Motion.contentChange) {
               proxy.scrollTo(field, anchor: .center)
             }
           }

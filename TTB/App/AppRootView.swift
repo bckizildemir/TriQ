@@ -62,7 +62,7 @@ struct AppRootView: View {
   /// minimum display time: a fast launch still ends as soon as the app is ready.
   private func updateLaunchCover(isWaiting: Bool) async {
     // Opacity only, so it stays on under Reduce Motion.
-    let fade = Animation.easeOut(duration: 0.25)
+    let fade = Motion.launchCoverFade
 
     guard !isWaiting else {
       if !isShowingLaunchCover {
@@ -100,7 +100,7 @@ private struct LaunchLoadingView: View {
         .scaleEffect(reduceMotion ? 1 : (isAnimating ? 1.035 : 0.985))
         .opacity(reduceMotion ? 1 : (isAnimating ? 1 : 0.88))
         .animation(
-          reduceMotion ? nil : .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
+          reduceMotion ? nil : Motion.launchPulse,
           value: isAnimating
         )
         .accessibilityElement(children: .ignore)

@@ -132,7 +132,7 @@ struct QuestionCardExpandedView: View {
             .labelStyle(.iconOnly)
             .foregroundStyle(isFavorite ? .yellow : .primary)
             .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
-            .animation(.easeOut(duration: 0.2), value: isFavorite)
+            .animation(Motion.quickFade, value: isFavorite)
         }
         .accessibilityIdentifier("question-card-fullscreen-favorite")
         .accessibilityLabel(
@@ -259,7 +259,7 @@ struct QuestionCardExpandedView: View {
                     .scrollDismissesKeyboard(.interactively)
                     .onChange(of: focusedField) { _, newValue in
                         if case let .slot(index) = newValue {
-                            withAnimation(.easeInOut(duration: 0.25)) {
+                            withAnimation(Motion.scrollToFocusedField) {
                                 proxy.scrollTo("slot_\(index)", anchor: .center)
                             }
                         }
@@ -1208,7 +1208,7 @@ private struct AnswerImageFullscreenView: View {
 
     /// The snap-back of a short or cancelled 1x drag. Reduce Motion: a short ease-out.
     private var snapBackAnimation: Animation {
-        reduceMotion ? .easeOut(duration: 0.15) : .spring(duration: 0.3, bounce: 0)
+        reduceMotion ? .easeOut(duration: 0.15) : Motion.gestureReset
     }
 
     var body: some View {
@@ -1335,14 +1335,14 @@ private struct AnswerImageFullscreenView: View {
 
     /// Zoom in and out. Reduce Motion swaps the spring for a short ease-out.
     private var resetAnimation: Animation {
-        reduceMotion ? .easeOut(duration: 0.15) : .spring(duration: 0.3, bounce: 0)
+        reduceMotion ? .easeOut(duration: 0.15) : Motion.gestureReset
     }
 
     /// Glide after a release, without bounce. Reduce Motion drops the spring and the momentum.
     /// `initialVelocity` is the release speed along the glide, as a share of its distance per second.
     private func settleAnimation(initialVelocity: Double = 0) -> Animation {
         reduceMotion
-            ? .easeOut(duration: 0.2)
+            ? Motion.quickFade
             : .interpolatingSpring(duration: 0.45, bounce: 0, initialVelocity: initialVelocity)
     }
 

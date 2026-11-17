@@ -37,7 +37,7 @@ struct AITabDisclosureView: View {
 
     /// The entrance spring, started `delay` seconds late. Reduce Motion: no animation, no stagger.
     private func appearAnimation(delay: Double) -> Animation? {
-        reduceMotion ? nil : .spring(response: 0.56, dampingFraction: 0.86).delay(delay)
+        reduceMotion ? nil : Motion.reveal.delay(delay)
     }
 
     private var backgroundLayer: some View {
