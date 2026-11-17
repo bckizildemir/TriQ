@@ -2,14 +2,17 @@ import Testing
 @testable import TTB
 
 struct AnswerImageViewerDismissalTests {
-    @Test func longSlowDragDismisses() {
+    @Test func longSlowDownwardDragDismisses() {
         #expect(AnswerImageViewerDismissal.shouldDismiss(translation: 120, predictedEndTranslation: 130))
-        #expect(AnswerImageViewerDismissal.shouldDismiss(translation: -120, predictedEndTranslation: -130))
     }
 
-    @Test func shortFastFlickDismisses() {
+    @Test func shortFastDownwardFlickDismisses() {
         #expect(AnswerImageViewerDismissal.shouldDismiss(translation: 60, predictedEndTranslation: 400))
-        #expect(AnswerImageViewerDismissal.shouldDismiss(translation: -60, predictedEndTranslation: -400))
+    }
+
+    @Test func upwardDragNeverDismisses() {
+        #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: -120, predictedEndTranslation: -130))
+        #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: -60, predictedEndTranslation: -400))
     }
 
     @Test func shortSlowDragSnapsBack() {
@@ -27,7 +30,6 @@ struct AnswerImageViewerDismissalTests {
 
     @Test func longDragFlickedMostlyBackStaysOpen() {
         #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: 150, predictedEndTranslation: 40))
-        #expect(!AnswerImageViewerDismissal.shouldDismiss(translation: -150, predictedEndTranslation: -40))
     }
 
     @Test func fastFlickAgainstTheDragStaysOpen() {
