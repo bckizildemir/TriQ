@@ -1,5 +1,4 @@
 import NukeUI
-import OSLog
 import SwiftUI
 
 /// Only the card's view code reads or writes this, so it lives on the main actor with it.
@@ -1154,9 +1153,6 @@ private struct AnswerImageZoomTransition: ViewModifier {
     }
 }
 
-// TEMPORARY DEBUG (chore(debug) commit, dropped before merge): why a double tap does not zoom.
-private let imageViewerLog = Logger(subsystem: "com.ttb.debug", category: "ImageViewer")
-
 private struct AnswerImageFullscreenView: View {
     let presentedImage: PresentedAnswerImage
 
@@ -1225,7 +1221,6 @@ private struct AnswerImageFullscreenView: View {
                 // A tap on the black closes the viewer. The image view is only as big as the image,
                 // so a tap outside it lands here. Zoomed, it does nothing: it would throw the zoom away.
                 .onTapGesture {
-                    debugLog("black tap isZoomed=\(isZoomed)")
                     guard !isZoomed else { return }
                     closeViewer()
                 }
@@ -1243,10 +1238,7 @@ private struct AnswerImageFullscreenView: View {
                 )
                 .scaleEffect(zoomScale)
                 .offset(x: panOffset.width, y: panOffset.height + totalOffset)
-                .onTapGesture(count: 2) {
-                    debugLog("double tap zoomScale=\(zoomScale)")
-                    toggleZoom()
-                }
+                .onTapGesture(count: 2, perform: toggleZoom)
                 .gesture(magnifyGesture)
                 .gesture(dragGesture)
                 .accessibilityElement(children: .ignore)
@@ -1274,14 +1266,6 @@ private struct AnswerImageFullscreenView: View {
         .interactiveDismissDisabled(isZoomed)
         .onChange(of: panMath) {
             panOffset = panMath.clamp(panOffset, at: zoomScale)
-        }
-        .onChange(of: zoomScale) { old, new in
-            debugLog("onChange zoomScale \(old) -> \(new)")
-        }
-        .onAppear { logGeometry("onAppear") }
-        .task {
-            try? await Task.sleep(for: .seconds(1))
-            logGeometry("after 1s")
         }
         .onChange(of: isPinching) {
             guard !isPinching else { return }
@@ -1370,26 +1354,11 @@ private struct AnswerImageFullscreenView: View {
     }
 
     private func toggleZoom() {
-        debugLog("toggleZoom entry zoomScale=\(zoomScale)")
         if isZoomed {
             resetZoom()
         } else {
             withAnimation(resetAnimation) { zoomScale = ImageViewerPanMath.doubleTapScale }
         }
-        debugLog("toggleZoom result zoomScale=\(zoomScale)")
-    }
-
-    private func debugLog(_ message: String) {
-        imageViewerLog.notice("\(message, privacy: .public)")
-    }
-
-    private func logGeometry(_ when: String) {
-        let rect = panMath.visibleImageRect(at: zoomScale, offset: panOffset)
-        debugLog(
-            "geometry \(when): container=\(containerFrame.debugDescription) "
-                + "imageArea=\(imageAreaFrame.debugDescription) fitted=\(fittedSize.debugDescription) "
-                + "visibleRect=\(rect.debugDescription) shift=\(panMath.restCenterShift.debugDescription)"
-        )
     }
 
     /// Closes the viewer. A zoomed image drops to 1x first, with no animation, so the zoom back to
@@ -1411,9 +1380,6 @@ private struct AnswerImageFullscreenView: View {
         MagnifyGesture()
             .updating($isPinching) { _, state, _ in state = true }
             .onChanged { value in
-                if pinchStartScale == nil {
-                    debugLog("magnify first onChanged magnification=\(value.magnification) zoomScale=\(zoomScale)")
-                }
                 let start = pinchStartScale ?? zoomScale
                 pinchStartScale = start
                 let newScale = ImageViewerPanMath.clampedScale(start * value.magnification)
@@ -1437,7 +1403,6 @@ private struct AnswerImageFullscreenView: View {
             .onChanged { value in
                 if dragMode == .idle {
                     dragMode = ImageViewerPanMath.dragMode(isZoomed: isZoomed, isPinching: isPinching)
-                    debugLog("drag first onChanged translation=\(value.translation.debugDescription) mode=\(String(describing: dragMode))")
                 }
                 if dragMode == .dismiss, isZoomed || isPinching {
                     dragMode = .ignored
@@ -1455,7 +1420,6 @@ private struct AnswerImageFullscreenView: View {
             }
             .onEnded { value in
                 let mode = dragMode
-                debugLog("drag onEnded translation=\(value.translation.debugDescription) mode=\(String(describing: mode)) zoomScale=\(zoomScale)")
                 dragMode = .idle
                 switch mode {
                 case .pan:
