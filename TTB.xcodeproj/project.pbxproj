@@ -656,7 +656,7 @@
 			repositoryURL = "https://github.com/kean/Nuke";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 12.9.0;
+				minimumVersion = 13.2.3;
 			};
 		};
 		7AE21F012D4CF6D300E5B745 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
