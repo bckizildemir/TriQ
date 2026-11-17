@@ -85,6 +85,11 @@ jobs:
           echo "Simulator: $UDID"
           echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
 
+      # The cold boot takes minutes on the runner. Start it now so it overlaps the build; the test step waits for it.
+      # "Unable to boot device in current state: Booted" is harmless.
+      - name: Boot the simulator in the background
+        run: nohup xcrun simctl boot "$SIM_UDID" > simctl-boot.log 2>&1 &
+
       # Scheme TTB also compiles the UI test target. The test step reuses these products.
       - name: Build app and test targets
         run: |
@@ -101,6 +106,8 @@ jobs:
 
       - name: Run unit tests
         run: |
+          # -b boots the device first if the background boot did not start, and returns once it is ready.
+          xcrun simctl bootstatus "$SIM_UDID" -b > bootstatus.log 2>&1 || { cat simctl-boot.log bootstatus.log; exit 1; }
           xcodebuild test-without-building \
             -project TTB.xcodeproj \
             -scheme TTB \
