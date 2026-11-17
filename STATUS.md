@@ -5,7 +5,12 @@ Every PR or issue number goes with a plain title.
 
 ## Focus
 
-No focus set. The owner picks the next one (candidates under "Next step").
+Finish the answer image viewer (owner, 2026-11-17), in this order. Done 0/3.
+1. Gesture tool spike: AXe 2.0.4 `tap --count 2`, `gesture double-tap`, `gesture pinch` and a fast swipe, 10 runs
+   each on a throwaway simulator; update verify-triq with what works (research:
+   `iOS Dev/research/2026-11-17-simulator-test-tools.md`, outside the repo, sections 5 and 7). Needed to prove item 2.
+2. #188 (answer image viewer: four known gesture limits): fix each, or ask the owner to keep it, one by one.
+3. #186 (answer image shows late after a Find Image pick and on the Home card).
 
 Previous focus, done 1/1: #168 (client writes of server-owned answer stats are refused by the security rules),
 chosen by the owner 2026-11-16, fixed with option A in #173 (merged 2026-11-16, issue closed). The triage below is
@@ -156,15 +161,13 @@ Last session:
 
 ## Next step
 
-1. The owner picks the next focus. The parked audit leftovers are all merged.
-2. Candidates: spike AXe 2.0.4's double tap and pinch on a throwaway simulator, then update verify-triq (research
-   file above, sections 5 and 7); #188 (the four image viewer limits); #186 (answer image shows late); the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
+1. Focus item 1, the gesture tool spike.
+2. After the focus: release readiness (#139, test account cleanup, the question-list cleanup on account delete). #158 (Home scroll hides Profile and shrinks the
    tab bar) is closed: the owner made both on purpose (2026-11-13).
 
 ## Waits for the owner
 
-- The next focus.
-- #188 (the four image viewer limits): fix each, or decide to keep it.
+- #188 (the four image viewer limits): a keep-or-fix answer per limit, asked when focus item 2 reaches it.
 - #139 (before release, check that 1 copy per function is enough for launch traffic): `ready-for-human`.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): `ready-for-human`.
 - #68 (run the UI tests in CI): needs a grilling round.
