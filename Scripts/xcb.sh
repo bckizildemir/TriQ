@@ -74,8 +74,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 REPO_ROOT="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
-PROJECT_PATH="$(find "$REPO_ROOT" -maxdepth 1 -name '*.xcodeproj' -print -quit)"
-[[ -n "$PROJECT_PATH" ]] || fail "no .xcodeproj in $REPO_ROOT"
+# Only a .xcodeproj that holds a project.pbxproj counts: a stale empty folder must not win.
+PROJECT_CANDIDATES=()
+while IFS= read -r candidate; do
+  [[ -f "$candidate/project.pbxproj" ]] && PROJECT_CANDIDATES+=("$candidate")
+done < <(find "$REPO_ROOT" -maxdepth 1 -name '*.xcodeproj' | sort)
+[[ ${#PROJECT_CANDIDATES[@]} -gt 0 ]] || fail "no .xcodeproj with a project.pbxproj in $REPO_ROOT"
+[[ ${#PROJECT_CANDIDATES[@]} -eq 1 ]] || fail "more than one .xcodeproj with a project.pbxproj in $REPO_ROOT: ${PROJECT_CANDIDATES[*]}"
+PROJECT_PATH="${PROJECT_CANDIDATES[0]}"
 PROJECT_NAME="$(basename "$PROJECT_PATH" .xcodeproj)"
 SCHEME="${SCHEME:-$PROJECT_NAME}"
 
