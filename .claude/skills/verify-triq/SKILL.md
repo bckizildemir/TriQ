@@ -289,6 +289,9 @@ deleted) by the next `start` of either project. `Scripts/slim-sim.sh slots` list
   field's value after each `axe type`.
 - **The floating tab bar covers the bottom of the screen** (y ≥ 761 on iPhone 12). A tap there hits
   a tab. Scroll until the element you want has a frame above y = 735.
+- **A full-screen cover hides nothing from the tree.** `vt ui` and `vt tap --label` also see the Home tree under a
+  card cover or the Trio disclosure, so a tap meant for a tab lands on the cover (a "Best Of" tap opened the
+  guest "Create Free Account" sheet). Close every cover before you tap a tab or a Home element.
 - **Tabs keep their stack.** A tab reopens on its last pushed screen. Read `$V ui` and tap
   `BackButton` before you use a tab's root.
 - **Live data changes.** Question text, categories and counts come from the live database and change

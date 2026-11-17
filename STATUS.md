@@ -50,7 +50,18 @@ Previous focus, done 3/3: #151 (guest upgrade username) fixed in #161; #152 (old
 2026-11-17
 
 Last session:
-- 2026-11-16/17 (latest): the parked audit leftovers, started on the owner's go after the usage reset.
+- 2026-11-17 (latest): #184 (pan a zoomed-in answer image) and #183 (shared Motion tokens) merged, squash, owner's
+  yes for each, in that order; #183 resolved its conflict with #184 by a merge commit (tokens only where the value
+  is identical; #184's new springs stay literal). Proof of both together: PASS, run
+  `~/verify-evidence/triq/2026-11-17-113514-1273` (zoom, pan inside edges, tap while zoomed does nothing, back to
+  1×, swipe-down close, star, tabs, carousel, launch fade). Not proved: pinch, the toast, a fast sideways flick at
+  1×. Known limits of #184 (accepted with the merge): at 1× a drag over 100 pt in any direction can close the
+  viewer (older than #184); pinch and pan don't run together; grabbing mid-glide jumps to the glide's end;
+  gestures start only on the image. #186 opened (answer image shows late after a Find Image pick and on the Home
+  card; probably older). Research on simulator test tools:
+  `iOS Dev/research/2026-11-17-simulator-test-tools.md` (outside the repo): AXe 2.0.4 adds double tap and pinch;
+  the Mac runs 1.8.0.
+- 2026-11-16/17: the parked audit leftovers, started on the owner's go after the usage reset.
   - #182 (verify-triq: simulator tool traps) merged (docs). Plans 001-010 marked DONE in
     `animation-audits/TriQ-2026-11-16/plans/README.md` (outside the repo).
   - #183 (shared Motion tokens, audit finding 11): 18 tokens in `TTB/Utilities/Motion.swift`, values unchanged at
@@ -144,16 +155,15 @@ Last session:
 
 ## Next step
 
-1. The owner picks the next focus. The parked audit leftovers are done or in review: #183 (Motion tokens) and
-   #184 (image pan) wait for the owner's merge; the second to merge rebases on the first.
-2. Candidate: the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
+1. The owner picks the next focus. The parked audit leftovers are all merged.
+2. Candidates: upgrade AXe to 2.0.4 and spike its double tap and pinch (research file above, section 7); #186
+   (answer image shows late); the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
    tab bar) is closed: the owner made both on purpose (2026-11-13).
 
 ## Waits for the owner
 
 - The next focus.
-- Merge #183 (shared Motion tokens) and #184 (pan a zoomed-in answer image). #184 has two owner choices in its
-  body: a black tap while zoomed does nothing; double tap toggles 1× and 2.5×.
+- Whether to upgrade AXe (shared by every agent on this Mac) and run the gesture spike.
 - #139 (before release, check that 1 copy per function is enough for launch traffic): `ready-for-human`.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): `ready-for-human`.
 - #68 (run the UI tests in CI): needs a grilling round.
