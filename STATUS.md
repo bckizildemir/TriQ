@@ -47,7 +47,22 @@ Previous focus, done 3/3: #151 (guest upgrade username) fixed in #161; #152 (old
 
 ## Last updated
 
-2026-11-16
+2026-11-17
+
+Last session:
+- 2026-11-16/17 (latest): the parked audit leftovers, started on the owner's go after the usage reset.
+  - #182 (verify-triq: simulator tool traps) merged (docs). Plans 001-010 marked DONE in
+    `animation-audits/TriQ-2026-11-16/plans/README.md` (outside the repo).
+  - #183 (shared Motion tokens, audit finding 11): 18 tokens in `TTB/Utilities/Motion.swift`, values unchanged at
+    all 23 sites (swift-reviewer checked each), `MotionTests` compare real values. CI green. Waits for the owner's
+    merge. No simulator run: no visible change.
+  - #184 (pan a zoomed-in answer image; owner's yes from #177): double tap 1×↔2.5×, pinch keeps its zoom up to 5×,
+    zoomed one-finger drag pans inside the screen edges with a glide, never closes; black tap closes at 1× and does
+    nothing while zoomed. Three fix rounds after two swift-reviewer reviews and simulator runs. Final proof PASS on
+    c34e1ec (`~/verify-evidence/triq/2026-11-16-235701-1e8a`). Not proved: pinch (one-finger tool). Waits for the
+    owner's merge. #183 and #184 both touch `QuestionCardExpandedView.swift`; whichever merges second rebases.
+  - Lesson: four simulator runs read "double tap does nothing" as an app bug; it was the tool (`axe tap` pairs are
+    no double tap). A control run on the old commit found it. Recorded in verify-triq Gotchas.
 
 Last session:
 - 2026-11-16 (latest): the owner approved the rest of the 2026-11-16 animation audit (outside the repo,
@@ -129,23 +144,16 @@ Last session:
 
 ## Next step
 
-1. The owner picks the next focus. Postponed by the owner 2026-11-16 until their usage limit resets (start
-   trigger: the owner says go, or the next session after the reset):
-   - Finding 11 (shared Motion tokens) from the animation audit; then mark plans 001-010 done in
-     `animation-audits/TriQ-2026-11-16/plans/README.md` (every plan still reads TODO).
-   - Owner said yes: let a zoomed-in answer image be panned in the viewer (`QuestionCardExpandedView.swift`
-     has no pan code; found in #177).
-   - Owner said yes: add the 2026-11-16 simulator tricks to `.claude/skills/verify-triq/` tool traps: axe has no
-     pinch and carries no flick velocity; a true double tap is two parallel `axe touch --down --up` processes
-     (`axe batch` taps are 0.5-0.8 s apart); `simctl io recordVideo` is variable frame rate (3 s head-sleep,
-     `ffmpeg -ss/-to -fps_mode passthrough`), screenshots lag about 0.5 s; macOS has no `timeout`; wait on PIDs, not
-     `%N` jobs, when a recorder runs.
+1. The owner picks the next focus. The parked audit leftovers are done or in review: #183 (Motion tokens) and
+   #184 (image pan) wait for the owner's merge; the second to merge rebases on the first.
 2. Candidate: the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
    tab bar) is closed: the owner made both on purpose (2026-11-13).
 
 ## Waits for the owner
 
 - The next focus.
+- Merge #183 (shared Motion tokens) and #184 (pan a zoomed-in answer image). #184 has two owner choices in its
+  body: a black tap while zoomed does nothing; double tap toggles 1× and 2.5×.
 - #139 (before release, check that 1 copy per function is enough for launch traffic): `ready-for-human`.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): `ready-for-human`.
 - #68 (run the UI tests in CI): needs a grilling round.

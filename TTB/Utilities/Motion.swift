@@ -52,8 +52,7 @@ enum Motion {
     // MARK: - Dismiss and snap-back
 
     /// Spring over 0.3 s without bounce. A gesture that lifts and returns to rest: the answer
-    /// image viewer's zoom and drag reset (`AnswerImageFullscreenView`), through
-    /// `GestureState(resetTransaction:)`.
+    /// image viewer's zoom reset and the snap-back of a short 1x drag (`AnswerImageFullscreenView`).
     static let gestureReset = Animation.spring(duration: 0.3, bounce: 0)
 
     // MARK: - Toast
