@@ -15,16 +15,17 @@ final class ImageViewerGlide: NSObject {
     private var velocity = CGSize.zero
     private var lastTimestamp: CFTimeInterval = 0
     private var onFrame: ((CGSize) -> Void)?
+    private var onFinish: (() -> Void)?
 
-    var isRunning: Bool { link != nil }
-
-    /// Starts gliding from `offset` at `velocity` (points per second). `onFrame` gets each new offset.
+    /// Starts gliding from `offset` at `velocity` (points per second). `onFrame` gets each new offset;
+    /// `onFinish` runs when the glide ends on its own (a `stop()` does not call it).
     func start(
         from offset: CGSize,
         velocity: CGSize,
         scale: CGFloat,
         math: ImageViewerPanMath,
-        onFrame: @escaping (CGSize) -> Void
+        onFrame: @escaping (CGSize) -> Void,
+        onFinish: @escaping () -> Void
     ) {
         stop()
         self.offset = offset
@@ -32,6 +33,7 @@ final class ImageViewerGlide: NSObject {
         self.scale = scale
         self.math = math
         self.onFrame = onFrame
+        self.onFinish = onFinish
         let link = CADisplayLink(target: self, selector: #selector(tick(_:)))
         lastTimestamp = CACurrentMediaTime()
         link.add(to: .main, forMode: .common)
@@ -43,6 +45,7 @@ final class ImageViewerGlide: NSObject {
         link?.invalidate()
         link = nil
         onFrame = nil
+        onFinish = nil
     }
 
     @objc private func tick(_ link: CADisplayLink) {
@@ -54,6 +57,10 @@ final class ImageViewerGlide: NSObject {
         offset = step.offset
         velocity = step.velocity
         onFrame?(step.offset)
-        if step.isFinished { stop() }
+        if step.isFinished {
+            let finish = onFinish
+            stop()
+            finish?()
+        }
     }
 }

@@ -8,24 +8,12 @@ import UIKit
 /// `DragGesture` does not follow the midpoint of two fingers. UIKit's recognizers give the midpoint of
 /// the touches at every step, which is what zooming around the fingers and panning during a pinch need.
 /// Points are in the layer's own space; the layer fills the viewer, so they are container points.
+///
+/// A pinch does not end when one finger lifts, only when both do. So the layer counts the touches itself
+/// and, whenever the count changes during a gesture, sends `.rebase`: the viewer takes new start values
+/// and the pinch scale restarts at 1.
 struct ImageViewerGestureLayer: UIViewRepresentable {
-    enum Event {
-        /// A finger touched down. The glide stops here, before any gesture is recognized.
-        case touchDown
-        /// `translation` is how far the finger already moved when the pan was recognized.
-        case panBegan(location: CGPoint, translation: CGSize)
-        case panChanged(location: CGPoint, translation: CGSize)
-        case panEnded(velocity: CGSize, isCancelled: Bool)
-        case pinchBegan(location: CGPoint)
-        /// `scale` is the spread of the fingers since the pinch began.
-        case pinchChanged(scale: CGFloat, location: CGPoint)
-        /// `remainingFinger` is where the one finger still down is, when a pan is running on it.
-        case pinchEnded(remainingFinger: CGPoint?)
-        case tap(location: CGPoint)
-        case doubleTap
-    }
-
-    let onEvent: (Event) -> Void
+    let onEvent: (ImageViewerInteraction.Event) -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator(onEvent: onEvent)
@@ -34,8 +22,8 @@ struct ImageViewerGestureLayer: UIViewRepresentable {
     func makeUIView(context: Context) -> TouchReportingView {
         let view = TouchReportingView()
         view.backgroundColor = .clear
-        view.onTouchDown = { [weak coordinator = context.coordinator] in
-            coordinator?.onEvent(.touchDown)
+        view.onTouchesChanged = { [weak coordinator = context.coordinator] event in
+            coordinator?.touchesChanged(event)
         }
         context.coordinator.install(on: view)
         return view
@@ -45,23 +33,57 @@ struct ImageViewerGestureLayer: UIViewRepresentable {
         context.coordinator.onEvent = onEvent
     }
 
-    /// Tells when a touch begins; recognizers only report once they have recognized something.
+    /// Keeps the set of touches on the view and reports each change, before any recognizer decides.
     final class TouchReportingView: UIView {
-        var onTouchDown: (() -> Void)?
+        enum Change {
+            case began
+            case countChanged(count: Int, centroid: CGPoint)
+        }
+
+        var onTouchesChanged: ((Change) -> Void)?
+        private var activeTouches = Set<UITouch>()
 
         override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-            onTouchDown?()
+            activeTouches.formUnion(touches)
+            onTouchesChanged?(.began)
+            reportCount()
             super.touchesBegan(touches, with: event)
+        }
+
+        override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+            activeTouches.subtract(touches)
+            reportCount()
+            super.touchesEnded(touches, with: event)
+        }
+
+        override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+            activeTouches.subtract(touches)
+            reportCount()
+            super.touchesCancelled(touches, with: event)
+        }
+
+        private func reportCount() {
+            guard !activeTouches.isEmpty else {
+                onTouchesChanged?(.countChanged(count: 0, centroid: .zero))
+                return
+            }
+            let points = activeTouches.map { $0.location(in: self) }
+            let centroid = CGPoint(
+                x: points.map(\.x).reduce(0, +) / CGFloat(points.count),
+                y: points.map(\.y).reduce(0, +) / CGFloat(points.count)
+            )
+            onTouchesChanged?(.countChanged(count: points.count, centroid: centroid))
         }
     }
 
     @MainActor
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
-        var onEvent: (Event) -> Void
+        var onEvent: (ImageViewerInteraction.Event) -> Void
         private let pan = UIPanGestureRecognizer()
         private let pinch = UIPinchGestureRecognizer()
+        private var lastTouchCount = 0
 
-        init(onEvent: @escaping (Event) -> Void) {
+        init(onEvent: @escaping (ImageViewerInteraction.Event) -> Void) {
             self.onEvent = onEvent
         }
 
@@ -71,19 +93,34 @@ struct ImageViewerGestureLayer: UIViewRepresentable {
             pan.addTarget(self, action: #selector(handlePan(_:)))
             pinch.addTarget(self, action: #selector(handlePinch(_:)))
 
-            let doubleTap = UITapGestureRecognizer(target: self, action: #selector(handleDoubleTap))
+            let doubleTap = UITapGestureRecognizer(target: self, action: #selector(handleDoubleTap(_:)))
             doubleTap.numberOfTapsRequired = 2
             let singleTap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
             singleTap.require(toFail: doubleTap)
 
             for recognizer in [pan, pinch, doubleTap, singleTap] as [UIGestureRecognizer] {
                 recognizer.delegate = self
+                // The view keeps getting every touch, so its touch count stays right.
+                recognizer.cancelsTouchesInView = false
                 view.addGestureRecognizer(recognizer)
             }
         }
 
+        func touchesChanged(_ change: TouchReportingView.Change) {
+            switch change {
+            case .began:
+                onEvent(.touchDown)
+            case let .countChanged(count, centroid):
+                defer { lastTouchCount = count }
+                guard count != lastTouchCount, count > 0 else { return }
+                // The pinch scale restarts, so the new start values and the scale agree.
+                pinch.scale = 1
+                onEvent(.rebase(location: centroid, touchCount: count))
+            }
+        }
+
         /// Pinch and pan run together; the taps stay apart from them.
-        nonisolated func gestureRecognizer(
+        func gestureRecognizer(
             _ gestureRecognizer: UIGestureRecognizer,
             shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer
         ) -> Bool {
@@ -98,7 +135,11 @@ struct ImageViewerGestureLayer: UIViewRepresentable {
             let translationSize = CGSize(width: translation.x, height: translation.y)
             switch recognizer.state {
             case .began:
-                onEvent(.panBegan(location: location, translation: translationSize))
+                onEvent(.panBegan(
+                    location: location,
+                    translation: translationSize,
+                    touchCount: recognizer.numberOfTouches
+                ))
             case .changed:
                 onEvent(.panChanged(location: location, translation: translationSize))
             case .ended, .cancelled, .failed:
@@ -120,11 +161,7 @@ struct ImageViewerGestureLayer: UIViewRepresentable {
             case .changed:
                 onEvent(.pinchChanged(scale: recognizer.scale, location: location))
             case .ended, .cancelled, .failed:
-                let panIsRunning = pan.state == .began || pan.state == .changed
-                let remaining = panIsRunning && pan.numberOfTouches == 1
-                    ? pan.location(in: pan.view)
-                    : nil
-                onEvent(.pinchEnded(remainingFinger: remaining))
+                onEvent(.pinchEnded)
             default:
                 break
             }
@@ -135,8 +172,9 @@ struct ImageViewerGestureLayer: UIViewRepresentable {
             onEvent(.tap(location: recognizer.location(in: recognizer.view)))
         }
 
-        @objc private func handleDoubleTap() {
-            onEvent(.doubleTap)
+        @objc private func handleDoubleTap(_ recognizer: UITapGestureRecognizer) {
+            guard recognizer.state == .ended else { return }
+            onEvent(.doubleTap(location: recognizer.location(in: recognizer.view)))
         }
     }
 }

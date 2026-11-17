@@ -34,6 +34,14 @@ struct ImageViewerPanMath: Equatable {
     /// centres differ.
     var restCenterShift: CGSize = .zero
 
+    /// Where the image's centre rests at 1x, in container points.
+    var restCenter: CGPoint {
+        CGPoint(
+            x: containerSize.width / 2 + restCenterShift.width,
+            y: containerSize.height / 2 + restCenterShift.height
+        )
+    }
+
     /// A zoom and the offset that goes with it.
     struct Transform: Equatable {
         var scale: CGFloat
