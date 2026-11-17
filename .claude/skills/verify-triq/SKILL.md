@@ -292,6 +292,11 @@ deleted) by the next `start` of either project. `Scripts/slim-sim.sh slots` list
 - **A full-screen cover hides nothing from the tree.** `vt ui` and `vt tap --label` also see the Home tree under a
   card cover or the Trio disclosure, so a tap meant for a tab lands on the cover (a "Best Of" tap opened the
   guest "Create Free Account" sheet). Close every cover before you tap a tab or a Home element.
+- **Find Image needs Pexels.** The owner's company network blocks `images.pexels.com`: the picked photo never
+  downloads, the field shows only a `photo.fill` icon and no "Open image". Before a run that needs an answer
+  image, check `curl -sI https://images.pexels.com | head -1`; on a failure report BLOCKED (network), not FAIL.
+- **`/tmp/verify-triq.lock/evidence` holds only the evidence path.** Appending notes to it breaks `vt shot`; write
+  notes to `run.txt` in the evidence folder.
 - **Tabs keep their stack.** A tab reopens on its last pushed screen. Read `$V ui` and tap
   `BackButton` before you use a tab's root.
 - **Live data changes.** Question text, categories and counts come from the live database and change

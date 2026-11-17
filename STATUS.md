@@ -9,6 +9,16 @@ Finish the answer image viewer (owner, 2026-11-17), in this order. Done 0/3.
 1. Gesture tool spike: AXe 2.0.4 `tap --count 2`, `gesture double-tap`, `gesture pinch` and a fast swipe, 10 runs
    each on a throwaway simulator; update verify-triq with what works (research:
    `iOS Dev/research/2026-11-17-simulator-test-tools.md`, outside the repo, sections 5 and 7). Needed to prove item 2.
+   **On hold (owner, 2026-11-17): waits for a non-company network.** The company network blocks Pexels (`curl
+   https://images.pexels.com` fails with SSL_ERROR_SYSCALL; other sites work), so a Find Image photo never downloads
+   and the answer image viewer cannot be opened. Start trigger: the owner says they are on mobile data or at home;
+   check first with `curl -sI https://images.pexels.com | head -1`. First try, BLOCKED, run
+   `~/verify-evidence/triq/2026-11-17-133857-097b`. AXe 2.0.4 syntax, read from `--help`:
+   `axe tap -x X -y Y --count 2 --tap-style physical --udid U`; `axe gesture double-tap -x X -y Y [--interval 0.1]`;
+   `axe gesture pinch -x X -y Y --scale 2 [--radius R --duration 0.6 --delta 5]` (scale < 1 zooms out); fastest
+   swipe `axe swipe ... --duration 0.05 --delta 5` (no velocity flag). Memory, same run: 4 slim clones at once kept
+   at least 33% free on the 16 GB Mac (one with the app, no build running), so `SLIM_SIM_MAX=4` is now set in
+   `~/.claude/settings.json`.
 2. #188 (answer image viewer: four known gesture limits): fix each, or ask the owner to keep it, one by one.
 3. #186 (answer image shows late after a Find Image pick and on the Home card).
 
@@ -161,7 +171,7 @@ Last session:
 
 ## Next step
 
-1. Focus item 1, the gesture tool spike.
+1. Focus item 1, the gesture tool spike, once the owner is off the company network (see Focus).
 2. After the focus: release readiness (#139, test account cleanup, the question-list cleanup on account delete). #158 (Home scroll hides Profile and shrinks the
    tab bar) is closed: the owner made both on purpose (2026-11-13).
 
