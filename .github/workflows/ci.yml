@@ -30,7 +30,7 @@ jobs:
       # A skipped job reports as skipped, which a required check accepts as passing.
       # Markdown under TTB/, Tests/ and TTBUITests/ can join the app as a bundle resource, so only root and Scripts/ Markdown is excluded.
       # "every" makes the "!" patterns exclude files: a file counts only if it matches all of them.
-      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: ios
         with:
           predicate-quantifier: every
@@ -43,7 +43,7 @@ jobs:
               - '!Scripts/**/*.md'
               - '!.claude/**'
 
-      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: functions
         with:
           filters: |
