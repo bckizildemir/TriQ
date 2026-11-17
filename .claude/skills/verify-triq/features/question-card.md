@@ -47,6 +47,23 @@ answers and saves them, or closes the card. All sub-features proved on 2026-10-2
   `Button | Image suggestion by <photographer>` thumbnails and "Photos provided by Pexels". A tap on
   one shows the image on the field: `Change image` (PopUpButton), `Open image`, and an `xmark`
   Button that removes it. The image is saved with the answers (`saveSuggestedAnswerImage`).
+- `image-viewer` the answer image viewer. Open: tap the 160x160 `Open image` by coordinate (iPhone 12:
+  `axe tap -x 160 -y 440`); `--label` is ambiguous (the remove xmark has the same label). Close: (356,80), id
+  `xmark.circle.fill`. `vt ui` under the viewer prints the covered Home tree, and the image has no identifier: read
+  the element labelled "Full screen image" with `axe describe-ui --udid U | jq -r '[.. | objects |
+  select(.AXLabel=="Full screen image") | .AXFrame] | first // "NONE"'`. Its frame is the zoom and pan readout: 1x
+  is `{{0,233.7},{390,390}}`, a double tap gives 2.5x (975), the max is 4x (1560). Judge from the frame, never the
+  exit code: `axe` exits 0 whether or not the gesture registered. Reset between runs by closing and reopening.
+  AXe 2.0.4 gestures register 10 of 10 (spike 2026-11-18, `~/verify-evidence/triq/2026-11-18-005411-711c`, scripts
+  in that folder), with the image centre at (195,428):
+  - double tap: `axe tap -x 195 -y 428 --count 2 --tap-style physical --udid U` or
+    `axe gesture double-tap -x 195 -y 428 --udid U`;
+  - pinch: `axe gesture pinch -x 195 -y 428 --scale 2 --udid U` (2x); `--scale 0.5 --radius 80 --duration 0.6
+    --delta 5` zooms out;
+  - pan when zoomed: `axe swipe --start-x 290 --start-y 430 --end-x 140 --end-y 430 --duration 0.5 --udid U`; a
+    fast flick is the same with `--duration 0.05 --delta 5` and glides a few points further.
+  A "should fail" control is one single tap, or two taps 1.5 s apart. Two `axe tap` processes started together
+  register as a double tap, so they are no control.
 - `card-type` three fields `question-card-input-0`, `-1`, `-2` take answers.
 - `card-save` `question-card-fullscreen-save` ("Save answers", an icon-only check mark) saves and
   closes the card at once; the server call runs after the card closes.

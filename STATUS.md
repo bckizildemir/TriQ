@@ -5,22 +5,13 @@ Every PR or issue number goes with a plain title.
 
 ## Focus
 
-Finish the answer image viewer (owner, 2026-11-17), in this order. Done 0/3.
-1. Gesture tool spike: AXe 2.0.4 `tap --count 2`, `gesture double-tap`, `gesture pinch` and a fast swipe, 10 runs
-   each on a throwaway simulator; update verify-triq with what works (research:
-   `iOS Dev/research/2026-11-17-simulator-test-tools.md`, outside the repo, sections 5 and 7). Needed to prove item 2.
-   **Blocked: Google Cloud billing is off (found 2026-11-18).** The second try, from the owner's home network, ran
-   `~/verify-evidence/triq/2026-11-18-000939-2aa1`: Find Image and the AI quick answers both fail with HTTP 500
-   "billing is disabled for this project"; `gcloud billing accounts describe 01310F-AFB3AB-5E9E3D` prints
-   `open: False`. The company-network reason below was wrong: Find Image calls Pexels from the Cloud Function, not
-   from the Mac. Start trigger: the owner reopens or replaces the billing account (a spend decision, owner only);
-   then re-run the spike. The earlier note, kept for the syntax: First try, BLOCKED, run
-   `~/verify-evidence/triq/2026-11-17-133857-097b`. AXe 2.0.4 syntax, read from `--help`:
-   `axe tap -x X -y Y --count 2 --tap-style physical --udid U`; `axe gesture double-tap -x X -y Y [--interval 0.1]`;
-   `axe gesture pinch -x X -y Y --scale 2 [--radius R --duration 0.6 --delta 5]` (scale < 1 zooms out); fastest
-   swipe `axe swipe ... --duration 0.05 --delta 5` (no velocity flag). Memory, same run: 4 slim clones at once kept
-   at least 33% free on the 16 GB Mac (one with the app, no build running), so `SLIM_SIM_MAX=4` is now set in
-   `~/.claude/settings.json`.
+Finish the answer image viewer (owner, 2026-11-17), in this order. Done 1/3.
+1. Done 2026-11-18: gesture tool spike. Every AXe 2.0.4 gesture (double tap both ways, pinch in and out, slow pan,
+   fast flick) registered 10 of 10 in the viewer, run `~/verify-evidence/triq/2026-11-18-005411-711c`; recipe in
+   verify-triq `features/question-card.md` (`image-viewer`). The two earlier BLOCKED runs were a closed Google Cloud
+   billing account (Find Image and AI quick answers returned HTTP 500 "billing is disabled"), not the company
+   network; the owner reopened it on 2026-11-18. Memory: 4 slim clones at once kept at least 33% free, so
+   `SLIM_SIM_MAX=4` is set in `~/.claude/settings.json`.
 2. #188 (answer image viewer: four known gesture limits): fix each, or ask the owner to keep it, one by one.
 3. #186 (answer image shows late after a Find Image pick and on the Home card).
 
