@@ -55,12 +55,13 @@ Last session:
   is identical; #184's new springs stay literal). Proof of both together: PASS, run
   `~/verify-evidence/triq/2026-11-17-113514-1273` (zoom, pan inside edges, tap while zoomed does nothing, back to
   1×, swipe-down close, star, tabs, carousel, launch fade). Not proved: pinch, the toast, a fast sideways flick at
-  1×. Known limits of #184 (accepted with the merge): at 1× a drag over 100 pt in any direction can close the
-  viewer (older than #184); pinch and pan don't run together; grabbing mid-glide jumps to the glide's end;
-  gestures start only on the image. #186 opened (answer image shows late after a Find Image pick and on the Home
+  1×. Known limits of #184, OPEN, not accepted (the merge question left them out; the owner found out later):
+  tracked in #188 (at 1× a drag over 100 pt in any direction can close the viewer, older than #184; pinch and
+  pan don't run together; grabbing mid-glide jumps to the glide's end; gestures start only on the image). AXe
+  upgraded to 2.0.4 on the owner's yes; XcodeBuildMCP points at it through `XCODEBUILDMCP_AXE_PATH` in
+  `~/.claude/settings.json`. #186 opened (answer image shows late after a Find Image pick and on the Home
   card; probably older). Research on simulator test tools:
-  `iOS Dev/research/2026-11-17-simulator-test-tools.md` (outside the repo): AXe 2.0.4 adds double tap and pinch;
-  the Mac runs 1.8.0.
+  `iOS Dev/research/2026-11-17-simulator-test-tools.md` (outside the repo): AXe 2.0.4 adds double tap and pinch.
 - 2026-11-16/17: the parked audit leftovers, started on the owner's go after the usage reset.
   - #182 (verify-triq: simulator tool traps) merged (docs). Plans 001-010 marked DONE in
     `animation-audits/TriQ-2026-11-16/plans/README.md` (outside the repo).
@@ -156,14 +157,14 @@ Last session:
 ## Next step
 
 1. The owner picks the next focus. The parked audit leftovers are all merged.
-2. Candidates: upgrade AXe to 2.0.4 and spike its double tap and pinch (research file above, section 7); #186
-   (answer image shows late); the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
+2. Candidates: spike AXe 2.0.4's double tap and pinch on a throwaway simulator, then update verify-triq (research
+   file above, sections 5 and 7); #188 (the four image viewer limits); #186 (answer image shows late); the question-list cleanup on account delete. #158 (Home scroll hides Profile and shrinks the
    tab bar) is closed: the owner made both on purpose (2026-11-13).
 
 ## Waits for the owner
 
 - The next focus.
-- Whether to upgrade AXe (shared by every agent on this Mac) and run the gesture spike.
+- #188 (the four image viewer limits): fix each, or decide to keep it.
 - #139 (before release, check that 1 copy per function is enough for launch traffic): `ready-for-human`.
 - #21, #22 (Swift 6 stages 5a/5b, investigate then decide) and #44 (keyboard stays up under the image menu, flaky UI test): `ready-for-human`.
 - #68 (run the UI tests in CI): needs a grilling round.
