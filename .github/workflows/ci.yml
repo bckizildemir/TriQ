@@ -80,7 +80,8 @@ jobs:
 
       - name: Pick a simulator
         run: |
-          UDID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for r in sorted(d, reverse=True) if "iOS" in r for x in d[r] if x["name"].startswith("iPhone")))')
+          Scripts/ci-pick-simulator.sh --self-test
+          UDID=$(Scripts/ci-pick-simulator.sh)
           echo "Simulator: $UDID"
           echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
 
