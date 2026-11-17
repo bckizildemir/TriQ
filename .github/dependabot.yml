@@ -1,0 +1,36 @@
+version: 2
+
+# Weekly, one grouped PR per ecosystem for minor and patch updates. A major update gets its own PR.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /functions
+    schedule:
+      interval: weekly
+    groups:
+      functions-npm:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /Scripts/seed_questions
+    schedule:
+      interval: weekly
+    groups:
+      seed-questions-npm:
+        update-types: [minor, patch]
+
+  # Dependabot reads TTB.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved (the Xcode project layout).
+  - package-ecosystem: swift
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      swift-packages:
+        update-types: [minor, patch]
