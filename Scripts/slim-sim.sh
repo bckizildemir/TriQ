@@ -3,7 +3,7 @@
 #
 # SLIM_SIM_VERSION=2
 #
-# TWO COPIES: the same file ships in TTB and CatCareCalendar (Scripts/slim-sim.sh). Change both
+# TWO COPIES: the same file ships in TTB and Purrtine (Scripts/slim-sim.sh). Change both
 # copies together, keep them byte-identical (cmp), and raise SLIM_SIM_VERSION below on any change
 # to the slot format or the stale rules: each slot records the version that made it, and a copy
 # never reaps a slot made by a newer version. The project-specific part is Scripts/simslim-profile.json: its "name" names the devices, and its
