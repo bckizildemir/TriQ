@@ -292,9 +292,14 @@ deleted) by the next `start` of either project. `Scripts/slim-sim.sh slots` list
 - **A full-screen cover hides nothing from the tree.** `vt ui` and `vt tap --label` also see the Home tree under a
   card cover or the Trio disclosure, so a tap meant for a tab lands on the cover (a "Best Of" tap opened the
   guest "Create Free Account" sheet). Close every cover before you tap a tab or a Home element.
-- **Find Image needs Pexels.** The owner's company network blocks `images.pexels.com`: the picked photo never
-  downloads, the field shows only a `photo.fill` icon and no "Open image". Before a run that needs an answer
-  image, check `curl -sI https://images.pexels.com | head -1`; on a failure report BLOCKED (network), not FAIL.
+- **Find Image runs on the server.** The `suggestanswerimages` Cloud Function calls Pexels, so the Mac's network
+  does not decide it. When the card shows `INTERNAL` or `UNAVAILABLE`, read the function log before you blame
+  anything else: `gcloud logging read 'resource.labels.service_name="suggestanswerimages"' --project ttbp-9d652
+  --freshness=1h --limit 5` (read-only). "billing is disabled for this project" means the Google Cloud billing
+  account is closed or lapsed (`gcloud billing accounts describe <id> --format="value(open)"` prints `False`): only
+  the owner can fix it. Report BLOCKED (server billing), not FAIL. The AI quick answers fail the same way.
+  Separately, the downloaded photo itself loads from `images.pexels.com` on the device: if the field shows only a
+  `photo.fill` icon and no "Open image", check `curl -sI https://images.pexels.com | head -1`.
 - **`/tmp/verify-triq.lock/evidence` holds only the evidence path.** Appending notes to it breaks `vt shot`; write
   notes to `run.txt` in the evidence folder.
 - **Tabs keep their stack.** A tab reopens on its last pushed screen. Read `$V ui` and tap
