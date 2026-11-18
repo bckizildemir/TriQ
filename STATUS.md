@@ -5,14 +5,18 @@ Every PR or issue number goes with a plain title.
 
 ## Focus
 
-Finish the answer image viewer (owner, 2026-11-17), in this order. Done 1/3.
+Finish the answer image viewer (owner, 2026-11-17), in this order. Done 2/3.
 1. Done 2026-11-18: gesture tool spike. Every AXe 2.0.4 gesture (double tap both ways, pinch in and out, slow pan,
    fast flick) registered 10 of 10 in the viewer, run `~/verify-evidence/triq/2026-11-18-005411-711c`; recipe in
    verify-triq `features/question-card.md` (`image-viewer`). The two earlier BLOCKED runs were a closed Google Cloud
    billing account (Find Image and AI quick answers returned HTTP 500 "billing is disabled"), not the company
    network; the owner reopened it on 2026-11-18. Memory: 4 slim clones at once kept at least 33% free, so
    `SLIM_SIM_MAX=4` is set in `~/.claude/settings.json`.
-2. #188 (answer image viewer: four known gesture limits): fix each, or ask the owner to keep it, one by one.
+2. Done 2026-11-18: #188 (answer image viewer: four known gesture limits), fixed by #210, merged on the owner's yes
+   with every known limit listed. Follow-ups the owner accepted for later: #211 (shrink-to-card close, edge
+   rubber-band, glide feel, sharper photo) and #213 (remaining limits: real-finger pinch+pan and finger lift
+   unproven, review-fix commit not re-reviewed, ~0.3 s black-tap delay, zoom spring not interruptible, 60 Hz glide,
+   no iPad trackpad pan, no glide with Reduce Motion).
 3. #186 (answer image shows late after a Find Image pick and on the Home card).
 
 Previous focus, done 1/1: #168 (client writes of server-owned answer stats are refused by the security rules),
@@ -55,9 +59,18 @@ Previous focus, done 3/3: #151 (guest upgrade username) fixed in #161; #152 (old
 
 ## Last updated
 
-2026-11-17
+2026-11-18
 
 Last session:
+- 2026-11-18: Google Cloud billing for `ttbp-9d652` was found closed (every Cloud Function returned "billing is
+  disabled"; live Find Image and AI suggestions were down); the owner reopened it. Gesture spike done (AXe 2.0.4,
+  10/10 each). #210 merged (answer image viewer works like Photos: down-only close at 1×, pinch and pan together,
+  touch stops the glide, whole-screen gestures, zoom around fingers and tap point; UIKit gesture layer
+  `ImageViewerGestureLayer` + pure reducer `ImageViewerInteraction`). Proof: PASS 9/9 rows, run
+  `~/verify-evidence/triq/2026-11-18-022659-05ec`; swift-reviewer findings fixed in 3a8889e (not re-reviewed). Not
+  proven by tool: real-finger pinch+pan and finger lift (unit tests only). Research on free backend alternatives:
+  `iOS Dev/research/2026-11-18-free-backend-alternatives.md` (outside the repo); the owner keeps Firebase.
+  Next: #186 (repro run started).
 - 2026-11-17 (CI, from a Purrtine session; paused by the owner): a read-only CI audit of both apps (last 60 runs;
   TriQ: no failures, build+tests ~8.5 min, the unit-test step is ~4 min of which the 310-338 tests take 8-27 s).
   The owner approved a quick pack: PR #192 (branch `ci/simulator-boot-pins`, worktree `../wt-t-ci`), CI green, waits
