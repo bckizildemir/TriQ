@@ -21,13 +21,11 @@ Finish the answer image viewer (owner, 2026-11-17), in this order. Done 2/3.
    parts 2026-11-18: Home shows the held image right after Save; field thumbnail retries, then "Image couldn't
    load" / "Try again" / X), review fixes in 14b784a. Proven on a Pexels-blocking network: retry, error, Try again,
    X, second pick (run `~/verify-evidence/triq/2026-11-18-100828-230e`); editor labels "Open image" / "Delete image"
-   (run `2026-11-18-103645-6037`). **Waiting: the Save half of the proof** (Home shows the image at once after
-   Save; reopen in the upload window shows the held image; replacing photo A with B never flips back to A). Two
-   tries on the owner's hotspot were blocked: the auto-mode permission classifier denied the sim-verifier's Save
-   tap (`axe tap` on `question-card-fullscreen-save`) even with the owner's explicit yes for 2 test saves. Start
-   trigger: the owner says "devam" at home (a network that reaches `images.pexels.com`). Then the main session
-   drives the Save rows itself (not a subagent); if denied, the owner approves the prompt. Then the merge question
-   with every known limit (PR #216's last hand-back lists them; file each unfixed gap as an issue first).
+   (run `2026-11-18-103645-6037`). Save half PASS on 2026-11-19 (run `2026-11-19-003250-6e64`, home network,
+   main session drove it; the Save tap needed no prompt): Home shows image A at once after Save; replacing A with
+   B shows B on Home at once, on reopen, after close and after a relaunch, never A; server log clean. Unproven
+   paths filed as #223 (library pick, failure paths in the UI, slow-network reopen, flash-free swap on video,
+   signed-in account, 14b784a not re-reviewed). **Waiting: the owner's merge of PR #216.**
 
 Previous focus, done 1/1: #168 (client writes of server-owned answer stats are refused by the security rules),
 chosen by the owner 2026-11-16, fixed with option A in #173 (merged 2026-11-16, issue closed). The triage below is
