@@ -173,20 +173,30 @@ struct QuestionCard: View {
   private var answerPreviews: some View {
     let userAnswers = model.myAnswers(for: question.id)
     let userImageURLs = showImages ? model.myImageURLs(for: question.id) : [nil, nil, nil]
+    // Right after Save the Storage URL does not exist yet; the device's own copy fills the gap.
+    let pendingImages: [UIImage?] = showImages ? model.myPendingImages(for: question.id) : [nil, nil, nil]
+    let visibleImageCount = (0..<3).filter { index in
+      (index < userImageURLs.count && userImageURLs[index]?.isEmpty == false) || pendingImages[index] != nil
+    }.count
 
     VStack(alignment: .leading, spacing: answerSlotSpacing) {
       ForEach(0..<3, id: \.self) { index in
         let answer = index < userAnswers.count ? userAnswers[index] : ""
         let placeholder = Question.answerPlaceholders[index]
         let imageURL: String? = index < userImageURLs.count ? userImageURLs[index] : nil
+        let pendingImage = pendingImages[index]
 
         if presentationStyle == .pagedFeed {
-          answerSlotRow(index: index, text: answer, placeholder: placeholder, imageURL: imageURL)
+          answerSlotRow(
+            index: index, text: answer, placeholder: placeholder,
+            imageURL: imageURL, pendingImage: pendingImage)
         } else {
           VStack(alignment: .leading, spacing: answerSlotImageSpacing) {
             answerSlotRow(index: index, text: answer, placeholder: placeholder)
-            if let urlString = imageURL, let url = URL(string: urlString) {
-              answerPreviewImage(for: url, maxHeight: answerPreviewImageMaxHeight(for: userImageURLs))
+            if imageURL != nil || pendingImage != nil {
+              answerPreviewImage(
+                index: index, urlString: imageURL, pendingImage: pendingImage,
+                maxHeight: answerPreviewImageMaxHeight(visibleImageCount: visibleImageCount))
             }
           }
         }
@@ -194,7 +204,10 @@ struct QuestionCard: View {
     }
   }
 
-  private func answerSlotRow(index: Int, text: String, placeholder: String, imageURL: String? = nil) -> some View {
+  private func answerSlotRow(
+    index: Int, text: String, placeholder: String,
+    imageURL: String? = nil, pendingImage: UIImage? = nil
+  ) -> some View {
     let isEmpty = text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
     return HStack(alignment: .center, spacing: answerSlotBadgeSpacing) {
@@ -216,8 +229,8 @@ struct QuestionCard: View {
         .multilineTextAlignment(.leading)
         .frame(maxWidth: .infinity, minHeight: answerSlotTextMinHeight, alignment: .leading)
 
-      if let urlString = imageURL, let url = URL(string: urlString) {
-        answerPreviewThumbnail(for: url)
+      if imageURL != nil || pendingImage != nil {
+        answerPreviewThumbnail(index: index, urlString: imageURL, pendingImage: pendingImage)
       }
     }
     .padding(.horizontal, answerSlotHorizontalPadding)
@@ -408,10 +421,9 @@ struct QuestionCard: View {
     presentationStyle == .pagedFeed ? 18 : 20
   }
 
-  private func answerPreviewImageMaxHeight(for imageURLs: [String?]) -> CGFloat {
+  private func answerPreviewImageMaxHeight(visibleImageCount: Int) -> CGFloat {
     guard presentationStyle == .pagedFeed else { return 160 }
 
-    let visibleImageCount = imageURLs.filter { $0?.isEmpty == false }.count
     guard visibleImageCount > 0 else { return 120 }
 
     let reservedNonImageHeight: CGFloat = 390
@@ -423,13 +435,20 @@ struct QuestionCard: View {
   }
 
   @ViewBuilder
-  private func answerPreviewImage(for url: URL, maxHeight: CGFloat) -> some View {
-    LazyImage(url: url) { state in
-      if let uiImage = state.imageContainer?.image {
+  private func answerPreviewImage(
+    index: Int, urlString: String?, pendingImage: UIImage?, maxHeight: CGFloat
+  ) -> some View {
+    AnswerRemoteImage(
+      url: urlString.flatMap { URL(string: $0) },
+      placeholder: pendingImage,
+      onRemoteLoaded: { _ in model.releasePendingImage(slotIndex: index, for: question.id) }
+    ) { phase in
+      switch phase {
+      case .image(let uiImage):
         answerPreviewLoadedImage(uiImage, maxHeight: maxHeight)
-      } else if state.error != nil {
+      case .failed:
         EmptyView()
-      } else {
+      case .loading:
         RoundedRectangle(cornerRadius: 14)
           .fill(Color.secondary.opacity(0.15))
           .frame(maxWidth: .infinity)
@@ -452,17 +471,24 @@ struct QuestionCard: View {
   }
 
   @ViewBuilder
-  private func answerPreviewThumbnail(for url: URL) -> some View {
-    LazyImage(url: url) { state in
-      if let image = state.image {
-        image
+  private func answerPreviewThumbnail(
+    index: Int, urlString: String?, pendingImage: UIImage?
+  ) -> some View {
+    AnswerRemoteImage(
+      url: urlString.flatMap { URL(string: $0) },
+      placeholder: pendingImage,
+      onRemoteLoaded: { _ in model.releasePendingImage(slotIndex: index, for: question.id) }
+    ) { phase in
+      switch phase {
+      case .image(let uiImage):
+        Image(uiImage: uiImage)
           .resizable()
           .scaledToFill()
           .frame(width: answerPreviewThumbnailSize, height: answerPreviewThumbnailSize)
           .clipShape(RoundedRectangle(cornerRadius: 12))
-      } else if state.error != nil {
+      case .failed:
         EmptyView()
-      } else {
+      case .loading:
         RoundedRectangle(cornerRadius: 12)
           .fill(Color.secondary.opacity(0.15))
           .frame(width: answerPreviewThumbnailSize, height: answerPreviewThumbnailSize)

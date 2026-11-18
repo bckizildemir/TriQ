@@ -12708,6 +12708,23 @@
         }
       }
     },
+    "question.image.loadFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image couldn't load"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Görsel yüklenemedi"
+          }
+        }
+      }
+    },
     "question.image.noResults" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12823,6 +12840,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ tarafından görsel önerisi"
+          }
+        }
+      }
+    },
+    "question.image.tryAgain" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrar dene"
           }
         }
       }

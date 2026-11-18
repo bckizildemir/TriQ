@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 // The four things `AnswerDraftStore` needs from the rest of the app in order to save an answer.
 //
@@ -55,6 +56,19 @@ protocol AnswerCaching: AnyObject {
     /// Puts back what ``currentAnswer(for:)`` previously returned, or clears the entry when there was
     /// nothing there before.
     func restore(_ previous: UserAnswer?, for questionId: String)
+
+    /// Replaces the images the device holds for a question's slots while their uploads run, so the
+    /// Home card can show them at once. An empty dictionary clears them all.
+    func setPendingImages(_ images: [Int: UIImage], for questionId: String)
+
+    /// Forgets one slot's held image: the storage copy is showing, or the upload failed.
+    func releasePendingImage(slotIndex: Int, for questionId: String)
+}
+
+extension AnswerCaching {
+    // Defaults keep hosts that show no optimistic image (previews, simple fakes) compiling.
+    func setPendingImages(_ images: [Int: UIImage], for questionId: String) {}
+    func releasePendingImage(slotIndex: Int, for questionId: String) {}
 }
 
 /// Where a save reports failure.

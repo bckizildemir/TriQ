@@ -112,6 +112,22 @@ final class FakeAnswerHost: AnswerCaching, AnswerSaveErrorReporting {
         reported.append(error)
     }
 
+    /// The images held for optimistic display, by question then slot.
+    private(set) var pendingImages: [String: [Int: UIImage]] = [:]
+
+    func setPendingImages(_ images: [Int: UIImage], for questionId: String) {
+        pendingImages[questionId] = images.isEmpty ? nil : images
+    }
+
+    func releasePendingImage(slotIndex: Int, for questionId: String) {
+        pendingImages[questionId]?[slotIndex] = nil
+    }
+
+    /// The slots holding an optimistic image for a question.
+    func pendingSlots(_ questionId: String) -> Set<Int> {
+        Set(pendingImages[questionId]?.keys.map { $0 } ?? [])
+    }
+
     /// What is cached, in the shape assertions care about.
     func normalized(_ questionId: String) -> NormalizedAnswer? {
         stored[questionId].map(NormalizedAnswer.init)
