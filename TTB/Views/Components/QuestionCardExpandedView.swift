@@ -1158,37 +1158,20 @@ private struct AnswerImageFullscreenView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// The zoom. It stays when the fingers lift; it eases back to 1 only when a pinch ends near
-    /// 1x, on a double tap, or when the pinch goes back out.
-    @State private var zoomScale: CGFloat = 1.0
-    /// The pan while zoomed, in screen points from centre. It follows the finger directly.
-    @State private var panOffset: CGSize = .zero
-    /// `zoomScale` and `panOffset` when the running pinch or pan began; `nil` between gestures.
-    /// `isPinching` and `isDragging` are `@GestureState`, so they fall back to `false` when a
-    /// gesture is cancelled (system close gesture, interruption) as well as when it ends; the
-    /// `onChange` below then clears the start values.
-    @State private var pinchStartScale: CGFloat?
-    @State private var panStartOffset: CGSize?
-    @GestureState private var isPinching = false
-    @GestureState private var isDragging = false
-    /// What the running drag does, fixed when it begins: a drag that began zoomed, or saw a pinch,
-    /// never feeds `dragOffset` and never closes the viewer.
-    @State private var dragMode = ImageViewerPanMath.DragMode.idle
-    /// The full screen, safe area included: the pan clamp and the tap test measure against it.
+    /// The zoom, the pan, the downward drag and every touch rule: see `ImageViewerInteraction`. The zoom
+    /// stays when the fingers lift; it eases back to 1 only when a pinch ends near 1x, on a double
+    /// tap, or when the viewer closes.
+    @State private var viewer = ImageViewerInteraction()
+    /// Runs the glide after a pan is released; a touch stops it where it is.
+    @State private var glide = ImageViewerGlide()
+    /// The full screen, safe area included: the clamp and the tap test measure against it.
     @State private var containerFrame: CGRect = .zero
     /// The safe-area region the image is fitted to at 1x.
     @State private var imageAreaFrame: CGRect = .zero
     @State private var fittedSize: CGSize = .zero
-    /// The finger's vertical drag at 1x. A `@GestureState`, so a cancelled drag (the system zoom-dismiss
-    /// gesture takes the touch) falls back to 0; the `animation(value:)` below eases it.
-    @GestureState private var dragOffset: CGFloat = 0
-    /// Holds the drag's last offset once it closes the viewer, so the image does not snap back
-    /// while the cover animates away.
-    @State private var dismissOffset: CGFloat = 0
-
-    private var totalOffset: CGFloat { dragOffset + dismissOffset }
-
-    private var isZoomed: Bool { zoomScale > 1.0 }
+    /// The downward drag at 1x stays at its last value once it closes the viewer, so the image does
+    /// not snap back while the cover animates away.
+    private var totalOffset: CGFloat { viewer.dismissDrag }
 
     /// The image rests in the safe area, the clamp measures the full screen; the two centres can
     /// differ by a few points.
@@ -1206,11 +1189,6 @@ private struct AnswerImageFullscreenView: View {
         )
     }
 
-    /// The snap-back of a short or cancelled 1x drag. Reduce Motion: a short ease-out.
-    private var snapBackAnimation: Animation {
-        reduceMotion ? .easeOut(duration: 0.15) : Motion.gestureReset
-    }
-
     var body: some View {
         ZStack {
             // The measure sits inside `ignoresSafeArea`, so it sees the full screen (the modifier
@@ -1218,12 +1196,6 @@ private struct AnswerImageFullscreenView: View {
             Color.black
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { containerFrame = $0 }
                 .ignoresSafeArea()
-                // A tap on the black closes the viewer. The image view is only as big as the image,
-                // so a tap outside it lands here. Zoomed, it does nothing: it would throw the zoom away.
-                .onTapGesture {
-                    guard !isZoomed else { return }
-                    closeViewer()
-                }
 
             // Measures the safe-area region the image is fitted to, away from the transforms below.
             Color.clear
@@ -1231,58 +1203,43 @@ private struct AnswerImageFullscreenView: View {
                 .allowsHitTesting(false)
 
             imageContent
-                // Once measured, the view is exactly the fitted image: its hit area is the image.
+                // Once measured, the view is exactly the fitted image.
                 .frame(
                     width: fittedSize == .zero ? nil : fittedSize.width,
                     height: fittedSize == .zero ? nil : fittedSize.height
                 )
-                .scaleEffect(zoomScale)
-                .offset(x: panOffset.width, y: panOffset.height + totalOffset)
-                .onTapGesture(count: 2, perform: toggleZoom)
-                .gesture(magnifyGesture)
-                .gesture(dragGesture)
+                .scaleEffect(viewer.scale)
+                .offset(x: viewer.offset.width, y: viewer.offset.height + totalOffset)
                 .accessibilityElement(children: .ignore)
                 .accessibilityAddTraits(.isImage)
                 .accessibilityLabel(String(localized: "question.image.fullscreen"))
                 .accessibilityHint(String(localized: "question.image.fullscreenHint"))
                 // VoiceOver's activate: the same whether or not the image has loaded.
-                .accessibilityAction { toggleZoom() }
+                .accessibilityAction { send(.toggleZoom) }
                 .accessibilityZoomAction { action in
-                    withAnimation(resetAnimation) {
-                        zoomScale = ImageViewerPanMath.steppedScale(
-                            from: zoomScale,
-                            zoomingIn: action.direction == .zoomIn
-                        )
-                        panOffset = panMath.clamp(panOffset, at: zoomScale)
-                    }
+                    send(.zoomStep(zoomingIn: action.direction == .zoomIn))
                 }
+
+            // Reads every touch on the whole viewer, the black area included. It sits above the
+            // image and below the close button, which stays tappable. VoiceOver uses the image
+            // element and the close button instead.
+            ImageViewerGestureLayer(onEvent: send)
+                .ignoresSafeArea()
+                .accessibilityHidden(true)
 
             closeButton
         }
         .opacity(1 - (abs(totalOffset) / 300.0))
-        .animation(dragOffset == 0 ? snapBackAnimation : nil, value: dragOffset)
         .accessibilityAddTraits(.isModal)
-        // Zoomed, a swipe down pans the image; it must not also close the viewer.
-        .interactiveDismissDisabled(isZoomed)
+        // VoiceOver's escape gesture closes the viewer, now that the system's interactive close is off.
+        .accessibilityAction(.escape) { send(.closeRequested) }
+        // The viewer closes itself on a downward drag at 1x. The system's interactive close would also
+        // take a sideways or upward drag, and it would fight the pan and pinch.
+        .interactiveDismissDisabled()
         .onChange(of: panMath) {
-            panOffset = panMath.clamp(panOffset, at: zoomScale)
+            send(.geometryChanged)
         }
-        .onChange(of: isPinching) {
-            guard !isPinching else { return }
-            pinchStartScale = nil
-            if zoomScale < ImageViewerPanMath.restScaleTolerance {
-                resetZoom()
-            }
-        }
-        .onChange(of: isDragging) {
-            guard !isDragging else { return }
-            // `onEnded` already ran for a finished drag and left `.idle`; this is a cancelled one.
-            if dragMode == .pan {
-                withAnimation(settleAnimation()) { panOffset = panMath.clamp(panOffset, at: zoomScale) }
-            }
-            panStartOffset = nil
-            dragMode = .idle
-        }
+        .onDisappear { glide.stop() }
     }
 
     @ViewBuilder
@@ -1338,128 +1295,46 @@ private struct AnswerImageFullscreenView: View {
         reduceMotion ? .easeOut(duration: 0.15) : Motion.gestureReset
     }
 
-    /// Glide after a release, without bounce. Reduce Motion drops the spring and the momentum.
-    /// `initialVelocity` is the release speed along the glide, as a share of its distance per second.
-    private func settleAnimation(initialVelocity: Double = 0) -> Animation {
-        reduceMotion
-            ? Motion.quickFade
-            : .interpolatingSpring(duration: 0.45, bounce: 0, initialVelocity: initialVelocity)
-    }
-
-    private func resetZoom() {
-        withAnimation(resetAnimation) {
-            zoomScale = 1.0
-            panOffset = .zero
-        }
-    }
-
-    private func toggleZoom() {
-        if isZoomed {
-            resetZoom()
-        } else {
-            withAnimation(resetAnimation) { zoomScale = ImageViewerPanMath.doubleTapScale }
-        }
-    }
-
-    /// Closes the viewer. A zoomed image drops to 1x first, with no animation, so the zoom back to
-    /// the thumbnail shrinks the whole picture.
-    private func closeViewer() {
-        if isZoomed || panOffset != .zero {
+    /// Runs one event through the viewer's state machine and carries out what it asks for.
+    private func send(_ event: ImageViewerInteraction.Event) {
+        var next = viewer
+        let effects = next.handle(event, math: panMath, reduceMotion: reduceMotion)
+        if effects.contains(.animate) {
+            withAnimation(resetAnimation) { viewer = next }
+        } else if effects.contains(.close) {
+            // A zoomed image drops to 1x first, with no animation, so the zoom back to the thumbnail
+            // shrinks the whole picture.
             var transaction = Transaction()
             transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                zoomScale = 1.0
-                panOffset = .zero
+            withTransaction(transaction) { viewer = next }
+        } else {
+            viewer = next
+        }
+        for effect in effects {
+            switch effect {
+            case .animate:
+                break
+            case .stopGlide:
+                glide.stop()
+            case let .startGlide(velocity):
+                glide.start(
+                    from: next.offset,
+                    velocity: velocity,
+                    scale: next.scale,
+                    math: panMath,
+                    onFrame: { send(.glideFrame(offset: $0)) },
+                    onFinish: { send(.glideFinished) }
+                )
+            case .dismiss, .close:
+                dismiss()
             }
         }
-        dismiss()
     }
 
-    /// Pinch zooms around the current offset: the offset scales with the zoom and is re-clamped.
-    private var magnifyGesture: some Gesture {
-        MagnifyGesture()
-            .updating($isPinching) { _, state, _ in state = true }
-            .onChanged { value in
-                let start = pinchStartScale ?? zoomScale
-                pinchStartScale = start
-                let newScale = ImageViewerPanMath.clampedScale(start * value.magnification)
-                panOffset = panMath.rescaledOffset(panOffset, from: zoomScale, to: newScale)
-                zoomScale = newScale
-            }
+    private func closeViewer() {
+        send(.closeRequested)
     }
 
-    private var dragGesture: some Gesture {
-        // Global space: the view this sits on moves with the pan, and a local translation would
-        // feed that movement back into itself.
-        DragGesture(coordinateSpace: .global)
-            .updating($isDragging) { _, state, _ in state = true }
-            .updating($dragOffset) { value, state, _ in
-                // Only a drag that began at 1x and has seen no pinch feeds the dismiss offset.
-                let mode = dragMode == .idle
-                    ? ImageViewerPanMath.dragMode(isZoomed: isZoomed, isPinching: isPinching)
-                    : dragMode
-                state = mode == .dismiss && !isZoomed && !isPinching ? value.translation.height : 0
-            }
-            .onChanged { value in
-                if dragMode == .idle {
-                    dragMode = ImageViewerPanMath.dragMode(isZoomed: isZoomed, isPinching: isPinching)
-                }
-                if dragMode == .dismiss, isZoomed || isPinching {
-                    dragMode = .ignored
-                }
-                guard dragMode == .pan, !isPinching else { return }
-                let start = panStartOffset ?? panOffset
-                panStartOffset = start
-                panOffset = panMath.clamp(
-                    CGSize(
-                        width: start.width + value.translation.width,
-                        height: start.height + value.translation.height
-                    ),
-                    at: zoomScale
-                )
-            }
-            .onEnded { value in
-                let mode = dragMode
-                dragMode = .idle
-                switch mode {
-                case .pan:
-                    settlePan(after: value)
-                case .dismiss:
-                    guard !isZoomed,
-                          AnswerImageViewerDismissal.shouldDismiss(
-                              translation: value.translation.height,
-                              predictedEndTranslation: value.predictedEndTranslation.height
-                          )
-                    else { return }  // `dragOffset` eases back to 0 on its own
-                    dismissOffset = value.translation.height
-                    dismiss()
-                case .idle, .ignored:
-                    break
-                }
-            }
-    }
-
-    /// Carries a released pan a little further and settles it inside the clamp.
-    private func settlePan(after value: DragGesture.Value) {
-        // No start value: the drag never moved the image (it ran under a pinch), so settle in place.
-        let moved = panStartOffset != nil
-        let start = panStartOffset ?? panOffset
-        let current = panOffset
-        panStartOffset = nil
-        let settled = panMath.settledOffset(
-            offset: start,
-            translation: moved ? value.translation : .zero,
-            predictedEndTranslation: moved ? value.predictedEndTranslation : .zero,
-            at: zoomScale,
-            withMomentum: !reduceMotion
-        )
-        let velocity = ImageViewerPanMath.initialVelocity(
-            from: current,
-            to: settled,
-            releaseVelocity: value.velocity
-        )
-        withAnimation(settleAnimation(initialVelocity: velocity)) { panOffset = settled }
-    }
 }
 
 #Preview {
