@@ -1,8 +1,10 @@
 version: 2
 
-# Weekly, one grouped PR per ecosystem, minor and patch updates only.
-# A major update is a planned task, not a Dependabot PR (owner, 2026-11-18): the first run opened 13 major PRs,
-# and several were Firebase's own pieces that move only with Firebase.
+# Weekly. Minor and patch updates come as one grouped PR per ecosystem; major updates as a second grouped PR,
+# so a major never hides behind a small one and never floods the list.
+# No `ignore` rule on majors: GitHub's docs do not say an `ignore` leaves security updates alone, and a security
+# fix that exists only in a new major must still reach us (owner, 2026-11-18). A closed Dependabot PR is not
+# reopened for the same version, so the majors closed on 2026-11-18 stay closed.
 updates:
   - package-ecosystem: github-actions
     directory: /
@@ -11,9 +13,8 @@ updates:
     groups:
       actions:
         update-types: [minor, patch]
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+      actions-major:
+        update-types: [major]
 
   - package-ecosystem: npm
     directory: /functions
@@ -22,9 +23,8 @@ updates:
     groups:
       functions-npm:
         update-types: [minor, patch]
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+      functions-npm-major:
+        update-types: [major]
 
   - package-ecosystem: npm
     directory: /Scripts/seed_questions
@@ -33,13 +33,13 @@ updates:
     groups:
       seed-questions-npm:
         update-types: [minor, patch]
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+      seed-questions-npm-major:
+        update-types: [major]
 
   # Dependabot reads TTB.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved (the Xcode project layout).
   # Only the packages the project names. Firebase's own dependencies (app-check, gtm-session-fetcher, abseil, grpc)
-  # move with Firebase, and bumping one alone can break the resolve.
+  # move with Firebase, and bumping one alone can break the resolve. Dependabot alerts (Security tab) cover
+  # every package in Package.resolved either way.
   - package-ecosystem: swift
     directory: /
     schedule:
@@ -50,6 +50,3 @@ updates:
     groups:
       swift-packages:
         update-types: [minor, patch]
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
