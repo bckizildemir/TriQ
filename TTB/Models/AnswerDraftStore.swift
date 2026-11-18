@@ -20,6 +20,11 @@ struct AnswerSavePlan {
     let optimistic: NormalizedAnswer
 
     let uploads: [AnswerImageUpload]
+
+    /// The picked image of each slot that owes an upload, as the device already has it. The Home card
+    /// shows these at once, until the Storage copy is ready. A suggestion slot appears here only when
+    /// the editor had finished loading its preview.
+    let previews: [Int: UIImage]
 }
 
 /// Saves an answer draft: one entry point, one order, one place the choreography lives.
@@ -37,13 +42,19 @@ struct AnswerSavePlan {
 final class AnswerDraftStore {
     private nonisolated let persister: AnswerPersisting?
     private nonisolated let images: AnswerImageStoring
+    private nonisolated let cacheSeeder: any AnswerImageCacheSeeding
 
     /// `persister` is optional to preserve the existing local mode: with no backend configured,
     /// saving updates the cache and nothing else, exactly as `persistAnswers` did when
     /// `questionService` was nil. AD-3 and AD-5 are where that optionality should go away.
-    nonisolated init(persister: AnswerPersisting?, images: AnswerImageStoring) {
+    nonisolated init(
+        persister: AnswerPersisting?,
+        images: AnswerImageStoring,
+        cacheSeeder: any AnswerImageCacheSeeding = NukeAnswerImageCacheSeeder()
+    ) {
         self.persister = persister
         self.images = images
+        self.cacheSeeder = cacheSeeder
     }
 
     /// Starts a save. Returns whether there was anything to do.
@@ -54,9 +65,16 @@ final class AnswerDraftStore {
         _ draft: AnswerDraft,
         baseline: NormalizedAnswer,
         for questionId: String,
+        previewImages: [Int: UIImage] = [:],
         in host: any AnswerDraftHost
     ) -> Bool {
-        guard let plan = plan(for: draft, baseline: baseline, questionId: questionId, in: host) else {
+        guard let plan = plan(
+            for: draft,
+            baseline: baseline,
+            questionId: questionId,
+            previewImages: previewImages,
+            in: host
+        ) else {
             return false
         }
 
@@ -78,6 +96,7 @@ final class AnswerDraftStore {
         for draft: AnswerDraft,
         baseline: NormalizedAnswer,
         questionId: String,
+        previewImages: [Int: UIImage] = [:],
         in host: any AnswerDraftHost
     ) -> AnswerSavePlan? {
         guard draft.hasChanges(against: baseline) else { return nil }
@@ -95,13 +114,36 @@ final class AnswerDraftStore {
             baseline: baseline,
             previous: previous,
             optimistic: optimistic,
-            uploads: uploads
+            uploads: uploads,
+            previews: Self.previews(for: uploads, suggestionImages: previewImages)
         )
     }
 
-    /// Shows the answer as saved before it is.
+    /// The image the device holds for each slot owing an upload: a library pick is the image itself,
+    /// a suggestion is the preview the editor already loaded (none yet means no optimistic image).
+    private static func previews(
+        for uploads: [AnswerImageUpload],
+        suggestionImages: [Int: UIImage]
+    ) -> [Int: UIImage] {
+        var previews: [Int: UIImage] = [:]
+        for upload in uploads {
+            switch upload.source {
+            case let .local(image):
+                previews[upload.slotIndex] = image
+            case .suggestion:
+                previews[upload.slotIndex] = suggestionImages[upload.slotIndex]
+            }
+        }
+        return previews
+    }
+
+    /// Shows the answer as saved before it is, pending images included.
+    ///
+    /// The pending images are replaced as a set: a slot this save does not upload to must not keep
+    /// the image an earlier save left there.
     func applyOptimistically(_ plan: AnswerSavePlan, in host: any AnswerDraftHost) {
         host.cache(plan.optimistic, for: plan.questionId)
+        host.setPendingImages(plan.previews, for: plan.questionId)
     }
 
     /// Persists the answer, uploads any images, then reconciles the URLs that arrived.
@@ -129,6 +171,19 @@ final class AnswerDraftStore {
         // an answer the user has already replaced and writing them would resurrect it.
         guard cachedAnswer(for: plan, in: host) == plan.optimistic else { return }
 
+        // A slot that failed has no Storage copy coming: stop showing its image, so the card reads as
+        // the error says.
+        for failure in outcomes.compactMap(\.failure) {
+            host.releasePendingImage(slotIndex: failure.slotIndex, for: plan.questionId)
+        }
+
+        // A replaced photo keeps its download URL (fixed Storage path), and the image cache is keyed
+        // by URL. Refresh it before the URL reaches the cache, so a card that loads the URL gets the
+        // new photo, not the old one. The picked image itself is the new photo when we hold it.
+        for case let .uploaded(slotIndex, url, _) in outcomes {
+            cacheSeeder.refresh(downloadURL: url, with: plan.previews[slotIndex])
+        }
+
         host.cache(settled, for: plan.questionId)
 
         do {
@@ -138,9 +193,18 @@ final class AnswerDraftStore {
             // themselves: nothing will reference those files once the cache reads as it did
             // before this attempt, so leaving them in Storage would orphan them permanently.
             host.cache(plan.optimistic, for: plan.questionId)
+            host.setPendingImages([:], for: plan.questionId)
             await deleteUploaded(outcomes, for: plan.questionId)
             host.report(.imageURLSaveFailed)
             return
+        }
+
+        // The URL is stored and the cache is primed, so the card no longer needs the held images.
+        // Only while this save still owns the cache: a newer save replaced the held set already.
+        if cachedAnswer(for: plan, in: host) == settled {
+            for case let .uploaded(slotIndex, _, _) in outcomes {
+                host.releasePendingImage(slotIndex: slotIndex, for: plan.questionId)
+            }
         }
 
         if let failure = outcomes.compactMap(\.failure).first {
@@ -204,6 +268,7 @@ final class AnswerDraftStore {
     private func rollBack(_ plan: AnswerSavePlan, in host: any AnswerDraftHost) {
         guard cachedAnswer(for: plan, in: host) == plan.optimistic else { return }
         host.restore(plan.previous, for: plan.questionId)
+        host.setPendingImages([:], for: plan.questionId)
     }
 
     private func cachedAnswer(

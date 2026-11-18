@@ -3,6 +3,7 @@ import FirebaseAuth
 import FirebaseFirestore
 import Foundation
 import os
+import UIKit
 
 enum QuestionModelError: LocalizedError {
     case localModeUnsupported
@@ -32,6 +33,10 @@ class QuestionModel: ObservableObject {
 
     /// All answers saved by the currently signed-in user, keyed by questionId.
     @Published private(set) var currentUserAnswers: [String: UserAnswer] = [:]
+
+    /// The picked image of each slot whose upload is still running, keyed by questionId then slot.
+    /// The Home card shows it at once after Save and drops it once the Storage copy has loaded.
+    @Published private(set) var pendingAnswerImages: [String: [Int: UIImage]] = [:]
 
     private let questionService: QuestionService?
     /// Where the listeners come from: the same `QuestionService` in the app, a fake in tests, nil in local mode.
@@ -159,6 +164,7 @@ class QuestionModel: ObservableObject {
         todaysQuestions = []
         trioQuestions = []
         currentUserAnswers = [:]
+        pendingAnswerImages = [:]
         isLoading = false
         // An error from the old session must not carry into the next one.
         error = nil
@@ -203,6 +209,13 @@ class QuestionModel: ObservableObject {
     /// Returns [nil, nil, nil] when no images have been saved.
     func myImageURLs(for questionId: String) -> [String?] {
         currentUserAnswers[questionId]?.imageURLs ?? [nil, nil, nil]
+    }
+
+    /// The images the device holds for this question's slots while their uploads run (see
+    /// `AnswerCaching.setPendingImages`). Index = slot; `nil` when the slot has none.
+    func myPendingImages(for questionId: String) -> [UIImage?] {
+        let held = pendingAnswerImages[questionId] ?? [:]
+        return (0 ..< AnswerDraft.slotCount).map { held[$0] }
     }
 
     func myImageAttributions(for questionId: String) -> [AnswerImageAttribution?] {
@@ -499,6 +512,21 @@ extension QuestionModel: AnswerCaching {
         } else {
             currentUserAnswers.removeValue(forKey: questionId)
         }
+    }
+
+    func setPendingImages(_ images: [Int: UIImage], for questionId: String) {
+        if images.isEmpty {
+            pendingAnswerImages.removeValue(forKey: questionId)
+        } else {
+            pendingAnswerImages[questionId] = images
+        }
+    }
+
+    func releasePendingImage(slotIndex: Int, for questionId: String) {
+        guard var held = pendingAnswerImages[questionId], held.removeValue(forKey: slotIndex) != nil else {
+            return
+        }
+        setPendingImages(held, for: questionId)
     }
 }
 

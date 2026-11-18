@@ -65,6 +65,9 @@ struct QuestionCardExpandedView: View {
     @State private var isConfirmingClose = false
 
     @State private var presentedAnswerImage: PresentedAnswerImage?
+    /// Previews of Pexels suggestions that finished loading, by suggestion id. Handed to Save so the
+    /// Home card can show the picked image at once.
+    @State private var loadedSuggestionImages: [String: UIImage] = [:]
     @Namespace private var answerImageZoomNamespace
     @State private var isShowingQuestionLists = false
     @State private var dismissedGuestWarningQuestionID: String?
@@ -517,30 +520,30 @@ struct QuestionCardExpandedView: View {
 
             switch draft[index].image {
             case .none:
-                EmptyView()
+                // The card was reopened while this slot's upload still runs: show the held image,
+                // read-only. It is not a draft image, so saving never uploads it a second time.
+                if baseline.urls[index] == nil,
+                   let held = model.myPendingImages(for: question.id)[index] {
+                    heldImagePreview(held)
+                }
 
             case let .pendingLocal(localImage):
                 imagePreview(uiImage: localImage, index: index)
 
             case let .pendingSuggestion(suggestion):
                 if let url = suggestion.previewImageURL {
-                    suggestedImagePreview(url: url, index: index)
+                    suggestedImagePreview(url: url, suggestion: suggestion, index: index)
                 }
 
             case let .saved(urlString, _):
                 if let url = URL(string: urlString) {
-                    LazyImage(url: url) { state in
-                        if let uiImage = state.imageContainer?.image {
-                            imagePreview(uiImage: uiImage, index: index)
-                        } else if state.error != nil {
-                            EmptyView()
-                        } else {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.secondary.opacity(0.18))
-                                .frame(height: Self.imagePreviewMaxHeight)
-                                .overlay(ProgressView())
-                        }
-                    }
+                    // Right after a save the device's own copy fills in until the Storage copy loads.
+                    answerImageField(
+                        url: url,
+                        placeholder: model.myPendingImages(for: question.id)[index],
+                        index: index,
+                        onRemoteLoaded: { _ in }
+                    )
                 }
             }
         }
@@ -733,41 +736,60 @@ struct QuestionCardExpandedView: View {
             .frame(width: displayWidth, height: displayHeight)
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .matchedTransitionSource(id: index, in: answerImageZoomNamespace)
-            .overlay(alignment: .topTrailing) {
-                Button {
-                    // Whatever the slot held, removing it is one assignment. The caller used to have
-                    // to say which of three arrays its image came from so the right ones got cleared.
-                    draft[index].image = .none
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Color.white.opacity(0.92))
-                        .frame(width: 26, height: 26)
-                        .background(
-                            Circle()
-                                .fill(Color.black.opacity(0.46))
-                        )
-                        .padding(8)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "question.image.delete"))
-            }
             .onTapGesture {
                 presentedAnswerImage = presentedImage(at: index, fallbackImage: uiImage)
             }
+            // The open label and button trait belong to the image alone. They used to sit after the
+            // overlay, so VoiceOver and the accessibility tree gave the remove button "Open image" too.
             .accessibilityLabel(String(localized: "question.image.open"))
             .accessibilityHint(String(localized: "question.image.openHint"))
             .accessibilityAddTraits(.isButton)
+            .overlay(alignment: .topTrailing) {
+                // Whatever the slot held, removing it is one assignment. The caller used to have
+                // to say which of three arrays its image came from so the right ones got cleared.
+                AnswerImageRemoveButton { draft[index].image = .none }
+            }
             .frame(maxWidth: .infinity, alignment: .center)
     }
 
-    private func suggestedImagePreview(url: URL, index: Int) -> some View {
-        LazyImage(url: url) { state in
-            if let uiImage = state.imageContainer?.image {
+    /// The image of an upload that is still running, shown read-only.
+    private func heldImagePreview(_ uiImage: UIImage) -> some View {
+        let aspect = uiImage.size.width / uiImage.size.height
+        let displayHeight = min(uiImage.size.height, Self.imagePreviewMaxHeight)
+
+        return Image(uiImage: uiImage)
+            .resizable()
+            .frame(width: displayHeight * aspect, height: displayHeight)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .accessibilityHidden(true)
+            .frame(maxWidth: .infinity, alignment: .center)
+    }
+
+    private func suggestedImagePreview(url: URL, suggestion: AnswerImageSuggestion, index: Int) -> some View {
+        answerImageField(
+            url: url,
+            placeholder: nil,
+            index: index,
+            // Kept so Save can show this exact image on the Home card at once.
+            onRemoteLoaded: { loadedSuggestionImages[suggestion.id] = $0 }
+        )
+    }
+
+    /// The image in an answer field: loads with automatic retries, and after the last one shows
+    /// "Image couldn't load" with a "Try again" button.
+    private func answerImageField(
+        url: URL,
+        placeholder: UIImage?,
+        index: Int,
+        onRemoteLoaded: @escaping (UIImage) -> Void
+    ) -> some View {
+        AnswerRemoteImage(url: url, placeholder: placeholder, onRemoteLoaded: onRemoteLoaded) { phase in
+            switch phase {
+            case let .image(uiImage):
                 imagePreview(uiImage: uiImage, index: index)
-            } else if state.error != nil {
-                EmptyView()
-            } else {
+            case let .failed(retry):
+                AnswerImageFailedView(retry: retry, remove: { draft[index].image = .none })
+            case .loading:
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color.secondary.opacity(0.18))
                     .frame(height: Self.imagePreviewMaxHeight)
@@ -844,18 +866,21 @@ struct QuestionCardExpandedView: View {
     }
 
     private func suggestionThumbnail(_ suggestion: AnswerImageSuggestion, side: CGFloat) -> some View {
-        LazyImage(url: suggestion.thumbnailImageURL) { state in
-            if let image = state.image {
-                image
+        AnswerRemoteImage(url: suggestion.thumbnailImageURL) { phase in
+            switch phase {
+            case let .image(uiImage):
+                Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
-            } else if state.error != nil {
+            case .failed:
+                // Picking still works: the preview loads from its own URL. No retry button here, the
+                // whole thumbnail is the pick button.
                 Image(systemName: "photo")
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.secondary.opacity(0.12))
-            } else {
+            case .loading:
                 RoundedRectangle(cornerRadius: 14)
                     .fill(Color.secondary.opacity(0.14))
                     .overlay(ProgressView())
@@ -1110,13 +1135,31 @@ struct QuestionCardExpandedView: View {
     private func commitDraft() -> Bool {
         uploadError = nil
 
-        let started = answerDraftStore.save(draft, baseline: baseline, for: question.id, in: model)
+        let started = answerDraftStore.save(
+            draft,
+            baseline: baseline,
+            for: question.id,
+            previewImages: loadedPreviewImages(),
+            in: model
+        )
 
         // The images are the store's problem now, so stop showing them as this editor's pending work.
         if started, draft.hasPendingUploads {
             draft = draft.clearingPendingImages()
         }
         return started
+    }
+
+    /// The loaded preview of each slot that holds a chosen suggestion, by slot.
+    private func loadedPreviewImages() -> [Int: UIImage] {
+        var images: [Int: UIImage] = [:]
+        for index in draft.indices {
+            if case let .pendingSuggestion(suggestion) = draft[index].image,
+               let image = loadedSuggestionImages[suggestion.id] {
+                images[index] = image
+            }
+        }
+        return images
     }
 
     private func dismissFullscreen() {

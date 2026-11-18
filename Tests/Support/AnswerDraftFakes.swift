@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 import UIKit
 @testable import TTB
 
@@ -73,6 +74,24 @@ actor FakeAnswerImageStore: AnswerImageStoring {
     }
 }
 
+/// Records which download URLs the store refreshed in the image cache, and with what.
+final class FakeAnswerImageCacheSeeder: AnswerImageCacheSeeding {
+    struct Refresh {
+        let downloadURL: String
+        let image: UIImage?
+    }
+
+    private let storage = Mutex<[Refresh]>([])
+
+    func refresh(downloadURL: String, with image: UIImage?) {
+        storage.withLock { $0.append(Refresh(downloadURL: downloadURL, image: image)) }
+    }
+
+    var refreshed: [Refresh] {
+        storage.withLock { $0 }
+    }
+}
+
 /// Stands in for `QuestionModel`: holds the cached answer and collects reported failures.
 @MainActor
 final class FakeAnswerHost: AnswerCaching, AnswerSaveErrorReporting {
@@ -110,6 +129,22 @@ final class FakeAnswerHost: AnswerCaching, AnswerSaveErrorReporting {
 
     func report(_ error: AnswerSaveError) {
         reported.append(error)
+    }
+
+    /// The images held for optimistic display, by question then slot.
+    private(set) var pendingImages: [String: [Int: UIImage]] = [:]
+
+    func setPendingImages(_ images: [Int: UIImage], for questionId: String) {
+        pendingImages[questionId] = images.isEmpty ? nil : images
+    }
+
+    func releasePendingImage(slotIndex: Int, for questionId: String) {
+        pendingImages[questionId]?[slotIndex] = nil
+    }
+
+    /// The slots holding an optimistic image for a question.
+    func pendingSlots(_ questionId: String) -> Set<Int> {
+        Set(pendingImages[questionId]?.keys.map { $0 } ?? [])
     }
 
     /// What is cached, in the shape assertions care about.
