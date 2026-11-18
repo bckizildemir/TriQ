@@ -14,7 +14,9 @@ Finish the answer image viewer (owner, 2026-11-17), in this order. Done 2/3.
    `SLIM_SIM_MAX=4` is set in `~/.claude/settings.json`.
 2. Done 2026-11-18: #188 (answer image viewer: four known gesture limits), fixed by #210, merged on the owner's yes
    with every known limit listed. Follow-ups the owner accepted for later: #211 (shrink-to-card close, edge
-   rubber-band, glide feel, sharper photo).
+   rubber-band, glide feel, sharper photo) and #213 (remaining limits: real-finger pinch+pan and finger lift
+   unproven, review-fix commit not re-reviewed, ~0.3 s black-tap delay, zoom spring not interruptible, 60 Hz glide,
+   no iPad trackpad pan, no glide with Reduce Motion).
 3. #186 (answer image shows late after a Find Image pick and on the Home card).
 
 Previous focus, done 1/1: #168 (client writes of server-owned answer stats are refused by the security rules),
