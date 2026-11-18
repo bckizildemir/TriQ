@@ -71,6 +71,9 @@ Last session:
   proven by tool: real-finger pinch+pan and finger lift (unit tests only). Research on free backend alternatives:
   `iOS Dev/research/2026-11-18-free-backend-alternatives.md` (outside the repo); the owner keeps Firebase.
   Next: #186 (repro run started).
+- 2026-11-18 (CI, from a Purrtine session): #192 (CI quick pack) merged on the owner's go. Dependabot's first run
+  opened 14 major or Firebase-internal PRs (#196-#209); all closed on the owner's go. PR #214 makes Dependabot
+  propose minor and patch only, and Swift only `firebase-ios-sdk` and `nuke`; it waits for the owner.
 - 2026-11-17 (CI, from a Purrtine session; paused by the owner): a read-only CI audit of both apps (last 60 runs;
   TriQ: no failures, build+tests ~8.5 min, the unit-test step is ~4 min of which the 310-338 tests take 8-27 s).
   The owner approved a quick pack: PR #192 (branch `ci/simulator-boot-pins`, worktree `../wt-t-ci`), CI green, waits
@@ -189,14 +192,15 @@ Last session:
 1. Focus item 1, the gesture tool spike, once the owner is off the company network (see Focus).
 2. After the focus: release readiness (#139, test account cleanup, the question-list cleanup on account delete). #158 (Home scroll hides Profile and shrinks the
    tab bar) is closed: the owner made both on purpose (2026-11-13).
-3. CI, later (owner, 2026-11-17: quick pack now, the rest later; start trigger: #192 merged and the owner picks
-   one): a test summary on the PR page and `::error` annotations from `xcresulttool`, artifact `retention-days`;
+3. CI, later (owner, 2026-11-17: quick pack now, the rest later; #192 merged 2026-11-18; start trigger: the owner
+   picks one): major upgrades as planned tasks (Firebase iOS SDK 11 → 13, Nuke 12 → 13, firebase-admin 13 → 14,
+   actions on Node 20); a test summary on the PR page and `::error` annotations from `xcresulttool`, artifact `retention-days`;
    code coverage (none today) with a floor; move `npm audit` out of the required job; try a DerivedData cache
    (measure first); keep `Scripts/xcb.sh`/`slim-sim.sh` identical with Purrtine (a check that compares them).
 
 ## Waits for the owner
 
-- Merge PR #192 (CI quick pack: simulator picker, Xcode and action pins, Dependabot, synced scripts); CI green.
+- Merge PR #214 (Dependabot: minor and patch only, Swift only Firebase and Nuke).
 
 - #188 (the four image viewer limits): a keep-or-fix answer per limit, asked when focus item 2 reaches it.
 - #139 (before release, check that 1 copy per function is enough for launch traffic): `ready-for-human`.
