@@ -25,7 +25,12 @@ Finish the answer image viewer (owner, 2026-11-17), in this order. Done 2/3.
    main session drove it; the Save tap needed no prompt): Home shows image A at once after Save; replacing A with
    B shows B on Home at once, on reopen, after close and after a relaunch, never A; server log clean. Unproven
    paths filed as #223 (library pick, failure paths in the UI, slow-network reopen, flash-free swap on video,
-   signed-in account, 14b784a not re-reviewed). **Waiting: the owner's merge of PR #216.**
+   signed-in account, 14b784a not re-reviewed). PR #216 merged on the owner's yes 2026-11-19 (#186 closed).
+   The owner then asked for an end-to-end library pick: it FAILS, older than #216 (run
+   `2026-11-19-005949-5fe4`, photo added with `simctl addmedia`, picker cell tapped by coordinate, which works).
+   The server refuses the client's Storage download URL because it carries `:443`; every library-picked answer
+   image is lost. Tracked in #225 (cause, file:line, two fix options). **Waiting: the owner's pick of the fix**
+   (server fix needs a deploy of `saveQuestionAnswers`).
 
 Previous focus, done 1/1: #168 (client writes of server-owned answer stats are refused by the security rules),
 chosen by the owner 2026-11-16, fixed with option A in #173 (merged 2026-11-16, issue closed). The triage below is
