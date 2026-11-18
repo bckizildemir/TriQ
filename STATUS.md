@@ -17,7 +17,17 @@ Finish the answer image viewer (owner, 2026-11-17), in this order. Done 2/3.
    rubber-band, glide feel, sharper photo) and #213 (remaining limits: real-finger pinch+pan and finger lift
    unproven, review-fix commit not re-reviewed, ~0.3 s black-tap delay, zoom spring not interruptible, 60 Hz glide,
    no iPad trackpad pan, no glide with Reduce Motion).
-3. #186 (answer image shows late after a Find Image pick and on the Home card).
+3. #186 (answer image shows late after a Find Image pick and on the Home card). Fix in PR #216 (owner chose both
+   parts 2026-11-18: Home shows the held image right after Save; field thumbnail retries, then "Image couldn't
+   load" / "Try again" / X), review fixes in 14b784a. Proven on a Pexels-blocking network: retry, error, Try again,
+   X, second pick (run `~/verify-evidence/triq/2026-11-18-100828-230e`); editor labels "Open image" / "Delete image"
+   (run `2026-11-18-103645-6037`). **Waiting: the Save half of the proof** (Home shows the image at once after
+   Save; reopen in the upload window shows the held image; replacing photo A with B never flips back to A). Two
+   tries on the owner's hotspot were blocked: the auto-mode permission classifier denied the sim-verifier's Save
+   tap (`axe tap` on `question-card-fullscreen-save`) even with the owner's explicit yes for 2 test saves. Start
+   trigger: the owner says "devam" at home (a network that reaches `images.pexels.com`). Then the main session
+   drives the Save rows itself (not a subagent); if denied, the owner approves the prompt. Then the merge question
+   with every known limit (PR #216's last hand-back lists them; file each unfixed gap as an issue first).
 
 Previous focus, done 1/1: #168 (client writes of server-owned answer stats are refused by the security rules),
 chosen by the owner 2026-11-16, fixed with option A in #173 (merged 2026-11-16, issue closed). The triage below is
