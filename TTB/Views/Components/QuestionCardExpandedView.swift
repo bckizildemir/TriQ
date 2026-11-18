@@ -520,7 +520,12 @@ struct QuestionCardExpandedView: View {
 
             switch draft[index].image {
             case .none:
-                EmptyView()
+                // The card was reopened while this slot's upload still runs: show the held image,
+                // read-only. It is not a draft image, so saving never uploads it a second time.
+                if baseline.urls[index] == nil,
+                   let held = model.myPendingImages(for: question.id)[index] {
+                    heldImagePreview(held)
+                }
 
             case let .pendingLocal(localImage):
                 imagePreview(uiImage: localImage, index: index)
@@ -537,9 +542,7 @@ struct QuestionCardExpandedView: View {
                         url: url,
                         placeholder: model.myPendingImages(for: question.id)[index],
                         index: index,
-                        onRemoteLoaded: { _ in
-                            model.releasePendingImage(slotIndex: index, for: question.id)
-                        }
+                        onRemoteLoaded: { _ in }
                     )
                 }
             }
@@ -742,24 +745,23 @@ struct QuestionCardExpandedView: View {
             .accessibilityHint(String(localized: "question.image.openHint"))
             .accessibilityAddTraits(.isButton)
             .overlay(alignment: .topTrailing) {
-                Button {
-                    // Whatever the slot held, removing it is one assignment. The caller used to have
-                    // to say which of three arrays its image came from so the right ones got cleared.
-                    draft[index].image = .none
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Color.white.opacity(0.92))
-                        .frame(width: 26, height: 26)
-                        .background(
-                            Circle()
-                                .fill(Color.black.opacity(0.46))
-                        )
-                        .padding(8)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "question.image.delete"))
+                // Whatever the slot held, removing it is one assignment. The caller used to have
+                // to say which of three arrays its image came from so the right ones got cleared.
+                AnswerImageRemoveButton { draft[index].image = .none }
             }
+            .frame(maxWidth: .infinity, alignment: .center)
+    }
+
+    /// The image of an upload that is still running, shown read-only.
+    private func heldImagePreview(_ uiImage: UIImage) -> some View {
+        let aspect = uiImage.size.width / uiImage.size.height
+        let displayHeight = min(uiImage.size.height, Self.imagePreviewMaxHeight)
+
+        return Image(uiImage: uiImage)
+            .resizable()
+            .frame(width: displayHeight * aspect, height: displayHeight)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .accessibilityHidden(true)
             .frame(maxWidth: .infinity, alignment: .center)
     }
 
@@ -786,7 +788,7 @@ struct QuestionCardExpandedView: View {
             case let .image(uiImage):
                 imagePreview(uiImage: uiImage, index: index)
             case let .failed(retry):
-                AnswerImageFailedView(height: Self.imagePreviewMaxHeight, retry: retry)
+                AnswerImageFailedView(retry: retry, remove: { draft[index].image = .none })
             case .loading:
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color.secondary.opacity(0.18))

@@ -440,8 +440,7 @@ struct QuestionCard: View {
   ) -> some View {
     AnswerRemoteImage(
       url: urlString.flatMap { URL(string: $0) },
-      placeholder: pendingImage,
-      onRemoteLoaded: { _ in model.releasePendingImage(slotIndex: index, for: question.id) }
+      placeholder: pendingImage
     ) { phase in
       switch phase {
       case .image(let uiImage):
@@ -476,8 +475,7 @@ struct QuestionCard: View {
   ) -> some View {
     AnswerRemoteImage(
       url: urlString.flatMap { URL(string: $0) },
-      placeholder: pendingImage,
-      onRemoteLoaded: { _ in model.releasePendingImage(slotIndex: index, for: question.id) }
+      placeholder: pendingImage
     ) { phase in
       switch phase {
       case .image(let uiImage):

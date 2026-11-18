@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 
 /// How many times, and how patiently, a remote image is retried before the user is told it failed.
@@ -18,6 +19,12 @@ struct ImageLoadRetryPolicy: Equatable, Sendable {
         guard failureNumber >= 1, failureNumber <= retryDelays.count else { return nil }
         return retryDelays[failureNumber - 1]
     }
+}
+
+/// What makes one `LazyImage` a different load from the last: another URL, or another attempt.
+struct AnswerImageLoadIdentity: Hashable {
+    let url: URL
+    let attempt: Int
 }
 
 /// What a remote answer image shows, decided from what has loaded so far.
@@ -61,6 +68,9 @@ final class ImageLoadRetryModel {
     private(set) var attempt = 0
 
     private var failureCount = 0
+    /// The newest failure already counted. A view that appears again re-runs its `.task` for a
+    /// failure it has already handled; that must not count a second time.
+    private var handledFailureToken = 0
     private let policy: ImageLoadRetryPolicy
     private let sleep: @Sendable (Duration) async throws -> Void
 
@@ -72,10 +82,16 @@ final class ImageLoadRetryModel {
         self.sleep = sleep
     }
 
-    /// A load failed. Waits out the backoff and asks for a reload, or settles on `.failed`.
+    /// A load failed; `token` numbers the failure (the view bumps it once per failed load). Waits out
+    /// the backoff and asks for a reload, or settles on `.failed`. A token that was already handled is
+    /// ignored.
     ///
-    /// Cancelling the calling task (the view went away) abandons the retry.
-    func loadFailed() async {
+    /// Cancelling the calling task (the view went away) abandons the retry and un-counts the failure,
+    /// so the view handles it once when it comes back.
+    func loadFailed(token: Int) async {
+        guard token > handledFailureToken else { return }
+        let previousToken = handledFailureToken
+        handledFailureToken = token
         failureCount += 1
 
         guard let delay = policy.delay(afterFailureNumber: failureCount) else {
@@ -86,6 +102,8 @@ final class ImageLoadRetryModel {
         do {
             try await sleep(delay)
         } catch {
+            failureCount -= 1
+            handledFailureToken = previousToken
             return
         }
         attempt += 1

@@ -8,11 +8,13 @@ import UIKit
 struct AnswerDraftStorePendingImageTests {
     private let questionId = "q-1"
 
+    private let seeder = FakeAnswerImageCacheSeeder()
+
     private func store(
         persister: FakeAnswerPersister = FakeAnswerPersister(),
         images: FakeAnswerImageStore = FakeAnswerImageStore()
     ) -> AnswerDraftStore {
-        AnswerDraftStore(persister: persister, images: images)
+        AnswerDraftStore(persister: persister, images: images, cacheSeeder: seeder)
     }
 
     private func suggestion() -> AnswerImageSuggestion {
@@ -72,9 +74,63 @@ struct AnswerDraftStorePendingImageTests {
         #expect(host.pendingSlots(questionId).isEmpty)
     }
 
-    @Test func uploadedSlotKeepsItsImageUntilTheCardReleasesIt() async throws {
+    @Test func uploadedSlotIsReleasedOnceItsURLIsSaved() async throws {
         let host = FakeAnswerHost()
         let store = store()
+        let plan = try #require(store.plan(
+            for: .fixture(["a", "", ""], images: [0: .pendingLocal(UIImage())]),
+            baseline: .empty,
+            questionId: questionId,
+            in: host
+        ))
+        store.applyOptimistically(plan, in: host)
+        #expect(host.pendingSlots(questionId) == [0])
+
+        await store.finish(plan, in: host)
+
+        #expect(host.pendingSlots(questionId).isEmpty)
+        #expect(host.normalized(questionId)?.urls[0] != nil)
+    }
+
+    @Test func imageCacheIsRefreshedWithThePickedImageBeforeTheURLIsSaved() async throws {
+        let host = FakeAnswerHost()
+        let picked = UIImage()
+        let store = store(images: FakeAnswerImageStore(urls: [0: "https://example.com/zero.jpg"]))
+        let plan = try #require(store.plan(
+            for: .fixture(["a", "", ""], images: [0: .pendingLocal(picked)]),
+            baseline: .empty,
+            questionId: questionId,
+            in: host
+        ))
+        store.applyOptimistically(plan, in: host)
+
+        await store.finish(plan, in: host)
+
+        #expect(seeder.refreshed.count == 1)
+        #expect(seeder.refreshed.first?.downloadURL == "https://example.com/zero.jpg")
+        #expect(seeder.refreshed.first?.image === picked)
+    }
+
+    @Test func suggestionWithoutALoadedPreviewStillEvictsTheStaleCacheEntry() async throws {
+        let host = FakeAnswerHost()
+        let store = store(images: FakeAnswerImageStore(urls: [0: "https://example.com/zero.jpg"]))
+        let plan = try #require(store.plan(
+            for: .fixture(["a", "", ""], images: [0: .pendingSuggestion(suggestion())]),
+            baseline: .empty,
+            questionId: questionId,
+            in: host
+        ))
+        store.applyOptimistically(plan, in: host)
+
+        await store.finish(plan, in: host)
+
+        #expect(seeder.refreshed.count == 1)
+        #expect(seeder.refreshed.first?.image == nil)
+    }
+
+    @Test func failedUploadDoesNotTouchTheImageCache() async throws {
+        let host = FakeAnswerHost()
+        let store = store(images: FakeAnswerImageStore(failingSlots: [0]))
         let plan = try #require(store.plan(
             for: .fixture(["a", "", ""], images: [0: .pendingLocal(UIImage())]),
             baseline: .empty,
@@ -85,11 +141,36 @@ struct AnswerDraftStorePendingImageTests {
 
         await store.finish(plan, in: host)
 
-        #expect(host.pendingSlots(questionId) == [0])
-        #expect(host.normalized(questionId)?.urls[0] != nil)
+        #expect(seeder.refreshed.isEmpty)
     }
 
-    @Test func failedUploadReleasesOnlyThatSlot() async throws {
+    @Test func oldPlanLeavesTheImagesOfANewerSaveAlone() async throws {
+        let host = FakeAnswerHost()
+        let store = store()
+        let plan = try #require(store.plan(
+            for: .fixture(["a", "", ""], images: [0: .pendingLocal(UIImage())]),
+            baseline: .empty,
+            questionId: questionId,
+            in: host
+        ))
+        store.applyOptimistically(plan, in: host)
+
+        // A newer save takes the cache and holds its own image in the same slot.
+        let newerImage = UIImage()
+        host.cache(
+            NormalizedAnswer(texts: ["Newer", "", ""], urls: [nil, nil, nil], attributions: [nil, nil, nil]),
+            for: questionId
+        )
+        host.setPendingImages([0: newerImage], for: questionId)
+
+        await store.finish(plan, in: host)
+
+        #expect(host.pendingImages[questionId]?[0] === newerImage)
+        #expect(seeder.refreshed.isEmpty)
+        #expect(host.normalized(questionId)?.texts == ["Newer", "", ""])
+    }
+
+    @Test func failedUploadReleasesItsSlotAndTheSuccessfulOneOnceItsURLIsSaved() async throws {
         let host = FakeAnswerHost()
         let store = store(images: FakeAnswerImageStore(failingSlots: [0]))
         let plan = try #require(store.plan(
@@ -105,7 +186,9 @@ struct AnswerDraftStorePendingImageTests {
 
         await store.finish(plan, in: host)
 
-        #expect(host.pendingSlots(questionId) == [1])
+        #expect(host.pendingSlots(questionId).isEmpty)
+        #expect(host.normalized(questionId)?.urls[1] != nil)
+        #expect(host.normalized(questionId)?.urls[0] == nil)
         #expect(host.reported.count == 1)
     }
 

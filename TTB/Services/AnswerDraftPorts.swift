@@ -1,4 +1,5 @@
 import Foundation
+import Nuke
 import UIKit
 
 // The four things `AnswerDraftStore` needs from the rest of the app in order to save an answer.
@@ -65,10 +66,14 @@ protocol AnswerCaching: AnyObject {
     func releasePendingImage(slotIndex: Int, for questionId: String)
 }
 
-extension AnswerCaching {
-    // Defaults keep hosts that show no optimistic image (previews, simple fakes) compiling.
-    func setPendingImages(_ images: [Int: UIImage], for questionId: String) {}
-    func releasePendingImage(slotIndex: Int, for questionId: String) {}
+/// Makes the image cache agree with what an upload just stored.
+///
+/// An answer image is uploaded to a fixed Storage path (`answers/<uid>/<qid>/slot_N.jpg`) and keeps
+/// the same download URL when it is replaced. The image cache is keyed by URL, so without this the
+/// card could load the *previous* photo from cache once the new URL is saved.
+protocol AnswerImageCacheSeeding: Sendable {
+    /// Drops everything cached under `downloadURL`, then caches `image` there when the device has it.
+    func refresh(downloadURL: String, with image: UIImage?)
 }
 
 /// Where a save reports failure.
@@ -101,6 +106,19 @@ enum AnswerSaveError: Equatable {
 }
 
 // MARK: - Live adapters
+
+/// Nuke's shared pipeline: the memory entry is replaced by the picked image, the disk entry removed
+/// (the app has no `URLCache`; `ImagePipeline.Configuration.withDataCache` turns it off).
+struct NukeAnswerImageCacheSeeder: AnswerImageCacheSeeding {
+    func refresh(downloadURL: String, with image: UIImage?) {
+        guard let url = URL(string: downloadURL) else { return }
+        let pipeline = ImagePipeline.shared
+        pipeline.cache.removeCachedImage(for: ImageRequest(url: url))
+        if let image {
+            pipeline.cache[url] = ImageContainer(image: image)
+        }
+    }
+}
 
 extension QuestionService: AnswerPersisting {
     func save(_ answer: NormalizedAnswer, for questionId: String) async throws {

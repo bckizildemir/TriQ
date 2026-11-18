@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 import UIKit
 @testable import TTB
 
@@ -70,6 +71,24 @@ actor FakeAnswerImageStore: AnswerImageStoring {
 
     func deleteAnswerImage(questionId: String, slotIndex: Int) async throws {
         deletedSlots.append(slotIndex)
+    }
+}
+
+/// Records which download URLs the store refreshed in the image cache, and with what.
+final class FakeAnswerImageCacheSeeder: AnswerImageCacheSeeding {
+    struct Refresh {
+        let downloadURL: String
+        let image: UIImage?
+    }
+
+    private let storage = Mutex<[Refresh]>([])
+
+    func refresh(downloadURL: String, with image: UIImage?) {
+        storage.withLock { $0.append(Refresh(downloadURL: downloadURL, image: image)) }
+    }
+
+    var refreshed: [Refresh] {
+        storage.withLock { $0 }
     }
 }
 
