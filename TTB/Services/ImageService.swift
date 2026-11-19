@@ -214,6 +214,24 @@ actor ImageService {
         "answers/\(userId)/\(questionId)/slot_\(slotIndex).jpg"
     }
 
+    /// Drops the port from a Storage download URL when it is the scheme's default (443 for https).
+    ///
+    /// The Storage SDK returns `https://firebasestorage.googleapis.com:443/...`, and the server's
+    /// `saveQuestionAnswers` accepts only URLs that start with `https://firebasestorage.googleapis.com/` (#225).
+    /// Path and query keep the SDK's percent-encoding; every other URL comes back unchanged.
+    nonisolated static func normalizedDownloadURL(_ url: URL) -> URL {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              components.scheme == "https",
+              components.port == 443
+        else { return url }
+        let path = components.percentEncodedPath
+        let query = components.percentEncodedQuery
+        components.port = nil
+        components.percentEncodedPath = path
+        components.percentEncodedQuery = query
+        return components.url ?? url
+    }
+
     private func uploadImage(_ image: UIImage, to path: String, cachesResult: Bool) async throws -> String {
         if let existingTask = inFlightUploads[path] {
             return try await existingTask.value
@@ -228,7 +246,7 @@ actor ImageService {
 
                 _ = try await ref.putDataAsync(compressed, metadata: metadata)
                 let url = try await ref.downloadURL()
-                return url.absoluteString
+                return Self.normalizedDownloadURL(url).absoluteString
             } catch {
                 throw ImageServiceError.uploadFailed(error)
             }
