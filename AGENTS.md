@@ -57,8 +57,8 @@ The owner (2026-11-11) keeps routine PRs off their list. Once CI is green and Gi
 
 App code, config, a major bump and every server change still wait for the owner. A merged bump in
 `functions/` still needs a deploy, and the deploy needs the owner's yes: ask once, in the same message
-that reports the merges, with the full list of server changes (see "Firebase deploys" in the global
-CLAUDE.md). Record each merge in `STATUS.md` in the same session.
+that reports the merges, with the full list of server changes (see "Firebase deploys" in the iOS Dev
+home CLAUDE.md). Record each merge in `STATUS.md` in the same session.
 
 ## Project Structure & Module Organization
 - `Documentation/` is the single source for architecture, AI, migration, deployment, and badge docs.
