@@ -29,8 +29,13 @@ Finish the answer image viewer (owner, 2026-11-17), in this order. Done 2/3.
    The owner then asked for an end-to-end library pick: it FAILS, older than #216 (run
    `2026-11-19-005949-5fe4`, photo added with `simctl addmedia`, picker cell tapped by coordinate, which works).
    The server refuses the client's Storage download URL because it carries `:443`; every library-picked answer
-   image is lost. Tracked in #225 (cause, file:line, two fix options). **Waiting: the owner's pick of the fix**
-   (server fix needs a deploy of `saveQuestionAnswers`).
+   image is lost. Tracked in #225. The owner chose the app fix: PR #227 (`ImageService.normalizedDownloadURL`
+   drops `:443` from Storage download URLs, for answer and profile images) merged on the owner's yes 2026-11-19
+   (#225 closed). Proven on f064d9c (run `2026-11-19-015823-2940`): a library photo shows on Home at 0 s and
+   10 s, on reopen and after a relaunch; both `saveQuestionAnswers` calls 200. Known limits: no code review;
+   already installed builds keep failing until they update (the server still refuses `:443`); guest only; a
+   profile photo upload not driven (an old cached profile photo misses the cache once). The first save in that
+   run hit a Cloud Run 500 (no free instance), filed as #228; the retry passed.
 
 Previous focus, done 1/1: #168 (client writes of server-owned answer stats are refused by the security rules),
 chosen by the owner 2026-11-16, fixed with option A in #173 (merged 2026-11-16, issue closed). The triage below is
