@@ -13,7 +13,7 @@
     "migrate:remove-share-recipient-rosters": "node remove_share_recipient_rosters.js --dry-run"
   },
   "dependencies": {
-    "firebase-admin": "^13.10.0"
+    "firebase-admin": "^14.5.1"
   },
   "overrides": {
     "uuid": "^11.1.1"
